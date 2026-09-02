@@ -1,0 +1,25 @@
+node_modules
+dist
+dist-ssr
+*.local
+
+# Переменные окружения: сюда попадут адрес и ключи Supabase.
+# В git их не кладём никогда.
+.env
+.env.local
+.env.*.local
+
+# Служебные файлы локального Supabase (Docker)
+supabase/.temp
+supabase/.branches
+
+# Редакторы и ОС
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+*.suo
+*.njsproj
+*.sln
+*.sw?

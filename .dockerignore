@@ -1,0 +1,9 @@
+# Что НЕ передавать в Docker при сборке образа.
+# Уменьшает объём и не даёт зависимостям с хоста попасть в контейнер.
+node_modules
+dist
+.git
+.env
+.env.local
+supabase/.temp
+supabase/.branches

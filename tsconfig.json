@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Как разрешать импорты (современный режим для сборщиков вроде Vite) */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Строгие проверки — TypeScript ловит ошибки до запуска.
+       Для новичка это не «придирки», а бесплатный второй пилот. */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    /* Позволяет писать import { x } from '@/lib/time' вместо '../../lib/time'.
+       В TypeScript 7 опцию baseUrl убрали, поэтому путь пишем
+       относительно этого файла — с ведущим './'. */
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
+    /* Типы, доступные глобально во всех файлах */
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"]
+  },
+  "include": ["src", "vite.config.ts"]
+}
