@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/database'
 
 /**
  * Единая точка подключения к базе данных.
@@ -25,7 +26,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+// <Database> — типы, сгенерированные из настоящей структуры базы командой
+// `npx supabase gen types typescript --local`. Благодаря им редактор
+// подсказывает имена таблиц и колонок, а опечатка вроде 'activites'
+// или обращение к несуществующему полю станут ошибкой ещё до запуска.
+// ВАЖНО: после каждой новой миграции типы нужно генерировать заново.
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     // Сохранять сессию в браузере, чтобы вход не слетал при перезагрузке страницы.
     persistSession: true,
