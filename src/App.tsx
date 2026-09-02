@@ -1,94 +1,81 @@
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { formatMinutes, type Locale } from '@/lib/time'
+import { useI18n } from '@/lib/i18n'
+import { useAuth } from '@/features/auth/AuthProvider'
+import { AuthPage } from '@/features/auth/AuthPage'
+import { signOut } from '@/features/auth/api'
 import { fetchCategories } from '@/features/categories/api'
+import { Button } from '@/components/ui/Button'
+import { LocaleSwitcher } from '@/components/LocaleSwitcher'
 
 /**
- * ВРЕМЕННАЯ страница Фазы 1.
- * Её задача — доказать, что цепочка работает целиком:
- * браузер → React Query → Supabase → PostgreSQL в Docker → и обратно.
- * В Фазе 3 она будет заменена настоящим макетом приложения.
+ * Главный «регулировщик» приложения. Решает, что показать:
+ *   1. пока выясняем, есть ли сохранённая сессия — надпись «Загружаем»;
+ *   2. если пользователь не вошёл — экран входа;
+ *   3. если вошёл — личный кабинет.
+ *
+ * Шаг 1 нельзя пропускать: без него при каждой перезагрузке страницы
+ * на долю секунды мелькала бы форма входа, хотя человек уже вошёл.
  */
 export default function App() {
-  const [locale, setLocale] = useState<Locale>('ru')
+  const { user, isLoading } = useAuth()
+  const { t } = useI18n()
 
-  // useQuery делает три вещи разом: запрашивает данные, кэширует их
-  // и сообщает нам состояние загрузки. queryKey — имя, под которым
-  // React Query хранит результат в кэше.
-  const {
-    data: categories,
-    isPending,
-    error,
-  } = useQuery({
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <p className="text-slate-500">{t('common.loading')}</p>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <AuthPage />
+  }
+
+  return <HomePage />
+}
+
+/**
+ * ВРЕМЕННАЯ страница личного кабинета Фазы 2.
+ * Показывает, что вход работает, и заодно доказывает работу защиты:
+ * категории, невидимые до входа, теперь загружаются.
+ * В Фазе 3 её заменит настоящий макет с меню и разделами.
+ */
+function HomePage() {
+  const { user } = useAuth()
+  const { t } = useI18n()
+
+  const { data: categories, isPending } = useQuery({
     queryKey: ['categories'],
     queryFn: fetchCategories,
   })
 
-  const t = {
-    ru: {
-      title: 'Семейный учёт времени',
-      demo: 'Пример форматирования времени:',
-      fromDb: 'Категории, загруженные из базы данных:',
-      loading: 'Загружаем…',
-      error: 'Не удалось загрузить категории:',
-      empty:
-        'Список пуст — и это правильно. Правила доступа в базе (RLS) отдают данные ' +
-        'только тем, кто вошёл в систему. Вход появится в Фазе 2.',
-    },
-    en: {
-      title: 'Family Time Tracker',
-      demo: 'Time formatting example:',
-      fromDb: 'Categories loaded from the database:',
-      loading: 'Loading…',
-      error: 'Could not load categories:',
-      empty:
-        'The list is empty on purpose. Row Level Security only serves data to signed-in ' +
-        'users. Sign-in arrives in Phase 2.',
-    },
-  }[locale]
+  // Имя мы клали в metadata при регистрации, оттуда его и берём.
+  // Если имени нет (аккаунт создан в обход формы) — показываем почту.
+  const displayName = (user?.user_metadata?.display_name as string | undefined) ?? user?.email
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="mx-auto max-w-2xl px-6 py-16">
-        <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
-
-        <div className="mt-6 flex gap-2">
-          <button
-            type="button"
-            onClick={() => setLocale('ru')}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-              locale === 'ru' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-700 shadow-sm'
-            }`}
-          >
-            RU
-          </button>
-          <button
-            type="button"
-            onClick={() => setLocale('en')}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-              locale === 'en' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-700 shadow-sm'
-            }`}
-          >
-            EN
-          </button>
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
+          <h1 className="text-lg font-bold">{t('app.title')}</h1>
+          <div className="flex items-center gap-3">
+            <LocaleSwitcher />
+            <Button variant="secondary" onClick={() => signOut()}>
+              {t('auth.signOut')}
+            </Button>
+          </div>
         </div>
+      </header>
 
-        <p className="mt-8 text-sm text-slate-500">{t.demo}</p>
-        <p className="mt-1 text-2xl font-semibold tabular-nums">{formatMinutes(90, locale)}</p>
+      <main className="mx-auto max-w-3xl px-6 py-10">
+        <p className="text-sm text-slate-500">
+          {t('home.signedInAs')} <span className="font-semibold text-slate-900">{displayName}</span>
+        </p>
 
-        <p className="mt-10 text-sm text-slate-500">{t.fromDb}</p>
+        <p className="mt-8 text-sm text-slate-500">{t('home.categoriesFromDb')}</p>
 
-        {isPending && <p className="mt-2 text-slate-400">{t.loading}</p>}
-
-        {error && (
-          <p className="mt-2 rounded-md bg-red-50 p-3 text-sm text-red-700">
-            {t.error} {error.message}
-          </p>
-        )}
-
-        {categories?.length === 0 && (
-          <p className="mt-2 rounded-md bg-amber-50 p-3 text-sm text-amber-800">{t.empty}</p>
-        )}
+        {isPending && <p className="mt-2 text-slate-400">{t('common.loading')}</p>}
 
         {categories && (
           <ul className="mt-2 space-y-1">
@@ -103,7 +90,7 @@ export default function App() {
             ))}
           </ul>
         )}
-      </div>
+      </main>
     </div>
   )
 }

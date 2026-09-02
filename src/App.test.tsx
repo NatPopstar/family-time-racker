@@ -1,21 +1,29 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { renderWithProviders } from '@/test/renderWithProviders'
 import App from './App'
 
 /**
- * Подменяем настоящий запрос к базе на выдуманные данные.
- *
- * Зачем: тест должен проверять ПОВЕДЕНИЕ КОМПОНЕНТА, а не работу
- * базы данных. К тому же настоящая база может быть не запущена,
- * и тогда тесты падали бы не по вине кода.
+ * App — «регулировщик»: он решает, какой экран показать.
+ * Здесь проверяем именно это решение, поэтому подменяем и сведения
+ * о пользователе, и запрос категорий.
  */
-vi.mock('@/features/categories/api', () => ({
-  fetchCategories: vi.fn(),
+vi.mock('@/features/auth/AuthProvider', () => ({
+  useAuth: vi.fn(),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }))
 
-// Импортируем уже подменённую версию, чтобы управлять её ответами.
+vi.mock('@/features/categories/api', () => ({
+  fetchCategories: vi.fn(),
+  fetchSubcategories: vi.fn(),
+}))
+
+vi.mock('@/features/auth/api', async () => {
+  const actual = await vi.importActual<typeof import('@/features/auth/api')>('@/features/auth/api')
+  return { ...actual, signIn: vi.fn(), signUp: vi.fn(), signOut: vi.fn() }
+})
+
+import { useAuth } from '@/features/auth/AuthProvider'
 import { fetchCategories } from '@/features/categories/api'
 
 const fakeCategories = [
@@ -23,70 +31,80 @@ const fakeCategories = [
   { id: '2', slug: 'study', name: 'Учёба', icon: '📚', sort_order: 2 },
 ]
 
+/** Собирает объект пользователя такой формы, какую отдаёт Supabase. */
+function fakeUser(displayName?: string) {
+  return {
+    id: 'user-1',
+    email: 'mama@example.com',
+    user_metadata: displayName ? { display_name: displayName } : {},
+  }
+}
+
 describe('App', () => {
   beforeEach(() => {
+    vi.clearAllMocks()
+    localStorage.clear()
     vi.mocked(fetchCategories).mockResolvedValue(fakeCategories)
   })
 
-  it('по умолчанию показывает русский заголовок', () => {
+  it('пока проверяет сессию, показывает «Загружаем», а не форму входа', () => {
+    // Это защита от неприятного мигания формой входа у того,
+    // кто на самом деле уже вошёл.
+    vi.mocked(useAuth).mockReturnValue({ session: null, user: null, isLoading: true })
+
     renderWithProviders(<App />)
-    expect(screen.getByRole('heading', { name: 'Семейный учёт времени' })).toBeInTheDocument()
+
+    expect(screen.getByText('Загружаем…')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Вход' })).not.toBeInTheDocument()
   })
 
-  it('по умолчанию форматирует время по-русски', () => {
+  it('показывает форму входа, если пользователь не вошёл', () => {
+    vi.mocked(useAuth).mockReturnValue({ session: null, user: null, isLoading: false })
+
     renderWithProviders(<App />)
-    expect(screen.getByText('1 ч 30 мин')).toBeInTheDocument()
+
+    expect(screen.getByRole('heading', { name: 'Вход' })).toBeInTheDocument()
   })
 
-  it('переключает язык на английский по клику на EN', async () => {
-    const user = userEvent.setup()
+  it('показывает личный кабинет вошедшему пользователю', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      session: {} as never,
+      user: fakeUser('Мама') as never,
+      isLoading: false,
+    })
+
     renderWithProviders(<App />)
 
-    await user.click(screen.getByRole('button', { name: 'EN' }))
-
-    expect(screen.getByRole('heading', { name: 'Family Time Tracker' })).toBeInTheDocument()
-    expect(screen.getByText('1h 30m')).toBeInTheDocument()
+    expect(screen.getByText('Мама')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Выйти' })).toBeInTheDocument()
   })
 
-  it('переключает язык обратно на русский', async () => {
-    const user = userEvent.setup()
+  it('после входа категории из базы становятся видны', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      session: {} as never,
+      user: fakeUser('Мама') as never,
+      isLoading: false,
+    })
+
     renderWithProviders(<App />)
 
-    await user.click(screen.getByRole('button', { name: 'EN' }))
-    await user.click(screen.getByRole('button', { name: 'RU' }))
-
-    expect(screen.getByRole('heading', { name: 'Семейный учёт времени' })).toBeInTheDocument()
-  })
-
-  it('показывает категории, загруженные из базы', async () => {
-    renderWithProviders(<App />)
-
-    // waitFor ждёт, пока запрос «выполнится»: данные приходят не мгновенно.
     await waitFor(() => {
       expect(screen.getByText('Работа')).toBeInTheDocument()
     })
     expect(screen.getByText('Учёба')).toBeInTheDocument()
   })
 
-  it('объясняет пустой список правилами доступа, а не молчит', async () => {
-    // Пока пользователь не вошёл, RLS честно отдаёт ноль строк.
-    // Страница не должна выглядеть сломанной — она должна объяснить причину.
-    vi.mocked(fetchCategories).mockResolvedValue([])
+  it('показывает почту, если имя не задано', () => {
+    // Аккаунт, созданный в обход формы регистрации, остался бы без имени —
+    // пустое место в шапке выглядело бы как поломка.
+    vi.mocked(useAuth).mockReturnValue({
+      session: {} as never,
+      user: fakeUser() as never,
+      isLoading: false,
+    })
 
     renderWithProviders(<App />)
 
-    await waitFor(() => {
-      expect(screen.getByText(/RLS/)).toBeInTheDocument()
-    })
-  })
-
-  it('показывает понятное сообщение, если база недоступна', async () => {
-    vi.mocked(fetchCategories).mockRejectedValue(new Error('connection refused'))
-
-    renderWithProviders(<App />)
-
-    await waitFor(() => {
-      expect(screen.getByText(/connection refused/)).toBeInTheDocument()
-    })
+    expect(screen.getByText('mama@example.com')).toBeInTheDocument()
   })
 })
