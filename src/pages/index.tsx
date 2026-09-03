@@ -14,9 +14,8 @@ import { PagePlaceholder } from '@/components/PagePlaceholder'
 // «Мой день» уже наполнен и переехал в свой файл.
 export { DashboardPage } from './DashboardPage'
 
-export function FamilyPage() {
-  return <PagePlaceholder titleKey="page.family.title" subtitleKey="page.family.subtitle" />
-}
+// «Семья» уже наполнена и живёт в своём файле.
+export { FamilyPage } from './FamilyPage'
 
 // «Планер» уже наполнен и живёт в своём файле.
 export { PlannerPage } from './PlannerPage'

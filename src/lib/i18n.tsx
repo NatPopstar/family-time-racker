@@ -154,6 +154,20 @@ const ru = {
   'dashboard.byCategory': 'Распределение времени по категориям',
   'dashboard.byCategoryPeriod': 'за эту неделю',
   'dashboard.noData': 'За этот период записей пока нет.',
+
+  'family.tableTitle': 'Кто сколько времени потратил',
+  'family.person': 'Пользователь',
+  'family.work': 'Работа',
+  'family.study': 'Учёба',
+  'family.household': 'Быт',
+  'family.childcare': 'Ребёнок',
+  'family.totalHours': 'Всего часов',
+  'family.marketValue': 'Оценка труда',
+  'family.compareTitle': 'Сравнение по людям',
+  'family.compareHint': 'Длина полосы — общее время, цвет внутри — распределение по категориям.',
+  'family.timelineTitle': 'Как прошла неделя',
+  'family.timelineHint': 'Сколько часов в день потратил каждый.',
+  'family.noPeople': 'В семье пока нет ни одного зарегистрированного пользователя.',
 } as const
 
 /**
@@ -303,6 +317,20 @@ const en: Record<keyof typeof ru, string> = {
   'dashboard.byCategory': 'Time by category',
   'dashboard.byCategoryPeriod': 'this week',
   'dashboard.noData': 'Nothing logged in this period yet.',
+
+  'family.tableTitle': 'Who spent how much time',
+  'family.person': 'Person',
+  'family.work': 'Work',
+  'family.study': 'Study',
+  'family.household': 'Home',
+  'family.childcare': 'Child',
+  'family.totalHours': 'Total hours',
+  'family.marketValue': 'Market value',
+  'family.compareTitle': 'Side by side',
+  'family.compareHint': 'Bar length is total time; the colours inside split it by category.',
+  'family.timelineTitle': 'How the week went',
+  'family.timelineHint': 'Hours per day for each person.',
+  'family.noPeople': 'No one has registered in this family yet.',
 }
 
 export type TranslationKey = keyof typeof ru

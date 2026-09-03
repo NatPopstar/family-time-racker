@@ -72,6 +72,113 @@ export function filterByRange(
   return activities.filter((a) => a.date !== null && a.date >= from && a.date <= to)
 }
 
+/** Строка семейной таблицы: один человек и его время по категориям. */
+export type PersonRow = {
+  userId: string
+  name: string
+  /** Минуты по каждой из четырёх категорий. Отсутствующие — нули. */
+  work: number
+  study: number
+  household: number
+  childcare: number
+  totalMinutes: number
+  totalValue: number
+}
+
+/**
+ * Сводка по людям — сердце семейного дашборда.
+ *
+ * Людей берём из списка профилей, а НЕ из записей: человек без единой
+ * записи всё равно должен появиться в таблице с нулями. Иначе
+ * «ничего не делал» выглядело бы как «его нет в семье», и сравнение
+ * теряло бы смысл.
+ */
+export function summarizeByPerson(
+  activities: ActivityWithValue[],
+  people: { id: string; display_name: string }[],
+): PersonRow[] {
+  const rows = new Map<string, PersonRow>(
+    people.map((person) => [
+      person.id,
+      {
+        userId: person.id,
+        name: person.display_name,
+        work: 0,
+        study: 0,
+        household: 0,
+        childcare: 0,
+        totalMinutes: 0,
+        totalValue: 0,
+      },
+    ]),
+  )
+
+  for (const activity of activities) {
+    const row = rows.get(activity.user_id ?? '')
+    // Запись человека, которого нет в списке профилей, пропускаем:
+    // приписать её некому.
+    if (!row) continue
+
+    const minutes = activity.actual_minutes ?? 0
+    row.totalMinutes += minutes
+    row.totalValue += activity.value ?? 0
+
+    switch (activity.category_slug) {
+      case 'work':
+        row.work += minutes
+        break
+      case 'study':
+        row.study += minutes
+        break
+      case 'household':
+        row.household += minutes
+        break
+      case 'childcare':
+        row.childcare += minutes
+        break
+    }
+  }
+
+  return [...rows.values()].sort((a, b) => b.totalMinutes - a.totalMinutes)
+}
+
+/** Точка недельной шкалы: день и сколько в этот день потратил каждый. */
+export type TimelinePoint = {
+  date: string
+  /** Минуты по идентификатору человека. */
+  [userId: string]: string | number
+}
+
+/**
+ * Раскладывает время по дням недели для линейного графика.
+ *
+ * Дни задаём СПИСКОМ снаружи, а не берём из записей: день без записей
+ * должен остаться на графике нулём, иначе линия «перепрыгнет» пустой
+ * день и создаст ложное впечатление непрерывной работы.
+ */
+export function buildTimeline(
+  activities: ActivityWithValue[],
+  days: string[],
+  people: { id: string }[],
+): TimelinePoint[] {
+  return days.map((date) => {
+    const point: TimelinePoint = { date }
+
+    for (const person of people) {
+      point[person.id] = 0
+    }
+
+    for (const activity of activities) {
+      if (activity.date !== date) continue
+      const key = activity.user_id ?? ''
+      if (!(key in point)) continue
+      point[key] = (point[key] as number) + (activity.actual_minutes ?? 0)
+    }
+
+    return point
+  })
+}
+
 /** Доля категории в общем времени, в процентах от 0 до 100. */
 export function percentOfTotal(minutes: number, totalMinutes: number): number {
   if (totalMinutes <= 0) return 0

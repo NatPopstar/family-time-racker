@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { summarize, filterByRange, percentOfTotal } from './stats'
+import {
+  summarize,
+  filterByRange,
+  percentOfTotal,
+  summarizeByPerson,
+  buildTimeline,
+} from './stats'
 import type { ActivityWithValue } from '@/types/models'
 
 /** Короткая заготовка записи — в тестах важны лишь несколько полей. */
@@ -119,6 +125,119 @@ describe('filterByRange', () => {
   it('один день — это диапазон из одной даты', () => {
     const result = filterByRange(activities, '2026-09-03', '2026-09-03')
     expect(result.map((a) => a.id)).toEqual(['b'])
+  })
+})
+
+describe('summarizeByPerson', () => {
+  const people = [
+    { id: 'mama', display_name: 'Мама' },
+    { id: 'papa', display_name: 'Папа' },
+    { id: 'kid', display_name: 'Даня' },
+  ]
+
+  it('раскладывает время по людям и категориям', () => {
+    const rows = summarizeByPerson(
+      [
+        entry({ user_id: 'mama', category_slug: 'work', actual_minutes: 300 }),
+        entry({ user_id: 'mama', category_slug: 'household', actual_minutes: 120, value: 40 }),
+        entry({ user_id: 'papa', category_slug: 'childcare', actual_minutes: 60, value: 16 }),
+      ],
+      people,
+    )
+
+    const mama = rows.find((r) => r.userId === 'mama')!
+    expect(mama.work).toBe(300)
+    expect(mama.household).toBe(120)
+    expect(mama.totalMinutes).toBe(420)
+    expect(mama.totalValue).toBe(40)
+
+    const papa = rows.find((r) => r.userId === 'papa')!
+    expect(papa.childcare).toBe(60)
+  })
+
+  it('показывает человека без записей строкой из нулей', () => {
+    // Иначе «ничего не делал» выглядело бы как «его нет в семье»,
+    // и сравнение теряло бы смысл.
+    const rows = summarizeByPerson([entry({ user_id: 'mama', actual_minutes: 60 })], people)
+
+    expect(rows).toHaveLength(3)
+    const kid = rows.find((r) => r.userId === 'kid')!
+    expect(kid.totalMinutes).toBe(0)
+    expect(kid.name).toBe('Даня')
+  })
+
+  it('сортирует по общему времени, от большего к меньшему', () => {
+    const rows = summarizeByPerson(
+      [
+        entry({ user_id: 'kid', actual_minutes: 600 }),
+        entry({ user_id: 'mama', actual_minutes: 120 }),
+      ],
+      people,
+    )
+
+    expect(rows.map((r) => r.userId)).toEqual(['kid', 'mama', 'papa'])
+  })
+
+  it('пропускает записи неизвестного человека', () => {
+    const rows = summarizeByPerson(
+      [entry({ user_id: 'stranger', actual_minutes: 999 })],
+      people,
+    )
+
+    expect(rows.every((r) => r.totalMinutes === 0)).toBe(true)
+  })
+
+  it('считает пример из технического задания', () => {
+    // Пользователь 2: работа 45 ч, дом 10 ч, ребёнок 6 ч = 61 час
+    const rows = summarizeByPerson(
+      [
+        entry({ user_id: 'papa', category_slug: 'work', actual_minutes: 45 * 60 }),
+        entry({ user_id: 'papa', category_slug: 'household', actual_minutes: 10 * 60 }),
+        entry({ user_id: 'papa', category_slug: 'childcare', actual_minutes: 6 * 60 }),
+      ],
+      people,
+    )
+
+    expect(rows.find((r) => r.userId === 'papa')!.totalMinutes).toBe(61 * 60)
+  })
+})
+
+describe('buildTimeline', () => {
+  const people = [{ id: 'mama' }, { id: 'papa' }]
+  const days = ['2026-08-31', '2026-09-01', '2026-09-02']
+
+  it('раскладывает минуты по дням и людям', () => {
+    const result = buildTimeline(
+      [
+        entry({ user_id: 'mama', date: '2026-08-31', actual_minutes: 60 }),
+        entry({ user_id: 'mama', date: '2026-08-31', actual_minutes: 30 }),
+        entry({ user_id: 'papa', date: '2026-09-02', actual_minutes: 120 }),
+      ],
+      days,
+      people,
+    )
+
+    expect(result[0]).toEqual({ date: '2026-08-31', mama: 90, papa: 0 })
+    expect(result[2]).toEqual({ date: '2026-09-02', mama: 0, papa: 120 })
+  })
+
+  it('оставляет пустой день нулём, а не пропускает его', () => {
+    // Пропущенный день заставил бы линию «перепрыгнуть» его и создал
+    // ложное впечатление непрерывной работы.
+    const result = buildTimeline([], days, people)
+
+    expect(result).toHaveLength(3)
+    expect(result[1]).toEqual({ date: '2026-09-01', mama: 0, papa: 0 })
+  })
+
+  it('игнорирует записи вне заданных дней', () => {
+    const result = buildTimeline(
+      [entry({ user_id: 'mama', date: '2026-09-20', actual_minutes: 300 })],
+      days,
+      people,
+    )
+
+    expect(result.every((p) => p.mama === 0)).toBe(true)
   })
 })
 
