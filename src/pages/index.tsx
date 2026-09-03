@@ -11,9 +11,8 @@ import { PagePlaceholder } from '@/components/PagePlaceholder'
  * она переедет в свой файл.
  */
 
-export function DashboardPage() {
-  return <PagePlaceholder titleKey="page.dashboard.title" subtitleKey="page.dashboard.subtitle" />
-}
+// «Мой день» уже наполнен и переехал в свой файл.
+export { DashboardPage } from './DashboardPage'
 
 export function FamilyPage() {
   return <PagePlaceholder titleKey="page.family.title" subtitleKey="page.family.subtitle" />

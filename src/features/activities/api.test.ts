@@ -1,0 +1,236 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import type { SubcategoryWithRate } from '@/features/categories/api'
+
+/**
+ * Подделка запроса к Supabase.
+ *
+ * Настоящий запрос — это «цепочка»: .select().gte().lte().order().eq(),
+ * где каждый вызов возвращает тот же объект, а в конце его можно
+ * дождаться через await. Поэтому наш поддельный объект тоже возвращает
+ * сам себя из каждого метода и умеет then — это и делает его «ожидаемым».
+ *
+ * Первая версия этой подделки была плоской и развалилась именно там,
+ * где фильтр по пользователю применяется ПОСЛЕ сортировки.
+ */
+let queryResult: { data: unknown; error: unknown } = { data: [], error: null }
+
+const mockSelect = vi.fn()
+const mockGte = vi.fn()
+const mockLte = vi.fn()
+const mockOrder = vi.fn()
+const mockEq = vi.fn()
+const mockInsert = vi.fn()
+const mockDelete = vi.fn()
+
+const builder = {
+  select: (...a: unknown[]) => (mockSelect(...a), builder),
+  gte: (...a: unknown[]) => (mockGte(...a), builder),
+  lte: (...a: unknown[]) => (mockLte(...a), builder),
+  order: (...a: unknown[]) => (mockOrder(...a), builder),
+  eq: (...a: unknown[]) => (mockEq(...a), builder),
+  delete: (...a: unknown[]) => (mockDelete(...a), builder),
+  insert: (...a: unknown[]) => {
+    mockInsert(...a)
+    return Promise.resolve(queryResult)
+  },
+  // then делает объект «ожидаемым»: await builder вернёт queryResult.
+  then: (resolve: (value: unknown) => unknown) => resolve(queryResult),
+}
+
+const mockFrom = vi.fn(() => builder)
+
+vi.mock('@/lib/supabase', () => ({
+  supabase: { from: (...args: unknown[]) => mockFrom(...(args as [])) },
+}))
+
+import { buildActivityInsert, createActivity, fetchActivities, deleteActivity } from './api'
+
+/** Подкатегория со ставкой — уборка по £20/час. */
+const cleaning: SubcategoryWithRate = {
+  id: 'sub-cleaning',
+  category_id: 'cat-household',
+  rate_id: 'rate-cleaning',
+  name: 'Уборка',
+  sort_order: 1,
+  is_active: true,
+  market_rates: { name: 'Cleaning', hourly_rate: 20, currency: 'GBP' },
+}
+
+/** Подкатегория без ставки — оплачиваемая работа. */
+const paidWork: SubcategoryWithRate = {
+  id: 'sub-work',
+  category_id: 'cat-work',
+  rate_id: null,
+  name: 'Основная работа',
+  sort_order: 1,
+  is_active: true,
+  market_rates: null,
+}
+
+const baseInput = {
+  userId: 'user-1',
+  title: 'Уборка кухни',
+  date: '2026-09-03',
+  actualMinutes: 90,
+}
+
+describe('buildActivityInsert: «заморозка» ставки', () => {
+  it('копирует ставку в запись', () => {
+    // Это защита истории: изменение ставки в настройках
+    // не должно переписывать прошлые отчёты.
+    const row = buildActivityInsert({ ...baseInput, subcategory: cleaning })
+
+    expect(row.rate_snapshot).toBe(20)
+    expect(row.currency_snapshot).toBe('GBP')
+  })
+
+  it('оставляет ставку пустой, если работа не оценивается деньгами', () => {
+    const row = buildActivityInsert({
+      ...baseInput,
+      subcategory: paidWork,
+      title: 'Работа над проектом',
+    })
+
+    expect(row.rate_snapshot).toBeNull()
+    expect(row.currency_snapshot).toBeNull()
+  })
+
+  it('записывает задачу сразу выполненной', () => {
+    const row = buildActivityInsert({ ...baseInput, subcategory: cleaning })
+
+    expect(row.status).toBe('done')
+    expect(row.completed_at).toBeTruthy()
+    expect(row.actual_minutes).toBe(90)
+  })
+
+  it('не заполняет плановое время', () => {
+    // План и факт — разные поля. Запись «сделал» не должна
+    // притворяться, что это было запланировано.
+    const row = buildActivityInsert({ ...baseInput, subcategory: cleaning })
+
+    expect(row.planned_minutes).toBeUndefined()
+  })
+
+  it('обрезает лишние пробелы в названии', () => {
+    const row = buildActivityInsert({
+      ...baseInput,
+      subcategory: cleaning,
+      title: '   Уборка кухни   ',
+    })
+
+    expect(row.title).toBe('Уборка кухни')
+  })
+
+  it('пустой комментарий сохраняет как null, а не пустую строку', () => {
+    // Одно значение «ничего нет» вместо двух разных упрощает
+    // все последующие проверки.
+    expect(buildActivityInsert({ ...baseInput, subcategory: cleaning, comment: '   ' }).comment)
+      .toBeNull()
+    expect(buildActivityInsert({ ...baseInput, subcategory: cleaning }).comment).toBeNull()
+  })
+
+  it('сохраняет непустой комментарий', () => {
+    const row = buildActivityInsert({
+      ...baseInput,
+      subcategory: cleaning,
+      comment: ' генеральная уборка ',
+    })
+
+    expect(row.comment).toBe('генеральная уборка')
+  })
+
+  it('связывает запись с автором и видом работы', () => {
+    const row = buildActivityInsert({ ...baseInput, subcategory: cleaning })
+
+    expect(row.user_id).toBe('user-1')
+    expect(row.subcategory_id).toBe('sub-cleaning')
+    expect(row.date).toBe('2026-09-03')
+  })
+})
+
+describe('createActivity', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryResult = { data: [], error: null }
+  })
+
+  it('сохраняет запись в таблицу activities', async () => {
+    await createActivity({ ...baseInput, subcategory: cleaning })
+
+    expect(mockFrom).toHaveBeenCalledWith('activities')
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Уборка кухни', rate_snapshot: 20 }),
+    )
+  })
+
+  it('превращает ошибку Supabase в исключение', async () => {
+    queryResult = { data: null, error: { message: 'нет прав' } }
+
+    await expect(createActivity({ ...baseInput, subcategory: cleaning })).rejects.toThrow(
+      'нет прав',
+    )
+  })
+})
+
+describe('fetchActivities', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryResult = { data: [], error: null }
+  })
+
+  it('берёт данные из представления с посчитанной стоимостью', async () => {
+    await fetchActivities({ from: '2026-09-01', to: '2026-09-07' })
+
+    // Не из таблицы activities: во view уже посчитана стоимость
+    // и подставлены названия категорий.
+    expect(mockFrom).toHaveBeenCalledWith('v_activity_value')
+    expect(mockGte).toHaveBeenCalledWith('date', '2026-09-01')
+    expect(mockLte).toHaveBeenCalledWith('date', '2026-09-07')
+  })
+
+  it('фильтрует по пользователю, когда он указан', async () => {
+    await fetchActivities({ from: '2026-09-01', to: '2026-09-07', userId: 'user-1' })
+
+    expect(mockEq).toHaveBeenCalledWith('user_id', 'user-1')
+  })
+
+  it('без указания пользователя возвращает записи всей семьи', async () => {
+    await fetchActivities({ from: '2026-09-01', to: '2026-09-07' })
+
+    expect(mockEq).not.toHaveBeenCalled()
+  })
+
+  it('возвращает пустой список, если база прислала null', async () => {
+    queryResult = { data: null, error: null }
+
+    await expect(fetchActivities({ from: '2026-09-01', to: '2026-09-07' })).resolves.toEqual([])
+  })
+
+  it('превращает ошибку Supabase в исключение', async () => {
+    queryResult = { data: null, error: { message: 'нет доступа' } }
+
+    await expect(fetchActivities({ from: '2026-09-01', to: '2026-09-07' })).rejects.toThrow(
+      'нет доступа',
+    )
+  })
+})
+
+describe('deleteActivity', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryResult = { data: null, error: null }
+  })
+
+  it('удаляет запись по идентификатору', async () => {
+    await deleteActivity('activity-1')
+
+    expect(mockDelete).toHaveBeenCalled()
+    expect(mockEq).toHaveBeenCalledWith('id', 'activity-1')
+  })
+
+  it('сообщает об ошибке удаления', async () => {
+    queryResult = { data: null, error: { message: 'запись не найдена' } }
+
+    await expect(deleteActivity('activity-1')).rejects.toThrow('запись не найдена')
+  })
+})

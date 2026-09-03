@@ -64,6 +64,36 @@ const ru = {
   'page.notFound.back': 'Вернуться на главную',
 
   'common.comingSoon': 'Этот раздел появится на следующем этапе.',
+  'common.save': 'Сохранить',
+  'common.saving': 'Сохраняем…',
+  'common.cancel': 'Отмена',
+  'common.delete': 'Удалить',
+  'common.total': 'Всего',
+
+  'activity.formTitle': 'Записать выполненную работу',
+  'activity.title': 'Что делали',
+  'activity.titlePlaceholder': 'Например: уборка кухни',
+  'activity.category': 'Категория',
+  'activity.subcategory': 'Вид работы',
+  'activity.selectPlaceholder': 'Выберите…',
+  'activity.date': 'Дата',
+  'activity.time': 'Потраченное время',
+  'activity.hours': 'часов',
+  'activity.minutes': 'минут',
+  'activity.comment': 'Комментарий',
+  'activity.commentPlaceholder': 'Необязательно',
+  'activity.add': 'Записать',
+
+  'activity.error.titleRequired': 'Напишите, что вы делали.',
+  'activity.error.subcategoryRequired': 'Выберите вид работы.',
+  'activity.error.timeRequired': 'Укажите потраченное время — хотя бы одну минуту.',
+  'activity.error.timeTooLong': 'В сутках 24 часа. Проверьте введённое время.',
+  'activity.error.saveFailed': 'Не удалось сохранить запись:',
+
+  'activity.todayTitle': 'Записи за сегодня',
+  'activity.empty': 'За сегодня записей пока нет. Первую можно добавить формой выше.',
+  'activity.loadFailed': 'Не удалось загрузить записи:',
+  'activity.notPriced': 'без денежной оценки',
 } as const
 
 /**
@@ -123,6 +153,36 @@ const en: Record<keyof typeof ru, string> = {
   'page.notFound.back': 'Back to the start',
 
   'common.comingSoon': 'This section arrives in a later phase.',
+  'common.save': 'Save',
+  'common.saving': 'Saving…',
+  'common.cancel': 'Cancel',
+  'common.delete': 'Delete',
+  'common.total': 'Total',
+
+  'activity.formTitle': 'Log completed work',
+  'activity.title': 'What you did',
+  'activity.titlePlaceholder': 'For example: cleaning the kitchen',
+  'activity.category': 'Category',
+  'activity.subcategory': 'Type of work',
+  'activity.selectPlaceholder': 'Choose…',
+  'activity.date': 'Date',
+  'activity.time': 'Time spent',
+  'activity.hours': 'hours',
+  'activity.minutes': 'minutes',
+  'activity.comment': 'Comment',
+  'activity.commentPlaceholder': 'Optional',
+  'activity.add': 'Log it',
+
+  'activity.error.titleRequired': 'Write down what you did.',
+  'activity.error.subcategoryRequired': 'Choose a type of work.',
+  'activity.error.timeRequired': 'Enter the time spent — at least one minute.',
+  'activity.error.timeTooLong': 'A day has 24 hours. Please check the time you entered.',
+  'activity.error.saveFailed': 'Could not save the entry:',
+
+  'activity.todayTitle': "Today's entries",
+  'activity.empty': 'Nothing logged today yet. Add your first entry with the form above.',
+  'activity.loadFailed': 'Could not load the entries:',
+  'activity.notPriced': 'no market value',
 }
 
 export type TranslationKey = keyof typeof ru
