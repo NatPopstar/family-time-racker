@@ -130,6 +130,23 @@ const ru = {
   'timer.running': 'Идёт с',
   'timer.hint': 'Запустите таймер — время посчитается само и сохранится при остановке.',
   'timer.alreadyRunning': 'Таймер уже идёт. Остановите его, прежде чем запускать новый.',
+
+  'planner.prevWeek': '← Прошлая неделя',
+  'planner.nextWeek': 'Следующая неделя →',
+  'planner.thisWeek': 'Текущая неделя',
+  'planner.addTask': 'Добавить задачу',
+  'planner.plannedTime': 'Планируемое время',
+  'planner.noTasks': 'Задач нет',
+  'planner.done': 'Выполнено',
+  'planner.markDone': 'Отметить выполненной',
+  'planner.actualTime': 'Фактически потрачено',
+  'planner.plan': 'план',
+  'planner.fact': 'факт',
+  'planner.longer': 'дольше плана на',
+  'planner.shorter': 'быстрее плана на',
+  'planner.onPlan': 'ровно по плану',
+  'planner.weekTotal': 'Итого за неделю',
+  'planner.addFor': 'Добавить на этот день',
 } as const
 
 /**
@@ -255,6 +272,23 @@ const en: Record<keyof typeof ru, string> = {
   'timer.running': 'Running since',
   'timer.hint': 'Start the timer — the time counts itself and is saved when you stop.',
   'timer.alreadyRunning': 'A timer is already running. Stop it before starting another.',
+
+  'planner.prevWeek': '← Last week',
+  'planner.nextWeek': 'Next week →',
+  'planner.thisWeek': 'This week',
+  'planner.addTask': 'Add task',
+  'planner.plannedTime': 'Planned time',
+  'planner.noTasks': 'No tasks',
+  'planner.done': 'Done',
+  'planner.markDone': 'Mark as done',
+  'planner.actualTime': 'Time actually spent',
+  'planner.plan': 'plan',
+  'planner.fact': 'actual',
+  'planner.longer': 'longer than planned by',
+  'planner.shorter': 'faster than planned by',
+  'planner.onPlan': 'exactly as planned',
+  'planner.weekTotal': 'Week total',
+  'planner.addFor': 'Add for this day',
 }
 
 export type TranslationKey = keyof typeof ru

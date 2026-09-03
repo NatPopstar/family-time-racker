@@ -166,6 +166,66 @@ export async function updateActivity(id: string, input: EditActivityInput): Prom
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+//  ПЛАНЕР: задачи, назначенные заранее
+// ─────────────────────────────────────────────────────────────────────────
+
+/**
+ * Создаёт ЗАПЛАНИРОВАННУЮ задачу.
+ *
+ * Отличие от обычной записи: заполняем planned_minutes, а actual_minutes
+ * оставляем пустым. Ставку тоже не ставим — работа ещё не сделана,
+ * замораживать нечего.
+ */
+export async function createPlannedActivity(input: {
+  userId: string
+  subcategoryId: string
+  title: string
+  date: string
+  plannedMinutes: number
+}): Promise<void> {
+  const { error } = await supabase.from('activities').insert({
+    user_id: input.userId,
+    subcategory_id: input.subcategoryId,
+    title: input.title.trim(),
+    date: input.date,
+    planned_minutes: input.plannedMinutes,
+    status: 'planned',
+  })
+
+  if (error) throw new Error(error.message)
+}
+
+/**
+ * Отмечает запланированную задачу выполненной.
+ *
+ * ГЛАВНОЕ: planned_minutes НЕ ТРОГАЕМ. План остаётся как был, факт
+ * пишется отдельно. Именно ради этого сравнения («планировали час,
+ * вышло час сорок») план и факт живут в разных полях.
+ *
+ * Ставку замораживаем здесь же — работа только что закончена.
+ */
+export async function completePlannedActivity(params: {
+  activityId: string
+  actualMinutes: number
+  subcategory: SubcategoryWithRate
+}): Promise<void> {
+  const rate = params.subcategory.market_rates
+
+  const { error } = await supabase
+    .from('activities')
+    .update({
+      actual_minutes: params.actualMinutes,
+      status: 'done',
+      completed_at: new Date().toISOString(),
+      rate_snapshot: rate ? rate.hourly_rate : null,
+      currency_snapshot: rate ? rate.currency : null,
+    })
+    .eq('id', params.activityId)
+
+  if (error) throw new Error(error.message)
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 //  ТАЙМЕР
 // ─────────────────────────────────────────────────────────────────────────
 

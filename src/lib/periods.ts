@@ -5,6 +5,8 @@ import {
   endOfMonth,
   subWeeks,
   subMonths,
+  addWeeks,
+  addDays,
 } from 'date-fns'
 import { todayISO } from './dates'
 
@@ -65,4 +67,21 @@ export function getPeriodRange(period: Exclude<PeriodId, 'custom'>, now: Date = 
       return { from: todayISO(startOfMonth(monthAgo)), to: todayISO(endOfMonth(monthAgo)) }
     }
   }
+}
+
+/**
+ * Семь дат недели, начиная с понедельника: ['2026-08-31', ... '2026-09-06'].
+ * Нужны Планеру, который показывает неделю по дням.
+ *
+ * offsetWeeks сдвигает неделю: 0 — текущая, -1 — прошлая, 1 — следующая.
+ */
+export function getWeekDays(offsetWeeks = 0, now: Date = new Date()): string[] {
+  const monday = startOfWeek(addWeeks(now, offsetWeeks), WEEK_OPTIONS)
+  return Array.from({ length: 7 }, (_, index) => todayISO(addDays(monday, index)))
+}
+
+/** Границы недели со сдвигом — для запроса задач Планера одним разом. */
+export function getWeekRange(offsetWeeks = 0, now: Date = new Date()): DateRange {
+  const days = getWeekDays(offsetWeeks, now)
+  return { from: days[0], to: days[6] }
 }

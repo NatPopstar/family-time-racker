@@ -5,6 +5,7 @@ import {
   minutesToDecimalHours,
   formatMinutes,
   formatHours,
+  comparePlanToFact,
 } from './time'
 
 // describe — «раздел» тестов, it — один конкретный проверяемый случай.
@@ -71,6 +72,35 @@ describe('formatMinutes', () => {
   it('для нуля показывает 0, а не пустую строку', () => {
     expect(formatMinutes(0)).toBe('0 мин')
     expect(formatMinutes(0, 'en')).toBe('0m')
+  })
+})
+
+describe('comparePlanToFact', () => {
+  it('видит превышение плана', () => {
+    // Пример прямо из технического задания:
+    // планировали уборку 1 час, потратили 1 час 40 минут.
+    expect(comparePlanToFact(60, 100)).toEqual({ direction: 'longer', diffMinutes: 40 })
+  })
+
+  it('видит опережение плана', () => {
+    expect(comparePlanToFact(120, 90)).toEqual({ direction: 'shorter', diffMinutes: 30 })
+  })
+
+  it('узнаёт точное совпадение', () => {
+    expect(comparePlanToFact(60, 60)).toEqual({ direction: 'exact', diffMinutes: 0 })
+  })
+
+  it('ничего не сравнивает, если плана не было', () => {
+    // Запись, сделанную сразу «по факту», сравнивать не с чем.
+    expect(comparePlanToFact(null, 90)).toBeNull()
+  })
+
+  it('ничего не сравнивает, если задача ещё не выполнена', () => {
+    expect(comparePlanToFact(60, null)).toBeNull()
+  })
+
+  it('не делит на нулевой план', () => {
+    expect(comparePlanToFact(0, 90)).toBeNull()
   })
 })
 

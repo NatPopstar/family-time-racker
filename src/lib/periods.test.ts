@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getPeriodRange } from './periods'
+import { getPeriodRange, getWeekDays, getWeekRange } from './periods'
 
 // Четверг, 3 сентября 2026 года. Неделя с понедельника 31 августа
 // по воскресенье 6 сентября.
@@ -76,5 +76,44 @@ describe('getPeriodRange', () => {
       from: '2025-12-01',
       to: '2025-12-31',
     })
+  })
+})
+
+describe('getWeekDays', () => {
+  it('возвращает семь дней с понедельника по воскресенье', () => {
+    expect(getWeekDays(0, thursday)).toEqual([
+      '2026-08-31',
+      '2026-09-01',
+      '2026-09-02',
+      '2026-09-03',
+      '2026-09-04',
+      '2026-09-05',
+      '2026-09-06',
+    ])
+  })
+
+  it('сдвигается на прошлую неделю', () => {
+    const days = getWeekDays(-1, thursday)
+    expect(days[0]).toBe('2026-08-24')
+    expect(days[6]).toBe('2026-08-30')
+  })
+
+  it('сдвигается на следующую неделю', () => {
+    const days = getWeekDays(1, thursday)
+    expect(days[0]).toBe('2026-09-07')
+    expect(days[6]).toBe('2026-09-13')
+  })
+
+  it('правильно перешагивает через границу месяца', () => {
+    // Неделя 31 августа — 6 сентября лежит в двух месяцах.
+    const days = getWeekDays(0, thursday)
+    expect(days[0].startsWith('2026-08')).toBe(true)
+    expect(days[6].startsWith('2026-09')).toBe(true)
+  })
+})
+
+describe('getWeekRange', () => {
+  it('даёт границы недели одним объектом', () => {
+    expect(getWeekRange(0, thursday)).toEqual({ from: '2026-08-31', to: '2026-09-06' })
   })
 })

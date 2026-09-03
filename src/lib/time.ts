@@ -64,6 +64,32 @@ export function formatMinutes(totalMinutes: number, locale: Locale = 'ru'): stri
 }
 
 /**
+ * Сравнение плана и факта.
+ *
+ * Ради этого сравнения план и факт с самого начала живут в разных полях:
+ * «планировали час, вышло час сорок» — то, что нельзя увидеть,
+ * если хранить только одно число.
+ *
+ * Возвращает направление отклонения и его величину в минутах.
+ * Если плана не было (задача записана сразу выполненной) — null.
+ */
+export function comparePlanToFact(
+  plannedMinutes: number | null,
+  actualMinutes: number | null,
+): { direction: 'longer' | 'shorter' | 'exact'; diffMinutes: number } | null {
+  if (plannedMinutes === null || actualMinutes === null) return null
+  if (plannedMinutes <= 0) return null
+
+  const diff = actualMinutes - plannedMinutes
+
+  if (diff === 0) return { direction: 'exact', diffMinutes: 0 }
+  return {
+    direction: diff > 0 ? 'longer' : 'shorter',
+    diffMinutes: Math.abs(diff),
+  }
+}
+
+/**
  * Показывает суммарное время в часах с одним знаком после запятой —
  * такой формат нужен в таблицах статистики («42.5 ч»).
  */

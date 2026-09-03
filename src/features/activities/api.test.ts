@@ -65,6 +65,8 @@ import {
   startTimer,
   stopTimer,
   fetchRunningTimer,
+  createPlannedActivity,
+  completePlannedActivity,
 } from './api'
 
 /** Подкатегория со ставкой — уборка по £20/час. */
@@ -347,6 +349,64 @@ describe('fetchActivities', () => {
     await expect(fetchActivities({ from: '2026-09-01', to: '2026-09-07' })).rejects.toThrow(
       'нет доступа',
     )
+  })
+})
+
+describe('createPlannedActivity', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryResult = { data: null, error: null }
+  })
+
+  it('заполняет план, но не факт и не ставку', async () => {
+    await createPlannedActivity({
+      userId: 'user-1',
+      subcategoryId: 'sub-cleaning',
+      title: '  Уборка ванной  ',
+      date: '2026-09-04',
+      plannedMinutes: 60,
+    })
+
+    const row = mockInsert.mock.calls[0][0]
+    expect(row.planned_minutes).toBe(60)
+    expect(row.status).toBe('planned')
+    expect(row.title).toBe('Уборка ванной')
+    // Работа ещё не сделана: ни факта, ни ставки быть не должно.
+    expect(row.actual_minutes).toBeUndefined()
+    expect(row.rate_snapshot).toBeUndefined()
+  })
+})
+
+describe('completePlannedActivity', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryResult = { data: null, error: null }
+  })
+
+  it('пишет факт и замораживает ставку, НЕ трогая план', async () => {
+    await completePlannedActivity({
+      activityId: 'act-1',
+      actualMinutes: 100,
+      subcategory: cleaning,
+    })
+
+    const row = mockUpdate.mock.calls[0][0]
+    expect(row.actual_minutes).toBe(100)
+    expect(row.status).toBe('done')
+    expect(row.rate_snapshot).toBe(20)
+    // Главное: план остаётся нетронутым, иначе сравнивать
+    // «планировали час — вышло час сорок» станет не с чем.
+    expect(row).not.toHaveProperty('planned_minutes')
+  })
+
+  it('не ставит ставку работе без денежной оценки', async () => {
+    await completePlannedActivity({
+      activityId: 'act-1',
+      actualMinutes: 480,
+      subcategory: paidWork,
+    })
+
+    expect(mockUpdate.mock.calls[0][0].rate_snapshot).toBeNull()
   })
 })
 
