@@ -195,6 +195,18 @@ const ru = {
   'settings.error.rateRequired': 'Ставка должна быть больше нуля.',
   'settings.error.categoryRequired': 'Выберите категорию.',
   'settings.saved': 'Сохранено',
+
+  'report.week': 'За неделю',
+  'report.month': 'За месяц',
+  'report.prev': '← Раньше',
+  'report.next': 'Позже →',
+  'report.current': 'Текущий период',
+  'report.totalTime': 'Всего времени',
+  'report.estimatedValue': 'Estimated Market Value',
+  'report.familyTotal': 'Итого по семье',
+  'report.noData': 'За этот период записей нет.',
+  'report.unpaidShare': 'из них неоплачиваемый труд',
+  'report.print': 'Распечатать',
 } as const
 
 /**
@@ -385,6 +397,18 @@ const en: Record<keyof typeof ru, string> = {
   'settings.error.rateRequired': 'The rate must be greater than zero.',
   'settings.error.categoryRequired': 'Choose a category.',
   'settings.saved': 'Saved',
+
+  'report.week': 'Weekly',
+  'report.month': 'Monthly',
+  'report.prev': '← Earlier',
+  'report.next': 'Later →',
+  'report.current': 'Current period',
+  'report.totalTime': 'Total time',
+  'report.estimatedValue': 'Estimated Market Value',
+  'report.familyTotal': 'Family total',
+  'report.noData': 'No entries for this period.',
+  'report.unpaidShare': 'of which unpaid labour',
+  'report.print': 'Print',
 }
 
 export type TranslationKey = keyof typeof ru

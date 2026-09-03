@@ -85,3 +85,32 @@ export function getWeekRange(offsetWeeks = 0, now: Date = new Date()): DateRange
   const days = getWeekDays(offsetWeeks, now)
   return { from: days[0], to: days[6] }
 }
+
+/** Границы месяца со сдвигом: 0 — текущий, -1 — прошлый. */
+export function getMonthRange(offsetMonths = 0, now: Date = new Date()): DateRange {
+  const target = subMonths(now, -offsetMonths)
+  return { from: todayISO(startOfMonth(target)), to: todayISO(endOfMonth(target)) }
+}
+
+/**
+ * Название периода для заголовка отчёта:
+ * «31 августа — 6 сентября 2026» или «Сентябрь 2026».
+ */
+export function formatPeriodTitle(
+  mode: 'week' | 'month',
+  range: DateRange,
+  locale: 'ru' | 'en',
+): string {
+  const tag = locale === 'ru' ? 'ru-RU' : 'en-GB'
+  const from = new Date(`${range.from}T00:00:00`)
+
+  if (mode === 'month') {
+    const text = new Intl.DateTimeFormat(tag, { month: 'long', year: 'numeric' }).format(from)
+    // С заглавной буквы: это заголовок, а Intl отдаёт месяц строчным.
+    return text.charAt(0).toUpperCase() + text.slice(1)
+  }
+
+  const to = new Date(`${range.to}T00:00:00`)
+  const dayMonth = new Intl.DateTimeFormat(tag, { day: 'numeric', month: 'long' })
+  return `${dayMonth.format(from)} — ${dayMonth.format(to)} ${to.getFullYear()}`
+}

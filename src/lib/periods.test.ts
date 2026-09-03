@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { getPeriodRange, getWeekDays, getWeekRange } from './periods'
+import {
+  getPeriodRange,
+  getWeekDays,
+  getWeekRange,
+  getMonthRange,
+  formatPeriodTitle,
+} from './periods'
 
 // Четверг, 3 сентября 2026 года. Неделя с понедельника 31 августа
 // по воскресенье 6 сентября.
@@ -115,5 +121,48 @@ describe('getWeekDays', () => {
 describe('getWeekRange', () => {
   it('даёт границы недели одним объектом', () => {
     expect(getWeekRange(0, thursday)).toEqual({ from: '2026-08-31', to: '2026-09-06' })
+  })
+})
+
+describe('getMonthRange', () => {
+  it('текущий месяц — с первого по последнее число', () => {
+    expect(getMonthRange(0, thursday)).toEqual({ from: '2026-09-01', to: '2026-09-30' })
+  })
+
+  it('сдвигается на месяц назад', () => {
+    expect(getMonthRange(-1, thursday)).toEqual({ from: '2026-08-01', to: '2026-08-31' })
+  })
+
+  it('сдвигается на месяц вперёд', () => {
+    expect(getMonthRange(1, thursday)).toEqual({ from: '2026-10-01', to: '2026-10-31' })
+  })
+
+  it('перешагивает через границу года назад', () => {
+    const january = new Date(2026, 0, 15, 12, 0, 0)
+    expect(getMonthRange(-1, january)).toEqual({ from: '2025-12-01', to: '2025-12-31' })
+  })
+
+  it('правильно берёт февраль високосного года', () => {
+    const feb2028 = new Date(2028, 1, 10, 12, 0, 0)
+    expect(getMonthRange(0, feb2028)).toEqual({ from: '2028-02-01', to: '2028-02-29' })
+  })
+})
+
+describe('formatPeriodTitle', () => {
+  it('месяц пишет с заглавной буквы', () => {
+    // Intl отдаёт месяц строчным, а это заголовок отчёта.
+    // «г.» после года добавляет сама русская локаль — так принято
+    // по типографике, и мы её не переучиваем.
+    const title = formatPeriodTitle('month', getMonthRange(0, thursday), 'ru')
+    expect(title).toBe('Сентябрь 2026 г.')
+  })
+
+  it('месяц по-английски', () => {
+    expect(formatPeriodTitle('month', getMonthRange(0, thursday), 'en')).toBe('September 2026')
+  })
+
+  it('неделю показывает как диапазон с годом', () => {
+    const title = formatPeriodTitle('week', getWeekRange(0, thursday), 'ru')
+    expect(title).toBe('31 августа — 6 сентября 2026')
   })
 })
