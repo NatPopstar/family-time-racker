@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { SubcategoryWithRate } from '@/features/categories/api'
 
 /**
@@ -19,6 +19,9 @@ const mockGte = vi.fn()
 const mockLte = vi.fn()
 const mockOrder = vi.fn()
 const mockEq = vi.fn()
+const mockNot = vi.fn()
+const mockLimit = vi.fn()
+const mockMaybeSingle = vi.fn()
 const mockInsert = vi.fn()
 const mockUpdate = vi.fn()
 const mockDelete = vi.fn()
@@ -29,6 +32,12 @@ const builder = {
   lte: (...a: unknown[]) => (mockLte(...a), builder),
   order: (...a: unknown[]) => (mockOrder(...a), builder),
   eq: (...a: unknown[]) => (mockEq(...a), builder),
+  not: (...a: unknown[]) => (mockNot(...a), builder),
+  limit: (...a: unknown[]) => (mockLimit(...a), builder),
+  maybeSingle: (...a: unknown[]) => {
+    mockMaybeSingle(...a)
+    return Promise.resolve(queryResult)
+  },
   delete: (...a: unknown[]) => (mockDelete(...a), builder),
   update: (...a: unknown[]) => (mockUpdate(...a), builder),
   insert: (...a: unknown[]) => {
@@ -52,6 +61,10 @@ import {
   updateActivity,
   fetchActivities,
   deleteActivity,
+  elapsedMinutes,
+  startTimer,
+  stopTimer,
+  fetchRunningTimer,
 } from './api'
 
 /** Подкатегория со ставкой — уборка по £20/час. */
@@ -293,10 +306,33 @@ describe('fetchActivities', () => {
     expect(mockEq).toHaveBeenCalledWith('user_id', 'user-1')
   })
 
+  it('по умолчанию берёт только выполненные записи', async () => {
+    // Иначе в списке появился бы идущий сейчас таймер:
+    // он лежит в той же таблице со статусом planned и нулём минут.
+    await fetchActivities({ from: '2026-09-01', to: '2026-09-07' })
+
+    expect(mockEq).toHaveBeenCalledWith('status', 'done')
+  })
+
+  it('умеет вернуть записи любого статуса', async () => {
+    await fetchActivities({ from: '2026-09-01', to: '2026-09-07', status: 'all' })
+
+    expect(mockEq).not.toHaveBeenCalledWith('status', expect.anything())
+  })
+
+  it('умеет вернуть запланированные записи для Планера', async () => {
+    await fetchActivities({ from: '2026-09-01', to: '2026-09-07', status: 'planned' })
+
+    expect(mockEq).toHaveBeenCalledWith('status', 'planned')
+  })
+
   it('без указания пользователя возвращает записи всей семьи', async () => {
     await fetchActivities({ from: '2026-09-01', to: '2026-09-07' })
 
-    expect(mockEq).not.toHaveBeenCalled()
+    // Проверяем именно отсутствие фильтра по пользователю: фильтр
+    // по статусу при этом ставится всегда, поэтому «eq вообще не звали»
+    // здесь уже не годится.
+    expect(mockEq).not.toHaveBeenCalledWith('user_id', expect.anything())
   })
 
   it('возвращает пустой список, если база прислала null', async () => {
@@ -311,6 +347,133 @@ describe('fetchActivities', () => {
     await expect(fetchActivities({ from: '2026-09-01', to: '2026-09-07' })).rejects.toThrow(
       'нет доступа',
     )
+  })
+})
+
+describe('elapsedMinutes: сколько натикал таймер', () => {
+  const started = '2026-09-03T10:00:00.000Z'
+
+  it('считает целые минуты', () => {
+    expect(elapsedMinutes(started, new Date('2026-09-03T11:30:00.000Z'))).toBe(90)
+  })
+
+  it('округляет вверх неполную минуту', () => {
+    // 5 минут 10 секунд -> 6 минут. Округление вниз выглядело бы
+    // как потеря времени: человек работал, а минута пропала.
+    expect(elapsedMinutes(started, new Date('2026-09-03T10:05:10.000Z'))).toBe(6)
+  })
+
+  it('никогда не даёт ноль', () => {
+    // Запустил и сразу остановил — запись с нулём выглядела бы
+    // как поломка приложения.
+    expect(elapsedMinutes(started, new Date('2026-09-03T10:00:05.000Z'))).toBe(1)
+    expect(elapsedMinutes(started, new Date('2026-09-03T10:00:00.000Z'))).toBe(1)
+  })
+
+  it('не уходит в минус, если часы перевели назад', () => {
+    expect(elapsedMinutes(started, new Date('2026-09-03T09:00:00.000Z'))).toBe(1)
+  })
+
+  it('справляется с длинным таймером', () => {
+    expect(elapsedMinutes(started, new Date('2026-09-03T18:00:00.000Z'))).toBe(480)
+  })
+})
+
+describe('startTimer', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryResult = { data: null, error: null }
+  })
+
+  it('создаёт запись со временем старта и статусом «запланировано»', async () => {
+    await startTimer({
+      userId: 'user-1',
+      subcategoryId: 'sub-cleaning',
+      title: '  Уборка ванной  ',
+      date: '2026-09-03',
+    })
+
+    const row = mockInsert.mock.calls[0][0]
+    expect(row.timer_started_at).toBeTruthy()
+    expect(row.status).toBe('planned')
+    expect(row.title).toBe('Уборка ванной')
+    // Фактического времени ещё нет — работа только началась.
+    expect(row.actual_minutes).toBeUndefined()
+    // И ставки тоже нет: её замораживаем в момент остановки.
+    expect(row.rate_snapshot).toBeUndefined()
+  })
+
+  it('сообщает об ошибке', async () => {
+    queryResult = { data: null, error: { message: 'нет прав' } }
+
+    await expect(
+      startTimer({ userId: 'u', subcategoryId: 's', title: 'x', date: '2026-09-03' }),
+    ).rejects.toThrow('нет прав')
+  })
+})
+
+describe('stopTimer', () => {
+  // Замораживаем «сейчас»: иначе между вычислением времени старта
+  // и вызовом функции проходят миллисекунды, округление вверх
+  // превращает 90 минут в 91, и тест падает через раз.
+  const now = new Date('2026-09-03T12:00:00.000Z')
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryResult = { data: null, error: null }
+    vi.useFakeTimers()
+    vi.setSystemTime(now)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('замораживает ставку именно при остановке', async () => {
+    await stopTimer({
+      activityId: 'act-1',
+      startedAt: '2026-09-03T10:30:00.000Z',
+      subcategory: cleaning,
+    })
+
+    const row = mockUpdate.mock.calls[0][0]
+    expect(row.rate_snapshot).toBe(20)
+    expect(row.currency_snapshot).toBe('GBP')
+    expect(row.status).toBe('done')
+    expect(row.actual_minutes).toBe(90)
+    // Признак «идёт» снимаем, иначе таймер остался бы вечным.
+    expect(row.timer_started_at).toBeNull()
+  })
+
+  it('не ставит ставку работе без денежной оценки', async () => {
+    await stopTimer({
+      activityId: 'act-1',
+      startedAt: '2026-09-03T11:00:00.000Z',
+      subcategory: paidWork,
+    })
+
+    const row = mockUpdate.mock.calls[0][0]
+    expect(row.rate_snapshot).toBeNull()
+    expect(row.actual_minutes).toBe(60)
+  })
+})
+
+describe('fetchRunningTimer', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryResult = { data: null, error: null }
+  })
+
+  it('ищет запись с непустым временем старта', async () => {
+    await fetchRunningTimer('user-1')
+
+    expect(mockEq).toHaveBeenCalledWith('user_id', 'user-1')
+    expect(mockNot).toHaveBeenCalledWith('timer_started_at', 'is', null)
+    expect(mockLimit).toHaveBeenCalledWith(1)
+  })
+
+  it('возвращает null, если таймер не запущен', async () => {
+    await expect(fetchRunningTimer('user-1')).resolves.toBeNull()
   })
 })
 

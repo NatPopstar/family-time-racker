@@ -72,6 +72,15 @@ export async function fetchActivities(params: {
   from: string
   to: string
   userId?: string
+  /**
+   * По умолчанию берём только ВЫПОЛНЕННЫЕ записи.
+   *
+   * Иначе в список попадал бы идущий прямо сейчас таймер: он лежит
+   * в той же таблице со статусом 'planned' и нулевым временем,
+   * и выглядел бы как испорченная запись. Запланированные задачи
+   * показывает Планер, у него свой запрос.
+   */
+  status?: 'done' | 'planned' | 'all'
 }): Promise<ActivityWithValue[]> {
   let query = supabase
     .from('v_activity_value')
@@ -79,6 +88,11 @@ export async function fetchActivities(params: {
     .gte('date', params.from)
     .lte('date', params.to)
     .order('date', { ascending: false })
+
+  const status = params.status ?? 'done'
+  if (status !== 'all') {
+    query = query.eq('status', status)
+  }
 
   // Фильтр по пользователю необязательный: на семейном дашборде
   // нам нужны записи всех, на личном — только свои.
@@ -147,6 +161,95 @@ export async function updateActivity(id: string, input: EditActivityInput): Prom
     .from('activities')
     .update(buildActivityUpdate(input))
     .eq('id', id)
+
+  if (error) throw new Error(error.message)
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+//  ТАЙМЕР
+// ─────────────────────────────────────────────────────────────────────────
+
+/**
+ * Сколько минут прошло с момента запуска таймера.
+ *
+ * Округляем ВВЕРХ и никогда не даём меньше одной минуты: если человек
+ * запустил и через 20 секунд остановил, запись с нулём времени выглядела
+ * бы как поломка. Отрицательное время (часы компьютера перевели назад)
+ * тоже превращаем в минуту, а не в минус.
+ */
+export function elapsedMinutes(startedAt: string, now: Date = new Date()): number {
+  const startedMs = new Date(startedAt).getTime()
+  const diffMinutes = (now.getTime() - startedMs) / 60_000
+  return Math.max(1, Math.ceil(diffMinutes))
+}
+
+/**
+ * Запускает таймер: сразу создаёт запись со временем старта.
+ *
+ * Почему в базе, а не в памяти браузера: тогда таймер переживает
+ * перезагрузку страницы и виден с другого устройства. Запись пока
+ * со статусом 'planned' и без фактического времени — это «идёт сейчас».
+ */
+export async function startTimer(input: {
+  userId: string
+  subcategoryId: string
+  title: string
+  date: string
+}): Promise<void> {
+  const { error } = await supabase.from('activities').insert({
+    user_id: input.userId,
+    subcategory_id: input.subcategoryId,
+    title: input.title.trim(),
+    date: input.date,
+    status: 'planned',
+    timer_started_at: new Date().toISOString(),
+  })
+
+  if (error) throw new Error(error.message)
+}
+
+/** Идущий сейчас таймер пользователя, если он есть. */
+export async function fetchRunningTimer(userId: string): Promise<ActivityWithValue | null> {
+  const { data, error } = await supabase
+    .from('v_activity_value')
+    .select('*')
+    .eq('user_id', userId)
+    // Признак «таймер идёт» — заполненное время старта.
+    .not('timer_started_at', 'is', null)
+    .order('timer_started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) throw new Error(error.message)
+  return data
+}
+
+/**
+ * Останавливает таймер и превращает запись в выполненную.
+ *
+ * Ставку «замораживаем» именно СЕЙЧАС, в момент завершения работы —
+ * так же, как при обычной записи. При запуске таймера мы её не знаем:
+ * работа ещё не сделана.
+ */
+export async function stopTimer(params: {
+  activityId: string
+  startedAt: string
+  subcategory: SubcategoryWithRate
+}): Promise<void> {
+  const rate = params.subcategory.market_rates
+
+  const { error } = await supabase
+    .from('activities')
+    .update({
+      actual_minutes: elapsedMinutes(params.startedAt),
+      status: 'done',
+      completed_at: new Date().toISOString(),
+      // Обнуляем признак «идёт»: таймер больше не работает.
+      timer_started_at: null,
+      rate_snapshot: rate ? rate.hourly_rate : null,
+      currency_snapshot: rate ? rate.currency : null,
+    })
+    .eq('id', params.activityId)
 
   if (error) throw new Error(error.message)
 }

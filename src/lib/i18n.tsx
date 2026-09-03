@@ -122,6 +122,14 @@ const ru = {
   'history.editTitle': 'Изменить запись',
   'history.deleteConfirm': 'Удалить эту запись? Отменить будет нельзя.',
   'history.foreignHint': 'Чужие записи видны, но менять их нельзя.',
+
+  'timer.title': 'Таймер',
+  'timer.start': '▶ Запустить',
+  'timer.stop': '■ Остановить',
+  'timer.cancel': 'Отменить',
+  'timer.running': 'Идёт с',
+  'timer.hint': 'Запустите таймер — время посчитается само и сохранится при остановке.',
+  'timer.alreadyRunning': 'Таймер уже идёт. Остановите его, прежде чем запускать новый.',
 } as const
 
 /**
@@ -239,6 +247,14 @@ const en: Record<keyof typeof ru, string> = {
   'history.editTitle': 'Edit entry',
   'history.deleteConfirm': 'Delete this entry? This cannot be undone.',
   'history.foreignHint': "Other people's entries are visible but not editable.",
+
+  'timer.title': 'Timer',
+  'timer.start': '▶ Start',
+  'timer.stop': '■ Stop',
+  'timer.cancel': 'Cancel',
+  'timer.running': 'Running since',
+  'timer.hint': 'Start the timer — the time counts itself and is saved when you stop.',
+  'timer.alreadyRunning': 'A timer is already running. Stop it before starting another.',
 }
 
 export type TranslationKey = keyof typeof ru

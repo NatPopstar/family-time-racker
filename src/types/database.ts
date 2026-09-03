@@ -246,6 +246,7 @@ export type Database = {
           status: string | null
           subcategory_id: string | null
           subcategory_name: string | null
+          timer_started_at: string | null
           title: string | null
           user_id: string | null
           value: number | null

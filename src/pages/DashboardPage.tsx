@@ -2,6 +2,7 @@ import { useI18n } from '@/lib/i18n'
 import { todayISO } from '@/lib/dates'
 import { ActivityForm } from '@/features/activities/ActivityForm'
 import { ActivityList } from '@/features/activities/ActivityList'
+import { TimerCard } from '@/features/activities/TimerCard'
 
 /**
  * «Мой день» — главная рабочая страница.
@@ -17,6 +18,8 @@ export function DashboardPage() {
         <h1 className="text-2xl font-bold tracking-tight">{t('page.dashboard.title')}</h1>
         <p className="mt-1 text-sm text-slate-500">{t('page.dashboard.subtitle')}</p>
       </div>
+
+      <TimerCard />
 
       <ActivityForm />
 
