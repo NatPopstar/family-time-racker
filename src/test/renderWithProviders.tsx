@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from 'react'
 import { render } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { I18nProvider } from '@/lib/i18n'
 
@@ -7,15 +8,17 @@ import { I18nProvider } from '@/lib/i18n'
  * Помощник для тестов.
  *
  * Компоненты приложения не умеют работать без обёрток-провайдеров:
- * без QueryClientProvider падает useQuery, без I18nProvider — useI18n.
- * Эта функция ставит их автоматически, чтобы в каждом тесте
- * не повторять одно и то же.
+ * без QueryClientProvider падает useQuery, без I18nProvider — useI18n,
+ * без роутера — ссылки меню. Эта функция ставит их автоматически.
+ *
+ * MemoryRouter — роутер, который держит адрес в памяти, а не в адресной
+ * строке браузера. В тестах настоящей адресной строки нет, а так мы ещё и
+ * можем начать тест с любой страницы через параметр route.
  *
  * Для каждого теста создаётся СВОЙ QueryClient: иначе данные,
- * закэшированные в одном тесте, протекали бы в следующий,
- * и тесты влияли бы друг на друга.
+ * закэшированные в одном тесте, протекали бы в следующий.
  */
-export function renderWithProviders(ui: ReactElement) {
+export function renderWithProviders(ui: ReactElement, { route = '/' }: { route?: string } = {}) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -28,9 +31,11 @@ export function renderWithProviders(ui: ReactElement) {
 
   function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <QueryClientProvider client={queryClient}>
-        <I18nProvider>{children}</I18nProvider>
-      </QueryClientProvider>
+      <MemoryRouter initialEntries={[route]}>
+        <QueryClientProvider client={queryClient}>
+          <I18nProvider>{children}</I18nProvider>
+        </QueryClientProvider>
+      </MemoryRouter>
     )
   }
 

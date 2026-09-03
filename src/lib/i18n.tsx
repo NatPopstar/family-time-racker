@@ -37,6 +37,33 @@ const ru = {
 
   'home.signedInAs': 'Вы вошли как',
   'home.categoriesFromDb': 'Категории из базы данных — теперь они видны, потому что вы вошли:',
+
+  'nav.dashboard': 'Мой день',
+  'nav.family': 'Семья',
+  'nav.planner': 'Планер',
+  'nav.history': 'История',
+  'nav.reports': 'Отчёты',
+  'nav.settings': 'Настройки',
+  'nav.menu': 'Разделы',
+  'nav.openMenu': 'Открыть меню',
+
+  'page.dashboard.title': 'Мой день',
+  'page.dashboard.subtitle': 'Сколько времени вы потратили сегодня, за неделю и за месяц',
+  'page.family.title': 'Семейный дашборд',
+  'page.family.subtitle': 'Сравнение всех членов семьи и распределение времени',
+  'page.planner.title': 'Планер недели',
+  'page.planner.subtitle': 'Задачи на каждый день недели: план и фактически потраченное время',
+  'page.history.title': 'История',
+  'page.history.subtitle': 'Все записи с возможностью изменить или удалить',
+  'page.reports.title': 'Отчёты',
+  'page.reports.subtitle': 'Итоги за неделю и за месяц, включая оценку стоимости труда',
+  'page.settings.title': 'Настройки',
+  'page.settings.subtitle': 'Ставки London Market Rates, категории и профиль',
+
+  'page.notFound.title': 'Страница не найдена',
+  'page.notFound.back': 'Вернуться на главную',
+
+  'common.comingSoon': 'Этот раздел появится на следующем этапе.',
 } as const
 
 /**
@@ -69,6 +96,33 @@ const en: Record<keyof typeof ru, string> = {
 
   'home.signedInAs': 'Signed in as',
   'home.categoriesFromDb': 'Categories from the database — visible now that you are signed in:',
+
+  'nav.dashboard': 'My day',
+  'nav.family': 'Family',
+  'nav.planner': 'Planner',
+  'nav.history': 'History',
+  'nav.reports': 'Reports',
+  'nav.settings': 'Settings',
+  'nav.menu': 'Sections',
+  'nav.openMenu': 'Open menu',
+
+  'page.dashboard.title': 'My day',
+  'page.dashboard.subtitle': 'Your time today, this week and this month',
+  'page.family.title': 'Family dashboard',
+  'page.family.subtitle': 'Everyone side by side, and how the time splits up',
+  'page.planner.title': 'Weekly planner',
+  'page.planner.subtitle': 'Tasks for each day: planned versus actual time',
+  'page.history.title': 'History',
+  'page.history.subtitle': 'Every entry, editable and deletable',
+  'page.reports.title': 'Reports',
+  'page.reports.subtitle': 'Weekly and monthly totals, including estimated market value',
+  'page.settings.title': 'Settings',
+  'page.settings.subtitle': 'London market rates, categories and your profile',
+
+  'page.notFound.title': 'Page not found',
+  'page.notFound.back': 'Back to the start',
+
+  'common.comingSoon': 'This section arrives in a later phase.',
 }
 
 export type TranslationKey = keyof typeof ru
