@@ -147,6 +147,13 @@ const ru = {
   'planner.onPlan': 'ровно по плану',
   'planner.weekTotal': 'Итого за неделю',
   'planner.addFor': 'Добавить на этот день',
+
+  'dashboard.today': 'Сегодня',
+  'dashboard.week': 'Эта неделя',
+  'dashboard.month': 'Этот месяц',
+  'dashboard.byCategory': 'Распределение времени по категориям',
+  'dashboard.byCategoryPeriod': 'за эту неделю',
+  'dashboard.noData': 'За этот период записей пока нет.',
 } as const
 
 /**
@@ -289,6 +296,13 @@ const en: Record<keyof typeof ru, string> = {
   'planner.onPlan': 'exactly as planned',
   'planner.weekTotal': 'Week total',
   'planner.addFor': 'Add for this day',
+
+  'dashboard.today': 'Today',
+  'dashboard.week': 'This week',
+  'dashboard.month': 'This month',
+  'dashboard.byCategory': 'Time by category',
+  'dashboard.byCategoryPeriod': 'this week',
+  'dashboard.noData': 'Nothing logged in this period yet.',
 }
 
 export type TranslationKey = keyof typeof ru

@@ -3,8 +3,15 @@
 // например expect(кнопка).toBeInTheDocument() или .toBeDisabled().
 import '@testing-library/jest-dom/vitest'
 
-import { cleanup } from '@testing-library/react'
+import { cleanup, configure } from '@testing-library/react'
 import { afterEach } from 'vitest'
+
+// Сколько ждать появления элемента в findBy*/waitFor.
+// По умолчанию 1 секунда. Наши тесты идут внутри Docker, набор растёт,
+// и на медленной машине секунды перестало хватать — тесты начинали
+// падать не из-за ошибок в коде, а из-за загруженности.
+// Три секунды убирают эту случайность, не пряча настоящих зависаний.
+configure({ asyncUtilTimeout: 3000 })
 
 // После каждого теста стираем нарисованные компоненты из «фальшивого браузера».
 // Без этого тесты начали бы видеть остатки предыдущих и падать без причины.

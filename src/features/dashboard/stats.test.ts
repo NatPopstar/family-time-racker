@@ -1,0 +1,138 @@
+import { describe, it, expect } from 'vitest'
+import { summarize, filterByRange, percentOfTotal } from './stats'
+import type { ActivityWithValue } from '@/types/models'
+
+/** Короткая заготовка записи — в тестах важны лишь несколько полей. */
+function entry(over: Partial<ActivityWithValue>): ActivityWithValue {
+  return {
+    id: 'x',
+    user_id: 'user-1',
+    title: 'Задача',
+    date: '2026-09-03',
+    comment: null,
+    planned_minutes: null,
+    actual_minutes: 60,
+    status: 'done',
+    completed_at: null,
+    timer_started_at: null,
+    subcategory_id: 'sub',
+    subcategory_name: 'Подкатегория',
+    category_id: 'cat',
+    category_slug: 'household',
+    category_name: 'Домашние обязанности',
+    rate_snapshot: null,
+    currency_snapshot: null,
+    value: 0,
+    ...over,
+  } as ActivityWithValue
+}
+
+describe('summarize', () => {
+  it('складывает время и деньги', () => {
+    const result = summarize([
+      entry({ actual_minutes: 90, value: 30 }),
+      entry({ actual_minutes: 60, value: 20 }),
+    ])
+
+    expect(result.totalMinutes).toBe(150)
+    expect(result.totalValue).toBe(50)
+  })
+
+  it('разносит время по категориям', () => {
+    const result = summarize([
+      entry({ category_slug: 'work', category_name: 'Работа', actual_minutes: 480, value: 0 }),
+      entry({ category_slug: 'household', category_name: 'Дом', actual_minutes: 90, value: 30 }),
+      entry({ category_slug: 'household', category_name: 'Дом', actual_minutes: 30, value: 10 }),
+    ])
+
+    expect(result.byCategory).toHaveLength(2)
+    const household = result.byCategory.find((c) => c.slug === 'household')!
+    // Две записи одной категории должны сложиться в одну строку.
+    expect(household.minutes).toBe(120)
+    expect(household.value).toBe(40)
+  })
+
+  it('сортирует категории от большей к меньшей', () => {
+    const result = summarize([
+      entry({ category_slug: 'household', actual_minutes: 60 }),
+      entry({ category_slug: 'work', actual_minutes: 480 }),
+      entry({ category_slug: 'study', actual_minutes: 120 }),
+    ])
+
+    expect(result.byCategory.map((c) => c.slug)).toEqual(['work', 'study', 'household'])
+  })
+
+  it('считает пустой список без ошибки', () => {
+    const result = summarize([])
+
+    expect(result.totalMinutes).toBe(0)
+    expect(result.totalValue).toBe(0)
+    expect(result.byCategory).toEqual([])
+  })
+
+  it('не спотыкается на записях без времени', () => {
+    // Запись может быть без факта: например, запланированная задача.
+    const result = summarize([entry({ actual_minutes: null, value: null })])
+
+    expect(result.totalMinutes).toBe(0)
+    expect(result.totalValue).toBe(0)
+  })
+
+  it('считает пример из технического задания', () => {
+    // Пользователь 1: работа 35 ч, учёба 10 ч, дом 12 ч, ребёнок 15 ч
+    const result = summarize([
+      entry({ category_slug: 'work', actual_minutes: 35 * 60 }),
+      entry({ category_slug: 'study', actual_minutes: 10 * 60 }),
+      entry({ category_slug: 'household', actual_minutes: 12 * 60 }),
+      entry({ category_slug: 'childcare', actual_minutes: 15 * 60 }),
+    ])
+
+    expect(result.totalMinutes).toBe(72 * 60)
+    expect(result.byCategory[0].slug).toBe('work')
+  })
+})
+
+describe('filterByRange', () => {
+  const activities = [
+    entry({ id: 'a', date: '2026-08-31' }),
+    entry({ id: 'b', date: '2026-09-03' }),
+    entry({ id: 'c', date: '2026-09-06' }),
+    entry({ id: 'd', date: '2026-09-10' }),
+  ]
+
+  it('берёт записи внутри диапазона', () => {
+    const result = filterByRange(activities, '2026-09-01', '2026-09-07')
+    expect(result.map((a) => a.id)).toEqual(['b', 'c'])
+  })
+
+  it('включает обе границы', () => {
+    // Диапазон включительный с обеих сторон: иначе понедельник
+    // или воскресенье выпадали бы из недельной статистики.
+    const result = filterByRange(activities, '2026-08-31', '2026-09-06')
+    expect(result.map((a) => a.id)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('возвращает пустой список, если ничего не подходит', () => {
+    expect(filterByRange(activities, '2026-10-01', '2026-10-31')).toEqual([])
+  })
+
+  it('один день — это диапазон из одной даты', () => {
+    const result = filterByRange(activities, '2026-09-03', '2026-09-03')
+    expect(result.map((a) => a.id)).toEqual(['b'])
+  })
+})
+
+describe('percentOfTotal', () => {
+  it('считает долю в процентах', () => {
+    expect(percentOfTotal(30, 120)).toBe(25)
+    expect(percentOfTotal(60, 120)).toBe(50)
+  })
+
+  it('округляет до целых', () => {
+    expect(percentOfTotal(1, 3)).toBe(33)
+  })
+
+  it('не делит на ноль', () => {
+    expect(percentOfTotal(0, 0)).toBe(0)
+  })
+})
