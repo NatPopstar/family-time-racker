@@ -168,6 +168,33 @@ const ru = {
   'family.timelineTitle': 'Как прошла неделя',
   'family.timelineHint': 'Сколько часов в день потратил каждый.',
   'family.noPeople': 'В семье пока нет ни одного зарегистрированного пользователя.',
+
+  'settings.ratesTitle': 'Ставки London Market Rates',
+  'settings.ratesHint':
+    'Изменение ставки влияет только на будущие записи. Уже сохранённые хранят свою копию ставки и не пересчитываются.',
+  'settings.rateName': 'Тип работы',
+  'settings.rateValue': 'Ставка в час',
+  'settings.rateActive': 'Показывать',
+  'settings.addRate': 'Добавить тип работы',
+  'settings.addRateName': 'Название услуги',
+  'settings.addRateNamePlaceholder': 'Например: Dog Walker',
+  'settings.currency': 'Валюта',
+  'settings.currencyWarning':
+    'Смена валюты меняет только значок. Суммы не пересчитываются по курсу — курс приложению взять неоткуда.',
+  'settings.currencyChange': 'Сменить валюту',
+
+  'settings.subcategoriesTitle': 'Виды работы и их ставки',
+  'settings.subcategoriesHint':
+    'Вид работы без ставки деньгами не оценивается — так устроены «Работа» и «Учёба».',
+  'settings.noRate': '— без денежной оценки —',
+  'settings.addSubcategory': 'Добавить вид работы',
+  'settings.addSubcategoryName': 'Название',
+  'settings.addSubcategoryNamePlaceholder': 'Например: полив цветов',
+
+  'settings.error.nameRequired': 'Введите название.',
+  'settings.error.rateRequired': 'Ставка должна быть больше нуля.',
+  'settings.error.categoryRequired': 'Выберите категорию.',
+  'settings.saved': 'Сохранено',
 } as const
 
 /**
@@ -331,6 +358,33 @@ const en: Record<keyof typeof ru, string> = {
   'family.timelineTitle': 'How the week went',
   'family.timelineHint': 'Hours per day for each person.',
   'family.noPeople': 'No one has registered in this family yet.',
+
+  'settings.ratesTitle': 'London market rates',
+  'settings.ratesHint':
+    'Changing a rate affects future entries only. Saved entries keep their own copy of the rate and are never recalculated.',
+  'settings.rateName': 'Type of work',
+  'settings.rateValue': 'Hourly rate',
+  'settings.rateActive': 'Show',
+  'settings.addRate': 'Add a type of work',
+  'settings.addRateName': 'Service name',
+  'settings.addRateNamePlaceholder': 'For example: Dog Walker',
+  'settings.currency': 'Currency',
+  'settings.currencyWarning':
+    'Changing the currency swaps the symbol only. Amounts are not converted — the app has no exchange rate.',
+  'settings.currencyChange': 'Change currency',
+
+  'settings.subcategoriesTitle': 'Types of work and their rates',
+  'settings.subcategoriesHint':
+    'A type of work with no rate is not valued in money — that is how Work and Study are set up.',
+  'settings.noRate': '— no market value —',
+  'settings.addSubcategory': 'Add a type of work',
+  'settings.addSubcategoryName': 'Name',
+  'settings.addSubcategoryNamePlaceholder': 'For example: watering the plants',
+
+  'settings.error.nameRequired': 'Enter a name.',
+  'settings.error.rateRequired': 'The rate must be greater than zero.',
+  'settings.error.categoryRequired': 'Choose a category.',
+  'settings.saved': 'Saved',
 }
 
 export type TranslationKey = keyof typeof ru

@@ -27,9 +27,8 @@ export function ReportsPage() {
   return <PagePlaceholder titleKey="page.reports.title" subtitleKey="page.reports.subtitle" />
 }
 
-export function SettingsPage() {
-  return <PagePlaceholder titleKey="page.settings.title" subtitleKey="page.settings.subtitle" />
-}
+// «Настройки» уже наполнены и живут в своём файле.
+export { SettingsPage } from './SettingsPage'
 
 /** Показывается, если человек набрал несуществующий адрес. */
 export function NotFoundPage() {
