@@ -20,6 +20,7 @@ const mockLte = vi.fn()
 const mockOrder = vi.fn()
 const mockEq = vi.fn()
 const mockInsert = vi.fn()
+const mockUpdate = vi.fn()
 const mockDelete = vi.fn()
 
 const builder = {
@@ -29,6 +30,7 @@ const builder = {
   order: (...a: unknown[]) => (mockOrder(...a), builder),
   eq: (...a: unknown[]) => (mockEq(...a), builder),
   delete: (...a: unknown[]) => (mockDelete(...a), builder),
+  update: (...a: unknown[]) => (mockUpdate(...a), builder),
   insert: (...a: unknown[]) => {
     mockInsert(...a)
     return Promise.resolve(queryResult)
@@ -43,7 +45,14 @@ vi.mock('@/lib/supabase', () => ({
   supabase: { from: (...args: unknown[]) => mockFrom(...(args as [])) },
 }))
 
-import { buildActivityInsert, createActivity, fetchActivities, deleteActivity } from './api'
+import {
+  buildActivityInsert,
+  buildActivityUpdate,
+  createActivity,
+  updateActivity,
+  fetchActivities,
+  deleteActivity,
+} from './api'
 
 /** Подкатегория со ставкой — уборка по £20/час. */
 const cleaning: SubcategoryWithRate = {
@@ -145,6 +154,96 @@ describe('buildActivityInsert: «заморозка» ставки', () => {
     expect(row.user_id).toBe('user-1')
     expect(row.subcategory_id).toBe('sub-cleaning')
     expect(row.date).toBe('2026-09-03')
+  })
+})
+
+describe('buildActivityUpdate: правка записи', () => {
+  const editBase = {
+    title: 'Уборка кухни',
+    date: '2026-09-03',
+    actualMinutes: 120,
+    previousSubcategoryId: 'sub-cleaning',
+  }
+
+  it('НЕ трогает ставку, если вид работы не менялся', () => {
+    // Самое важное правило правки: исправление опечатки в минутах
+    // не должно пересчитывать старую запись по сегодняшней ставке.
+    const row = buildActivityUpdate({ ...editBase, subcategory: cleaning })
+
+    expect(row).not.toHaveProperty('rate_snapshot')
+    expect(row).not.toHaveProperty('currency_snapshot')
+    expect(row.actual_minutes).toBe(120)
+  })
+
+  it('берёт новую ставку, если вид работы поменяли', () => {
+    // Была уборка (£20), оказалась готовка (£35) — прежняя ставка
+    // относилась к другой профессии и больше не имеет смысла.
+    const cooking = {
+      ...cleaning,
+      id: 'sub-cooking',
+      name: 'Приготовление еды',
+      market_rates: { name: 'Private Chef', hourly_rate: 35, currency: 'GBP' },
+    }
+
+    const row = buildActivityUpdate({ ...editBase, subcategory: cooking })
+
+    expect(row.rate_snapshot).toBe(35)
+    expect(row.currency_snapshot).toBe('GBP')
+    expect(row.subcategory_id).toBe('sub-cooking')
+  })
+
+  it('обнуляет ставку при переходе на работу без денежной оценки', () => {
+    const row = buildActivityUpdate({ ...editBase, subcategory: paidWork })
+
+    expect(row.rate_snapshot).toBeNull()
+    expect(row.currency_snapshot).toBeNull()
+  })
+
+  it('обрезает пробелы и превращает пустой комментарий в null', () => {
+    const row = buildActivityUpdate({
+      ...editBase,
+      subcategory: cleaning,
+      title: '  Уборка ванной  ',
+      comment: '   ',
+    })
+
+    expect(row.title).toBe('Уборка ванной')
+    expect(row.comment).toBeNull()
+  })
+})
+
+describe('updateActivity', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryResult = { data: null, error: null }
+  })
+
+  it('обновляет запись по идентификатору', async () => {
+    await updateActivity('activity-1', {
+      title: 'Уборка кухни',
+      date: '2026-09-03',
+      actualMinutes: 120,
+      previousSubcategoryId: 'sub-cleaning',
+      subcategory: cleaning,
+    })
+
+    expect(mockFrom).toHaveBeenCalledWith('activities')
+    expect(mockUpdate).toHaveBeenCalled()
+    expect(mockEq).toHaveBeenCalledWith('id', 'activity-1')
+  })
+
+  it('сообщает об ошибке правки', async () => {
+    queryResult = { data: null, error: { message: 'чужая запись' } }
+
+    await expect(
+      updateActivity('activity-1', {
+        title: 'Уборка',
+        date: '2026-09-03',
+        actualMinutes: 60,
+        previousSubcategoryId: 'sub-cleaning',
+        subcategory: cleaning,
+      }),
+    ).rejects.toThrow('чужая запись')
   })
 })
 

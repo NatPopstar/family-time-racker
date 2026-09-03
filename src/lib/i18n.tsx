@@ -94,6 +94,34 @@ const ru = {
   'activity.empty': 'За сегодня записей пока нет. Первую можно добавить формой выше.',
   'activity.loadFailed': 'Не удалось загрузить записи:',
   'activity.notPriced': 'без денежной оценки',
+
+  'period.today': 'Сегодня',
+  'period.thisWeek': 'Эта неделя',
+  'period.lastWeek': 'Прошлая неделя',
+  'period.thisMonth': 'Этот месяц',
+  'period.lastMonth': 'Прошлый месяц',
+  'period.custom': 'Свой период',
+  'period.from': 'С',
+  'period.to': 'По',
+  'period.label': 'Период',
+
+  'filter.person': 'Кто',
+  'filter.everyone': 'Все',
+  'filter.category': 'Категория',
+  'filter.allCategories': 'Все категории',
+
+  'history.date': 'Дата',
+  'history.person': 'Пользователь',
+  'history.task': 'Задача',
+  'history.category': 'Категория',
+  'history.time': 'Время',
+  'history.value': 'Стоимость',
+  'history.actions': 'Действия',
+  'history.edit': 'Изменить',
+  'history.empty': 'За выбранный период записей нет.',
+  'history.editTitle': 'Изменить запись',
+  'history.deleteConfirm': 'Удалить эту запись? Отменить будет нельзя.',
+  'history.foreignHint': 'Чужие записи видны, но менять их нельзя.',
 } as const
 
 /**
@@ -183,6 +211,34 @@ const en: Record<keyof typeof ru, string> = {
   'activity.empty': 'Nothing logged today yet. Add your first entry with the form above.',
   'activity.loadFailed': 'Could not load the entries:',
   'activity.notPriced': 'no market value',
+
+  'period.today': 'Today',
+  'period.thisWeek': 'This week',
+  'period.lastWeek': 'Last week',
+  'period.thisMonth': 'This month',
+  'period.lastMonth': 'Last month',
+  'period.custom': 'Custom range',
+  'period.from': 'From',
+  'period.to': 'To',
+  'period.label': 'Period',
+
+  'filter.person': 'Who',
+  'filter.everyone': 'Everyone',
+  'filter.category': 'Category',
+  'filter.allCategories': 'All categories',
+
+  'history.date': 'Date',
+  'history.person': 'Person',
+  'history.task': 'Task',
+  'history.category': 'Category',
+  'history.time': 'Time',
+  'history.value': 'Value',
+  'history.actions': 'Actions',
+  'history.edit': 'Edit',
+  'history.empty': 'No entries for the selected period.',
+  'history.editTitle': 'Edit entry',
+  'history.deleteConfirm': 'Delete this entry? This cannot be undone.',
+  'history.foreignHint': "Other people's entries are visible but not editable.",
 }
 
 export type TranslationKey = keyof typeof ru

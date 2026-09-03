@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { ActivityInsert, ActivityWithValue } from '@/types/models'
+import type { ActivityInsert, ActivityUpdate, ActivityWithValue } from '@/types/models'
 import type { SubcategoryWithRate } from '@/features/categories/api'
 
 /**
@@ -90,6 +90,65 @@ export async function fetchActivities(params: {
 
   if (error) throw new Error(error.message)
   return data ?? []
+}
+
+/** Что можно поменять в существующей записи. */
+export type EditActivityInput = {
+  title: string
+  date: string
+  actualMinutes: number
+  comment?: string
+  /** Прежний вид работы — чтобы понять, менялся ли он. */
+  previousSubcategoryId: string
+  /** Выбранный сейчас вид работы. */
+  subcategory: SubcategoryWithRate
+}
+
+/**
+ * СОБИРАЕТ ПРАВКУ ЗАПИСИ — второе по важности место после «заморозки».
+ *
+ * Правило про ставку здесь тонкое, объясняю подробно.
+ *
+ * 1. Если человек поменял только время или название — ставку НЕ ТРОГАЕМ.
+ *    Иначе исправление опечатки в минутах молча пересчитало бы старую
+ *    запись по сегодняшней ставке, и прошлый отчёт изменился бы сам собой.
+ *
+ * 2. Если человек поменял ВИД РАБОТЫ (была уборка, оказалась готовка) —
+ *    берём ставку нового вида работы. Прежняя ставка относилась
+ *    к другой профессии и больше не имеет смысла.
+ *
+ * Возвращаем только те поля, которые меняем: Supabase обновит их,
+ * а остальные оставит как есть.
+ */
+export function buildActivityUpdate(input: EditActivityInput): ActivityUpdate {
+  const subcategoryChanged = input.previousSubcategoryId !== input.subcategory.id
+
+  const base: ActivityUpdate = {
+    title: input.title.trim(),
+    date: input.date,
+    actual_minutes: input.actualMinutes,
+    comment: input.comment?.trim() || null,
+    subcategory_id: input.subcategory.id,
+  }
+
+  if (!subcategoryChanged) return base
+
+  const rate = input.subcategory.market_rates
+  return {
+    ...base,
+    rate_snapshot: rate ? rate.hourly_rate : null,
+    currency_snapshot: rate ? rate.currency : null,
+  }
+}
+
+/** Сохраняет правку записи. Чужую запись изменить не даст RLS в базе. */
+export async function updateActivity(id: string, input: EditActivityInput): Promise<void> {
+  const { error } = await supabase
+    .from('activities')
+    .update(buildActivityUpdate(input))
+    .eq('id', id)
+
+  if (error) throw new Error(error.message)
 }
 
 /** Удаляет запись. База сама не даст удалить чужую — этим занимается RLS. */

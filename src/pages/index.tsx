@@ -22,9 +22,8 @@ export function PlannerPage() {
   return <PagePlaceholder titleKey="page.planner.title" subtitleKey="page.planner.subtitle" />
 }
 
-export function HistoryPage() {
-  return <PagePlaceholder titleKey="page.history.title" subtitleKey="page.history.subtitle" />
-}
+// «История» уже наполнена и живёт в своём файле.
+export { HistoryPage } from './HistoryPage'
 
 export function ReportsPage() {
   return <PagePlaceholder titleKey="page.reports.title" subtitleKey="page.reports.subtitle" />
