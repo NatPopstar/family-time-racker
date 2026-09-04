@@ -16,6 +16,10 @@ export type NewActivityInput = {
   /** Фактически потраченное время в минутах. */
   actualMinutes: number
   comment?: string
+  /** Адрес, куда ездили. Нужен для повторяющихся занятий ребёнка. */
+  address?: string | null
+  /** Время на дорогу туда и обратно. Считается как труд. */
+  travelMinutes?: number
 }
 
 /**
@@ -50,6 +54,8 @@ export function buildActivityInsert(input: NewActivityInput): ActivityInsert {
     // Пустой комментарий храним как null, а не как пустую строку:
     // так в базе одно значение «ничего нет» вместо двух разных.
     comment: input.comment?.trim() || null,
+    address: input.address?.trim() || null,
+    travel_minutes: input.travelMinutes ?? 0,
     rate_snapshot: rate ? rate.hourly_rate : null,
     currency_snapshot: rate ? rate.currency : null,
   }
@@ -81,6 +87,8 @@ export async function fetchActivities(params: {
    * показывает Планер, у него свой запрос.
    */
   status?: 'done' | 'planned' | 'all'
+  /** Добавить к своим записям ещё и ничьи задачи семьи. Нужно Планеру. */
+  includeUnassigned?: boolean
 }): Promise<ActivityWithValue[]> {
   let query = supabase
     .from('v_activity_value')
@@ -97,7 +105,14 @@ export async function fetchActivities(params: {
   // Фильтр по пользователю необязательный: на семейном дашборде
   // нам нужны записи всех, на личном — только свои.
   if (params.userId) {
-    query = query.eq('user_id', params.userId)
+    if (params.includeUnassigned) {
+      // Планеру нужны И свои задачи, И ничьи: иначе задача
+      // «кто отвезёт — не решили» была бы не видна никому,
+      // и забрать её стало бы некому.
+      query = query.or(`user_id.eq.${params.userId},user_id.is.null`)
+    } else {
+      query = query.eq('user_id', params.userId)
+    }
   }
 
   const { data, error } = await query
@@ -112,6 +127,8 @@ export type EditActivityInput = {
   date: string
   actualMinutes: number
   comment?: string
+  address?: string | null
+  travelMinutes?: number
   /** Прежний вид работы — чтобы понять, менялся ли он. */
   previousSubcategoryId: string
   /** Выбранный сейчас вид работы. */
@@ -142,6 +159,8 @@ export function buildActivityUpdate(input: EditActivityInput): ActivityUpdate {
     date: input.date,
     actual_minutes: input.actualMinutes,
     comment: input.comment?.trim() || null,
+    address: input.address?.trim() || null,
+    travel_minutes: input.travelMinutes ?? 0,
     subcategory_id: input.subcategory.id,
   }
 
@@ -177,11 +196,14 @@ export async function updateActivity(id: string, input: EditActivityInput): Prom
  * замораживать нечего.
  */
 export async function createPlannedActivity(input: {
-  userId: string
+  /** NULL — общая задача семьи: кто сделает, тот и заберёт. */
+  userId: string | null
   subcategoryId: string
   title: string
   date: string
   plannedMinutes: number
+  address?: string | null
+  travelMinutes?: number
 }): Promise<void> {
   const { error } = await supabase.from('activities').insert({
     user_id: input.userId,
@@ -189,6 +211,8 @@ export async function createPlannedActivity(input: {
     title: input.title.trim(),
     date: input.date,
     planned_minutes: input.plannedMinutes,
+    address: input.address?.trim() || null,
+    travel_minutes: input.travelMinutes ?? 0,
     status: 'planned',
   })
 
@@ -208,19 +232,30 @@ export async function completePlannedActivity(params: {
   activityId: string
   actualMinutes: number
   subcategory: SubcategoryWithRate
+  /**
+   * Кто отмечает. Если задача была ничьей, она становится его.
+   * Это и есть правило «не договорились заранее — кто отвёз,
+   * тот и отметил».
+   */
+  claimForUserId?: string | null
 }): Promise<void> {
   const rate = params.subcategory.market_rates
 
-  const { error } = await supabase
-    .from('activities')
-    .update({
-      actual_minutes: params.actualMinutes,
-      status: 'done',
-      completed_at: new Date().toISOString(),
-      rate_snapshot: rate ? rate.hourly_rate : null,
-      currency_snapshot: rate ? rate.currency : null,
-    })
-    .eq('id', params.activityId)
+  const patch: ActivityUpdate = {
+    actual_minutes: params.actualMinutes,
+    status: 'done',
+    completed_at: new Date().toISOString(),
+    rate_snapshot: rate ? rate.hourly_rate : null,
+    currency_snapshot: rate ? rate.currency : null,
+  }
+
+  // user_id трогаем ТОЛЬКО когда его передали. Иначе отметка чужой
+  // выполненной задачи молча переписала бы её владельца.
+  if (params.claimForUserId) {
+    patch.user_id = params.claimForUserId
+  }
+
+  const { error } = await supabase.from('activities').update(patch).eq('id', params.activityId)
 
   if (error) throw new Error(error.message)
 }

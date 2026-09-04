@@ -3,26 +3,31 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useI18n } from '@/lib/i18n'
 import { formatMinutes, comparePlanToFact, hoursAndMinutesToMinutes } from '@/lib/time'
 import { formatDateShort } from '@/lib/dates'
-import type { ActivityWithValue } from '@/types/models'
+import type { ActivityWithValue, Profile } from '@/types/models'
 import type { SubcategoryWithRate } from '@/features/categories/api'
 import { completePlannedActivity, deleteActivity } from '@/features/activities/api'
+import { claimActivity } from './rulesApi'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 
 /**
  * Один день недели в Планере: список задач и кнопка добавления.
- * Соответствует строке из твоего рисунка: день, задачи, отметка о выполнении.
+ * Соответствует строке из рисунка: день, задачи, отметка о выполнении.
  */
 export function PlannerDay({
   date,
   tasks,
   subcategories,
+  people,
+  currentUserId,
   isToday,
   onAdd,
 }: {
   date: string
   tasks: ActivityWithValue[]
   subcategories: SubcategoryWithRate[]
+  people: Profile[]
+  currentUserId: string | undefined
   isToday: boolean
   onAdd: (date: string) => void
 }) {
@@ -50,7 +55,13 @@ export function PlannerDay({
       ) : (
         <ul className="mt-3 space-y-2">
           {tasks.map((task) => (
-            <PlannerTask key={task.id} task={task} subcategories={subcategories} />
+            <PlannerTask
+              key={task.id}
+              task={task}
+              subcategories={subcategories}
+              people={people}
+              currentUserId={currentUserId}
+            />
           ))}
         </ul>
       )}
@@ -66,9 +77,13 @@ export function PlannerDay({
 function PlannerTask({
   task,
   subcategories,
+  people,
+  currentUserId,
 }: {
   task: ActivityWithValue
   subcategories: SubcategoryWithRate[]
+  people: Profile[]
+  currentUserId: string | undefined
 }) {
   const { t, locale } = useI18n()
   const queryClient = useQueryClient()
@@ -80,6 +95,10 @@ function PlannerTask({
   const subcategory = subcategories.find((s) => s.id === task.subcategory_id)
   const isDone = task.status === 'done'
   const comparison = comparePlanToFact(task.planned_minutes, task.actual_minutes)
+
+  // Ничья задача: договорённости не было, отметит тот, кто сделает.
+  const isUnassigned = task.user_id === null
+  const owner = people.find((p) => p.id === task.user_id)
 
   function refresh() {
     queryClient.invalidateQueries({ queryKey: ['planner'] })
@@ -94,16 +113,18 @@ function PlannerTask({
     },
   })
 
+  const claim = useMutation({ mutationFn: claimActivity, onSuccess: refresh })
   const remove = useMutation({ mutationFn: deleteActivity, onSuccess: refresh })
 
   return (
-    <li className="rounded-lg bg-slate-50 p-3">
+    <li className={`rounded-lg p-3 ${isUnassigned && !isDone ? 'bg-amber-50' : 'bg-slate-50'}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className={`text-sm font-medium ${isDone ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
             {task.title}
           </p>
           <p className="text-xs text-slate-500">{task.subcategory_name}</p>
+          {task.address && <p className="mt-0.5 text-xs text-slate-400">📍 {task.address}</p>}
         </div>
         <button
           type="button"
@@ -115,8 +136,25 @@ function PlannerTask({
         </button>
       </div>
 
+      {/* Кто делает. Ничья задача помечена явно, иначе её легко
+          принять за чужую и пройти мимо. */}
+      <p className="mt-1 text-xs">
+        {isUnassigned ? (
+          <span className="font-medium text-amber-700">{t('planner.unassigned')}</span>
+        ) : (
+          <span className="text-slate-500">
+            {t('planner.assignedTo')}: {owner?.display_name ?? '—'}
+          </span>
+        )}
+      </p>
+
       <p className="mt-1 text-xs text-slate-500 tabular-nums">
         {t('planner.plan')}: {formatMinutes(task.planned_minutes ?? 0, locale)}
+        {/* Дорогу показываем отдельным слагаемым: так видно,
+            из чего складывается время. */}
+        {(task.travel_minutes ?? 0) > 0 && (
+          <> {' + '}🚗 {formatMinutes(task.travel_minutes ?? 0, locale)}</>
+        )}
         {isDone && (
           <>
             {' · '}
@@ -125,8 +163,6 @@ function PlannerTask({
         )}
       </p>
 
-      {/* Отклонение показываем только у выполненных задач с планом —
-          ради этого сравнения Планер и затевался. */}
       {isDone && comparison && (
         <p
           className={`mt-1 text-xs font-medium ${
@@ -144,9 +180,28 @@ function PlannerTask({
       )}
 
       {!isDone && !isCompleting && (
-        <Button variant="secondary" onClick={() => setIsCompleting(true)} className="mt-2 text-xs">
-          {t('planner.done')}
-        </Button>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={() => setIsCompleting(true)} className="text-xs">
+            {t('planner.done')}
+          </Button>
+
+          {/* Забрать задачу можно и не выполняя её — например, когда
+              родители договорились утром, а занятие только вечером. */}
+          {isUnassigned && currentUserId && (
+            <Button
+              variant="ghost"
+              disabled={claim.isPending}
+              onClick={() => claim.mutate({ activityId: task.id!, userId: currentUserId })}
+              className="text-xs"
+            >
+              {t('planner.claim')}
+            </Button>
+          )}
+        </div>
+      )}
+
+      {isUnassigned && !isDone && (
+        <p className="mt-1 text-xs text-amber-700">{t('planner.unassignedHint')}</p>
       )}
 
       {!isDone && isCompleting && (
@@ -183,6 +238,8 @@ function PlannerTask({
                     Number(minutes) || 0,
                   ),
                   subcategory: subcategory!,
+                  // Ничья задача становится задачей того, кто её отметил.
+                  claimForUserId: isUnassigned ? currentUserId : null,
                 })
               }
               className="text-xs"

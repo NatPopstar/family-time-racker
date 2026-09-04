@@ -5,6 +5,7 @@ import { useAuth } from '@/features/auth/AuthProvider'
 import { hoursAndMinutesToMinutes } from '@/lib/time'
 import { formatDateShort } from '@/lib/dates'
 import { fetchCategories, fetchSubcategoriesWithRates } from '@/features/categories/api'
+import { fetchAllProfiles } from '@/features/profile/api'
 import { createPlannedActivity } from '@/features/activities/api'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -27,11 +28,17 @@ export function AddPlannedTaskDialog({
   const [categoryId, setCategoryId] = useState('')
   const [subcategoryId, setSubcategoryId] = useState('')
   const [title, setTitle] = useState('')
+  const [address, setAddress] = useState('')
   const [hours, setHours] = useState('')
   const [minutes, setMinutes] = useState('')
+  const [travel, setTravel] = useState('')
+  // Пустая строка означает «ничья задача»: договоримся потом,
+  // а отметит тот, кто в итоге сделает.
+  const [assigneeId, setAssigneeId] = useState<string>(user?.id ?? '')
   const [errorKey, setErrorKey] = useState<TranslationKey | null>(null)
 
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: fetchCategories })
+  const { data: profiles } = useQuery({ queryKey: ['profiles'], queryFn: fetchAllProfiles })
   const { data: subcategories } = useQuery({
     queryKey: ['subcategories-with-rates'],
     queryFn: fetchSubcategoriesWithRates,
@@ -39,6 +46,7 @@ export function AddPlannedTaskDialog({
 
   const visibleSubcategories = (subcategories ?? []).filter((s) => s.category_id === categoryId)
   const plannedMinutes = hoursAndMinutesToMinutes(Number(hours) || 0, Number(minutes) || 0)
+  const travelMinutes = Number(travel) || 0
 
   const mutation = useMutation({
     mutationFn: createPlannedActivity,
@@ -55,10 +63,17 @@ export function AddPlannedTaskDialog({
     if (title.trim() === '') return setErrorKey('activity.error.titleRequired')
     if (!subcategoryId) return setErrorKey('activity.error.subcategoryRequired')
     if (plannedMinutes <= 0) return setErrorKey('activity.error.timeRequired')
-    if (plannedMinutes > MAX_MINUTES) return setErrorKey('activity.error.timeTooLong')
-    if (!user) return
+    if (plannedMinutes + travelMinutes > MAX_MINUTES) return setErrorKey('activity.error.timeTooLong')
 
-    mutation.mutate({ userId: user.id, subcategoryId, title, date, plannedMinutes })
+    mutation.mutate({
+      userId: assigneeId || null,
+      subcategoryId,
+      title,
+      date,
+      plannedMinutes,
+      address,
+      travelMinutes,
+    })
   }
 
   return (
@@ -111,6 +126,27 @@ export function AddPlannedTaskDialog({
             onChange={(e) => setTitle(e.target.value)}
           />
 
+          <Input
+            label={t('activity.address')}
+            placeholder={t('activity.addressPlaceholder')}
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
+
+          {/* Кто делает. Пустое значение — ничья задача. */}
+          <Select
+            label={t('planner.forWhom')}
+            value={assigneeId}
+            onChange={(e) => setAssigneeId(e.target.value)}
+          >
+            <option value="">{t('planner.nobody')}</option>
+            {profiles?.map((profile) => (
+              <option key={profile.id} value={profile.id}>
+                {profile.display_name}
+              </option>
+            ))}
+          </Select>
+
           <div>
             <span className="block text-sm font-medium text-slate-700">
               {t('planner.plannedTime')}
@@ -133,6 +169,17 @@ export function AddPlannedTaskDialog({
                 className="flex-1"
               />
             </div>
+          </div>
+
+          <div>
+            <Input
+              label={t('activity.travel')}
+              type="number"
+              min={0}
+              value={travel}
+              onChange={(e) => setTravel(e.target.value)}
+            />
+            <p className="mt-1 text-xs text-slate-500">{t('activity.travelHint')}</p>
           </div>
 
           {errorKey && (

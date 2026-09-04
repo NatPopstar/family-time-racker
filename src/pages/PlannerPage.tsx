@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useI18n } from '@/lib/i18n'
 import { useAuth } from '@/features/auth/AuthProvider'
 import { getWeekDays, getWeekRange } from '@/lib/periods'
@@ -7,8 +7,11 @@ import { todayISO, formatDateShort } from '@/lib/dates'
 import { formatHours } from '@/lib/time'
 import { fetchActivities } from '@/features/activities/api'
 import { fetchSubcategoriesWithRates } from '@/features/categories/api'
+import { fetchAllProfiles } from '@/features/profile/api'
 import { PlannerDay } from '@/features/planner/PlannerDay'
 import { AddPlannedTaskDialog } from '@/features/planner/AddPlannedTaskDialog'
+import { RecurringRulesCard } from '@/features/planner/RecurringRulesCard'
+import { fetchRecurringRules, materialiseRules } from '@/features/planner/rulesApi'
 import { Button } from '@/components/ui/Button'
 
 /**
@@ -24,15 +27,21 @@ export function PlannerPage() {
   // Сдвиг недели: 0 — текущая, -1 — прошлая, 1 — следующая.
   const [weekOffset, setWeekOffset] = useState(0)
   const [addingForDate, setAddingForDate] = useState<string | null>(null)
+  const [materialiseError, setMaterialiseError] = useState<string | null>(null)
 
   const days = getWeekDays(weekOffset)
   const range = getWeekRange(weekOffset)
   const today = todayISO()
 
+  const queryClient = useQueryClient()
+
   const { data: subcategories } = useQuery({
     queryKey: ['subcategories-with-rates'],
     queryFn: fetchSubcategoriesWithRates,
   })
+
+  const { data: profiles } = useQuery({ queryKey: ['profiles'], queryFn: fetchAllProfiles })
+  const { data: rules } = useQuery({ queryKey: ['recurring-rules'], queryFn: fetchRecurringRules })
 
   const { data: tasks, isPending } = useQuery({
     queryKey: ['planner', range.from, range.to, user?.id],
@@ -40,9 +49,36 @@ export function PlannerPage() {
     // иначе отмеченная задача исчезала бы с глаз, и сравнить план
     // с фактом было бы негде.
     queryFn: () =>
-      fetchActivities({ from: range.from, to: range.to, userId: user?.id, status: 'all' }),
+      fetchActivities({
+        from: range.from,
+        to: range.to,
+        userId: user?.id,
+        status: 'all',
+        includeUnassigned: true,
+      }),
     enabled: Boolean(user?.id),
   })
+
+  // Подставляем задачи из правил повтора при открытии недели.
+  // Дублей не будет: в базе стоит уникальный индекс «одно правило —
+  // одна задача в день», поэтому даже одновременное открытие Планера
+  // двумя людьми создаст задачу только один раз.
+  const materialise = useMutation({
+    mutationFn: materialiseRules,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['planner'] }),
+    // Ошибку обязательно показываем. В первой версии её здесь не было,
+    // и подстановка падала молча: правило создано, задача не появилась,
+    // а приложение делало вид, что всё хорошо.
+    onError: (e: Error) => setMaterialiseError(e.message),
+  })
+
+  useEffect(() => {
+    if (!rules || rules.length === 0) return
+    materialise.mutate({ rules, days })
+    // Зависимость от строки, а не от массива: массив пересоздаётся
+    // при каждой перерисовке, и эффект зациклился бы.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rules, days.join(',')])
 
   // Задачи Планера — только те, у которых есть план. Записи, сделанные
   // сразу «по факту» через форму или таймер, планом не являются.
@@ -78,6 +114,14 @@ export function PlannerPage() {
         </p>
       </div>
 
+      <RecurringRulesCard />
+
+      {materialiseError && (
+        <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+          {t('activity.error.saveFailed')} {materialiseError}
+        </p>
+      )}
+
       {isPending && <p className="text-slate-400">{t('common.loading')}</p>}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -88,6 +132,8 @@ export function PlannerPage() {
             isToday={date === today}
             tasks={plannedTasks.filter((task) => task.date === date)}
             subcategories={subcategories ?? []}
+            people={profiles ?? []}
+            currentUserId={user?.id}
             onAdd={setAddingForDate}
           />
         ))}

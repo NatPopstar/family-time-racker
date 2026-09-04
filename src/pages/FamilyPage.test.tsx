@@ -25,9 +25,9 @@ import { fetchAllProfiles } from '@/features/profile/api'
 import { fetchCategories } from '@/features/categories/api'
 
 const profiles = [
-  { id: 'mama', display_name: 'Мама', color: '#6366f1', created_at: '2026-09-01T00:00:00Z' },
-  { id: 'papa', display_name: 'Папа', color: '#6366f1', created_at: '2026-09-01T00:00:00Z' },
-  { id: 'kid', display_name: 'Даня', color: '#6366f1', created_at: '2026-09-01T00:00:00Z' },
+  { id: 'mama', display_name: 'Мама', color: '#6366f1', role: 'adult', created_at: '2026-09-01T00:00:00Z' },
+  { id: 'papa', display_name: 'Папа', color: '#6366f1', role: 'adult', created_at: '2026-09-01T00:00:00Z' },
+  { id: 'kid', display_name: 'Даня', color: '#6366f1', role: 'adult', created_at: '2026-09-01T00:00:00Z' },
 ]
 
 const days = getWeekDays(0)

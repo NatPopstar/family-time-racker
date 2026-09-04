@@ -37,6 +37,7 @@ export type Database = {
       activities: {
         Row: {
           actual_minutes: number | null
+          address: string | null
           comment: string | null
           completed_at: string | null
           created_at: string
@@ -46,15 +47,18 @@ export type Database = {
           planned_minutes: number | null
           pomodoros_done: number
           rate_snapshot: number | null
+          recurring_rule_id: string | null
           status: string
           subcategory_id: string
           timer_phase: string | null
           timer_started_at: string | null
           title: string
-          user_id: string
+          travel_minutes: number
+          user_id: string | null
         }
         Insert: {
           actual_minutes?: number | null
+          address?: string | null
           comment?: string | null
           completed_at?: string | null
           created_at?: string
@@ -64,15 +68,18 @@ export type Database = {
           planned_minutes?: number | null
           pomodoros_done?: number
           rate_snapshot?: number | null
+          recurring_rule_id?: string | null
           status?: string
           subcategory_id: string
           timer_phase?: string | null
           timer_started_at?: string | null
           title: string
-          user_id: string
+          travel_minutes?: number
+          user_id?: string | null
         }
         Update: {
           actual_minutes?: number | null
+          address?: string | null
           comment?: string | null
           completed_at?: string | null
           created_at?: string
@@ -82,14 +89,23 @@ export type Database = {
           planned_minutes?: number | null
           pomodoros_done?: number
           rate_snapshot?: number | null
+          recurring_rule_id?: string | null
           status?: string
           subcategory_id?: string
           timer_phase?: string | null
           timer_started_at?: string | null
           title?: string
-          user_id?: string
+          travel_minutes?: number
+          user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "activities_recurring_rule_id_fkey"
+            columns: ["recurring_rule_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_rules"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "activities_subcategory_id_fkey"
             columns: ["subcategory_id"]
@@ -170,20 +186,94 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          role: string
         }
         Insert: {
           color?: string
           created_at?: string
           display_name: string
           id: string
+          role?: string
         }
         Update: {
           color?: string
           created_at?: string
           display_name?: string
           id?: string
+          role?: string
         }
         Relationships: []
+      }
+      recurring_rules: {
+        Row: {
+          address: string | null
+          created_at: string
+          created_by: string
+          default_user_id: string | null
+          id: string
+          is_active: boolean
+          planned_minutes: number
+          subcategory_id: string
+          title: string
+          travel_minutes: number
+          weekday: number
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          created_by: string
+          default_user_id?: string | null
+          id?: string
+          is_active?: boolean
+          planned_minutes: number
+          subcategory_id: string
+          title: string
+          travel_minutes?: number
+          weekday: number
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          created_by?: string
+          default_user_id?: string | null
+          id?: string
+          is_active?: boolean
+          planned_minutes?: number
+          subcategory_id?: string
+          title?: string
+          travel_minutes?: number
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_rules_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_rules_default_user_id_fkey"
+            columns: ["default_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_rules_subcategory_id_fkey"
+            columns: ["subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "subcategories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_rules_subcategory_id_fkey"
+            columns: ["subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "v_activity_value"
+            referencedColumns: ["subcategory_id"]
+          },
+        ]
       }
       subcategories: {
         Row: {
@@ -239,6 +329,7 @@ export type Database = {
       v_activity_value: {
         Row: {
           actual_minutes: number | null
+          address: string | null
           category_id: string | null
           category_name: string | null
           category_slug: string | null
@@ -250,16 +341,25 @@ export type Database = {
           planned_minutes: number | null
           pomodoros_done: number | null
           rate_snapshot: number | null
+          recurring_rule_id: string | null
           status: string | null
           subcategory_id: string | null
           subcategory_name: string | null
           timer_phase: string | null
           timer_started_at: string | null
           title: string | null
+          travel_minutes: number | null
           user_id: string | null
           value: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "activities_recurring_rule_id_fkey"
+            columns: ["recurring_rule_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_rules"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "activities_user_id_fkey"
             columns: ["user_id"]
@@ -271,7 +371,7 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      is_adult: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

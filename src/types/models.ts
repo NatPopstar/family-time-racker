@@ -34,6 +34,16 @@ export type ActivityUpdate = Tables['activities']['Update']
 /** Строка из представления v_activity_value — уже с посчитанной стоимостью. */
 export type ActivityWithValue = Views['v_activity_value']['Row']
 
+export type RecurringRule = Tables['recurring_rules']['Row']
+export type RecurringRuleInsert = Tables['recurring_rules']['Insert']
+export type RecurringRuleUpdate = Tables['recurring_rules']['Update']
+
+/**
+ * Роль в семье. Взрослый может забрать себе общую задачу
+ * («кто отвёз, тот и отметил»), ребёнок — только свои.
+ */
+export type FamilyRole = 'adult' | 'child'
+
 /**
  * Четыре главные категории. Эти значения зашиты в базе как slug
  * и не меняются, поэтому их удобно иметь как тип: если где-то

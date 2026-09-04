@@ -171,6 +171,54 @@ const ru = {
   'planner.weekTotal': 'Итого за неделю',
   'planner.addFor': 'Добавить на этот день',
 
+  'activity.address': 'Адрес',
+  'activity.addressPlaceholder': 'Например: ул. Ленина 5, музыкальная школа',
+  'activity.travel': 'Дорога туда и обратно',
+  'activity.travelHint': 'Время в дороге считается как труд и входит в стоимость.',
+
+  'planner.unassigned': 'Ничья задача',
+  'planner.unassignedHint': 'Кто сделает — тот и отметит, задача станет его.',
+  'planner.assignedTo': 'Назначено',
+  'planner.claim': 'Это сделаю я',
+  'planner.forWhom': 'Кто делает',
+  'planner.nobody': '— договоримся потом —',
+  'planner.onlyAdultsCanClaim': 'Забрать общую задачу может только взрослый.',
+
+  'recurring.title': 'Повторяющиеся события',
+  'recurring.hint':
+    'Например: каждую субботу у Саши занятие. Задача сама появится в Планере в нужный день.',
+  'recurring.weekday': 'День недели',
+  'recurring.add': 'Добавить повтор',
+  'recurring.none': 'Повторяющихся событий пока нет.',
+  'recurring.remove': 'Убрать повтор',
+  'recurring.every': 'каждый',
+  'recurring.everyFeminine': 'каждую',
+
+  // Отдельные фразы «каждый/каждую/каждое X»: в русском нужен
+  // винительный падеж, и род у дней недели разный. Склеивать
+  // «каждую» + «суббота» нельзя — получается «каждую суббота».
+  'weekday.every.1': 'каждый понедельник',
+  'weekday.every.2': 'каждый вторник',
+  'weekday.every.3': 'каждую среду',
+  'weekday.every.4': 'каждый четверг',
+  'weekday.every.5': 'каждую пятницу',
+  'weekday.every.6': 'каждую субботу',
+  'weekday.every.7': 'каждое воскресенье',
+
+  'weekday.1': 'понедельник',
+  'weekday.2': 'вторник',
+  'weekday.3': 'среда',
+  'weekday.4': 'четверг',
+  'weekday.5': 'пятница',
+  'weekday.6': 'суббота',
+  'weekday.7': 'воскресенье',
+
+  'settings.roleTitle': 'Моя роль в семье',
+  'settings.roleHint':
+    'Взрослый может забирать себе общие задачи семьи. У ребёнка остаются только свои.',
+  'settings.roleAdult': 'Взрослый',
+  'settings.roleChild': 'Ребёнок',
+
   'dashboard.today': 'Сегодня',
   'dashboard.week': 'Эта неделя',
   'dashboard.month': 'Этот месяц',
@@ -395,6 +443,51 @@ const en: Record<keyof typeof ru, string> = {
   'planner.onPlan': 'exactly as planned',
   'planner.weekTotal': 'Week total',
   'planner.addFor': 'Add for this day',
+
+  'activity.address': 'Address',
+  'activity.addressPlaceholder': 'For example: 5 Lenin St, music school',
+  'activity.travel': 'Travel there and back',
+  'activity.travelHint': 'Travel time counts as work and is included in the value.',
+
+  'planner.unassigned': 'Unassigned',
+  'planner.unassignedHint': 'Whoever does it marks it done, and it becomes theirs.',
+  'planner.assignedTo': 'Assigned to',
+  'planner.claim': "I'll do this one",
+  'planner.forWhom': 'Who does it',
+  'planner.nobody': '— decide later —',
+  'planner.onlyAdultsCanClaim': 'Only an adult can take a shared task.',
+
+  'recurring.title': 'Repeating events',
+  'recurring.hint':
+    'For example: Sasha has a class every Saturday. The task appears in the planner on that day by itself.',
+  'recurring.weekday': 'Day of the week',
+  'recurring.add': 'Add a repeat',
+  'recurring.none': 'No repeating events yet.',
+  'recurring.remove': 'Remove repeat',
+  'recurring.every': 'every',
+  'recurring.everyFeminine': 'every',
+
+  'weekday.every.1': 'every Monday',
+  'weekday.every.2': 'every Tuesday',
+  'weekday.every.3': 'every Wednesday',
+  'weekday.every.4': 'every Thursday',
+  'weekday.every.5': 'every Friday',
+  'weekday.every.6': 'every Saturday',
+  'weekday.every.7': 'every Sunday',
+
+  'weekday.1': 'Monday',
+  'weekday.2': 'Tuesday',
+  'weekday.3': 'Wednesday',
+  'weekday.4': 'Thursday',
+  'weekday.5': 'Friday',
+  'weekday.6': 'Saturday',
+  'weekday.7': 'Sunday',
+
+  'settings.roleTitle': 'My role in the family',
+  'settings.roleHint':
+    'An adult can take shared family tasks. A child keeps only their own.',
+  'settings.roleAdult': 'Adult',
+  'settings.roleChild': 'Child',
 
   'dashboard.today': 'Today',
   'dashboard.week': 'This week',

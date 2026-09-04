@@ -6,6 +6,7 @@ import {
   summarizeByPerson,
   buildTimeline,
   detectCurrency,
+  activityMinutes,
 } from './stats'
 import type { ActivityWithValue } from '@/types/models'
 
@@ -303,5 +304,51 @@ describe('detectCurrency', () => {
     ])
 
     expect(result.isMixed).toBe(false)
+  })
+})
+
+describe('activityMinutes: дорога считается трудом', () => {
+  it('складывает время дела и время в дороге', () => {
+    // Отвезти ребёнка на занятие — это работа, а не пауза между делами.
+    expect(activityMinutes(entry({ actual_minutes: 60, travel_minutes: 30 }))).toBe(90)
+  })
+
+  it('без дороги возвращает только время дела', () => {
+    expect(activityMinutes(entry({ actual_minutes: 60, travel_minutes: 0 }))).toBe(60)
+  })
+
+  it('не спотыкается на пустых значениях', () => {
+    expect(activityMinutes(entry({ actual_minutes: null, travel_minutes: null }))).toBe(0)
+  })
+})
+
+describe('дорога попадает в итоги', () => {
+  it('summarize складывает дорогу вместе с делом', () => {
+    const result = summarize([
+      entry({ actual_minutes: 60, travel_minutes: 30 }),
+      entry({ actual_minutes: 60, travel_minutes: 0 }),
+    ])
+
+    expect(result.totalMinutes).toBe(150)
+  })
+
+  it('summarizeByPerson тоже учитывает дорогу', () => {
+    const rows = summarizeByPerson(
+      [entry({ user_id: 'mama', category_slug: 'childcare', actual_minutes: 60, travel_minutes: 30 })],
+      [{ id: 'mama', display_name: 'Мама' }],
+    )
+
+    expect(rows[0].childcare).toBe(90)
+    expect(rows[0].totalMinutes).toBe(90)
+  })
+
+  it('шкала недели тоже учитывает дорогу', () => {
+    const result = buildTimeline(
+      [entry({ user_id: 'mama', date: '2026-08-31', actual_minutes: 60, travel_minutes: 30 })],
+      ['2026-08-31'],
+      [{ id: 'mama' }],
+    )
+
+    expect(result[0].mama).toBe(90)
   })
 })

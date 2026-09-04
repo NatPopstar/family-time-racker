@@ -1,6 +1,18 @@
 import type { ActivityWithValue } from '@/types/models'
 
 /**
+ * Сколько времени труда в записи.
+ *
+ * Дорога считается наравне с самим делом: отвезти ребёнка на занятие —
+ * это работа, а не пауза между делами. Хранится отдельно, чтобы
+ * в интерфейсе было видно «занятие 1 ч + дорога 30 мин»,
+ * но во всех итогах складывается.
+ */
+export function activityMinutes(activity: ActivityWithValue): number {
+  return (activity.actual_minutes ?? 0) + (activity.travel_minutes ?? 0)
+}
+
+/**
  * Подсчёты для дашбордов.
  *
  * Все функции здесь — ЧИСТЫЕ: получают массив записей, возвращают числа,
@@ -30,7 +42,7 @@ export function summarize(activities: ActivityWithValue[]): Summary {
   let totalValue = 0
 
   for (const activity of activities) {
-    const minutes = activity.actual_minutes ?? 0
+    const minutes = activityMinutes(activity)
     const value = activity.value ?? 0
 
     totalMinutes += minutes
@@ -150,7 +162,7 @@ export function summarizeByPerson(
     // приписать её некому.
     if (!row) continue
 
-    const minutes = activity.actual_minutes ?? 0
+    const minutes = activityMinutes(activity)
     row.totalMinutes += minutes
     row.totalValue += activity.value ?? 0
 
@@ -203,7 +215,7 @@ export function buildTimeline(
       if (activity.date !== date) continue
       const key = activity.user_id ?? ''
       if (!(key in point)) continue
-      point[key] = (point[key] as number) + (activity.actual_minutes ?? 0)
+      point[key] = (point[key] as number) + activityMinutes(activity)
     }
 
     return point

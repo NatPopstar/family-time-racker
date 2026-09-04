@@ -35,8 +35,8 @@ import { fetchCategories, fetchSubcategoriesWithRates } from '@/features/categor
 import { fetchAllProfiles } from '@/features/profile/api'
 
 const profiles = [
-  { id: 'user-mama', display_name: 'Мама', color: '#6366f1', created_at: '2026-09-01T00:00:00Z' },
-  { id: 'user-papa', display_name: 'Папа', color: '#10b981', created_at: '2026-09-01T00:00:00Z' },
+  { id: 'user-mama', display_name: 'Мама', color: '#6366f1', role: 'adult', created_at: '2026-09-01T00:00:00Z' },
+  { id: 'user-papa', display_name: 'Папа', color: '#10b981', role: 'adult', created_at: '2026-09-01T00:00:00Z' },
 ]
 
 const categories = [

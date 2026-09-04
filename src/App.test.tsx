@@ -41,6 +41,7 @@ describe('App: какой экран показывать', () => {
       id: 'user-1',
       display_name: 'Мама',
       color: '#6366f1',
+      role: 'adult',
       created_at: '2026-09-01T00:00:00Z',
     })
   })
@@ -92,6 +93,7 @@ describe('App: переходы между разделами', () => {
       id: 'user-1',
       display_name: 'Мама',
       color: '#6366f1',
+      role: 'adult',
       created_at: '2026-09-01T00:00:00Z',
     })
   })
