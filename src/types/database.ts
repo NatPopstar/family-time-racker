@@ -54,7 +54,9 @@ export type Database = {
           timer_phase: string | null
           timer_started_at: string | null
           title: string
-          travel_minutes: number
+          travel_legs: number
+          travel_minutes: number | null
+          travel_one_way_minutes: number
           user_id: string | null
         }
         Insert: {
@@ -76,7 +78,9 @@ export type Database = {
           timer_phase?: string | null
           timer_started_at?: string | null
           title: string
-          travel_minutes?: number
+          travel_legs?: number
+          travel_minutes?: number | null
+          travel_one_way_minutes?: number
           user_id?: string | null
         }
         Update: {
@@ -98,7 +102,9 @@ export type Database = {
           timer_phase?: string | null
           timer_started_at?: string | null
           title?: string
-          travel_minutes?: number
+          travel_legs?: number
+          travel_minutes?: number | null
+          travel_one_way_minutes?: number
           user_id?: string | null
         }
         Relationships: [
@@ -221,7 +227,9 @@ export type Database = {
           planned_minutes: number
           subcategory_id: string
           title: string
-          travel_minutes: number
+          travel_legs: number
+          travel_minutes: number | null
+          travel_one_way_minutes: number
           weekday: number
         }
         Insert: {
@@ -234,7 +242,9 @@ export type Database = {
           planned_minutes: number
           subcategory_id: string
           title: string
-          travel_minutes?: number
+          travel_legs?: number
+          travel_minutes?: number | null
+          travel_one_way_minutes?: number
           weekday: number
         }
         Update: {
@@ -247,7 +257,9 @@ export type Database = {
           planned_minutes?: number
           subcategory_id?: string
           title?: string
-          travel_minutes?: number
+          travel_legs?: number
+          travel_minutes?: number | null
+          travel_one_way_minutes?: number
           weekday?: number
         }
         Relationships: [
@@ -355,7 +367,9 @@ export type Database = {
           timer_phase: string | null
           timer_started_at: string | null
           title: string | null
+          travel_legs: number | null
           travel_minutes: number | null
+          travel_one_way_minutes: number | null
           user_id: string | null
           value: number | null
         }

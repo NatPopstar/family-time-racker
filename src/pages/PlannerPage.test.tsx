@@ -344,7 +344,13 @@ describe('PlannerPage: задачи общие для родителей', () =>
   it('открывает окно правки с заполненными полями', async () => {
     const user = userEvent.setup()
     vi.mocked(fetchActivities).mockResolvedValue([
-      task({ title: 'Отвести с Show lab', address: 'Vukalovica, 6', travel_minutes: 15 }),
+      task({
+        title: 'Отвести с Show lab',
+        address: 'Vukalovica, 6',
+        travel_one_way_minutes: 15,
+        travel_legs: 4,
+        travel_minutes: 60,
+      }),
     ] as never)
 
     renderWithProviders(<PlannerPage />)
@@ -354,7 +360,11 @@ describe('PlannerPage: задачи общие для родителей', () =>
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getByLabelText('Что делали')).toHaveValue('Отвести с Show lab')
     expect(within(dialog).getByLabelText('Адрес')).toHaveValue('Vukalovica, 6')
-    expect(within(dialog).getByLabelText('Дорога туда и обратно')).toHaveValue(15)
+    // Вводится ОДНА сторона, форма поездки выбирается отдельно.
+    expect(within(dialog).getByLabelText('Дорога в одну сторону, минут')).toHaveValue(15)
+    expect(within(dialog).getByLabelText('Как ездили')).toHaveValue('4')
+    // Итог виден сразу, считать в уме не нужно.
+    expect(within(dialog).getByText(/Всего в дороге: 1 ч/)).toBeInTheDocument()
   })
 
   it('у выполненной задачи правки нет', async () => {

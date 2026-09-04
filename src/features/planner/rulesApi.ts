@@ -31,7 +31,8 @@ export async function createRecurringRule(input: {
   address: string | null
   weekday: number
   plannedMinutes: number
-  travelMinutes: number
+  travelOneWayMinutes: number
+  travelLegs: number
   /** NULL — задача появится ничьей, её заберёт тот, кто реально сделал. */
   defaultUserId: string | null
 }): Promise<void> {
@@ -42,7 +43,8 @@ export async function createRecurringRule(input: {
     address: input.address?.trim() || null,
     weekday: input.weekday,
     planned_minutes: input.plannedMinutes,
-    travel_minutes: input.travelMinutes,
+    travel_one_way_minutes: input.travelOneWayMinutes,
+    travel_legs: input.travelLegs,
     default_user_id: input.defaultUserId,
   })
 
@@ -95,7 +97,8 @@ export async function materialiseRules(params: {
         address: rule.address,
         date,
         planned_minutes: rule.planned_minutes,
-        travel_minutes: rule.travel_minutes,
+        travel_one_way_minutes: rule.travel_one_way_minutes,
+        travel_legs: rule.travel_legs,
         status: 'planned' as const,
         recurring_rule_id: rule.id,
       },
@@ -116,7 +119,8 @@ export type EditPlannedInput = {
   title: string
   date: string
   plannedMinutes: number
-  travelMinutes: number
+  travelOneWayMinutes: number
+  travelLegs: number
   address: string | null
   subcategoryId: string
   /** NULL — сделать задачу общей. */
@@ -143,7 +147,8 @@ export async function updatePlannedActivity(
       title: input.title.trim(),
       date: input.date,
       planned_minutes: input.plannedMinutes,
-      travel_minutes: input.travelMinutes,
+      travel_one_way_minutes: input.travelOneWayMinutes,
+      travel_legs: input.travelLegs,
       address: input.address?.trim() || null,
       subcategory_id: input.subcategoryId,
       user_id: input.userId,

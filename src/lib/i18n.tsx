@@ -174,7 +174,15 @@ const ru = {
   'activity.address': 'Адрес',
   'activity.addressPlaceholder': 'Например: ул. Ленина 5, музыкальная школа',
   'activity.travel': 'Дорога туда и обратно',
-  'activity.travelHint': 'Время в дороге считается как труд и входит в стоимость.',
+  'activity.travelHint':
+    'Время в дороге считается трудом и входит в стоимость — в том числе отрезки без ребёнка: нанятая няня выставила бы счёт и за них.',
+
+  'travel.oneWay': 'Дорога в одну сторону, минут',
+  'travel.shape': 'Как ездили',
+  'travel.legs.1': 'Только туда (по пути)',
+  'travel.legs.2': 'Туда и обратно',
+  'travel.legs.4': 'Отвезти и забрать (4 конца)',
+  'travel.total': 'Всего в дороге',
 
   'planner.unassigned': 'Ничья задача',
   'planner.unassignedHint': 'Кто сделает — тот и отметит, задача станет его.',
@@ -455,7 +463,15 @@ const en: Record<keyof typeof ru, string> = {
   'activity.address': 'Address',
   'activity.addressPlaceholder': 'For example: 5 Lenin St, music school',
   'activity.travel': 'Travel there and back',
-  'activity.travelHint': 'Travel time counts as work and is included in the value.',
+  'activity.travelHint':
+    'Travel counts as work and is included in the value — including the legs without the child: a hired nanny would bill for those too.',
+
+  'travel.oneWay': 'One-way travel, minutes',
+  'travel.shape': 'Trip shape',
+  'travel.legs.1': 'One way only (en route)',
+  'travel.legs.2': 'There and back',
+  'travel.legs.4': 'Drop off and pick up (4 legs)',
+  'travel.total': 'Travel total',
 
   'planner.unassigned': 'Unassigned',
   'planner.unassignedHint': 'Whoever does it marks it done, and it becomes theirs.',

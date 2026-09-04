@@ -18,8 +18,10 @@ export type NewActivityInput = {
   comment?: string
   /** Адрес, куда ездили. Нужен для повторяющихся занятий ребёнка. */
   address?: string | null
-  /** Время на дорогу туда и обратно. Считается как труд. */
-  travelMinutes?: number
+  /** Время в дороге в ОДНУ сторону. */
+  travelOneWayMinutes?: number
+  /** Сколько отрезков пути: 1, 2 или 4. Общее время база считает сама. */
+  travelLegs?: number
 }
 
 /**
@@ -55,7 +57,10 @@ export function buildActivityInsert(input: NewActivityInput): ActivityInsert {
     // так в базе одно значение «ничего нет» вместо двух разных.
     comment: input.comment?.trim() || null,
     address: input.address?.trim() || null,
-    travel_minutes: input.travelMinutes ?? 0,
+    // travel_minutes база вычисляет сама как одна сторона × отрезки,
+    // поэтому пишем только исходные значения.
+    travel_one_way_minutes: input.travelOneWayMinutes ?? 0,
+    travel_legs: input.travelLegs ?? 2,
     rate_snapshot: rate ? rate.hourly_rate : null,
     currency_snapshot: rate ? rate.currency : null,
   }
@@ -128,7 +133,8 @@ export type EditActivityInput = {
   actualMinutes: number
   comment?: string
   address?: string | null
-  travelMinutes?: number
+  travelOneWayMinutes?: number
+  travelLegs?: number
   /** Прежний вид работы — чтобы понять, менялся ли он. */
   previousSubcategoryId: string
   /** Выбранный сейчас вид работы. */
@@ -160,7 +166,8 @@ export function buildActivityUpdate(input: EditActivityInput): ActivityUpdate {
     actual_minutes: input.actualMinutes,
     comment: input.comment?.trim() || null,
     address: input.address?.trim() || null,
-    travel_minutes: input.travelMinutes ?? 0,
+    travel_one_way_minutes: input.travelOneWayMinutes ?? 0,
+    travel_legs: input.travelLegs ?? 2,
     subcategory_id: input.subcategory.id,
   }
 
@@ -203,7 +210,8 @@ export async function createPlannedActivity(input: {
   date: string
   plannedMinutes: number
   address?: string | null
-  travelMinutes?: number
+  travelOneWayMinutes?: number
+  travelLegs?: number
 }): Promise<void> {
   const { error } = await supabase.from('activities').insert({
     user_id: input.userId,
@@ -212,7 +220,8 @@ export async function createPlannedActivity(input: {
     date: input.date,
     planned_minutes: input.plannedMinutes,
     address: input.address?.trim() || null,
-    travel_minutes: input.travelMinutes ?? 0,
+    travel_one_way_minutes: input.travelOneWayMinutes ?? 0,
+    travel_legs: input.travelLegs ?? 2,
     status: 'planned',
   })
 

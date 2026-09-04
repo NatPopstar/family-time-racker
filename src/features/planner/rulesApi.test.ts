@@ -61,6 +61,9 @@ function saturdayRule(over: Partial<RecurringRule> = {}): RecurringRule {
     address: 'ул. Ленина 5',
     weekday: 6,
     planned_minutes: 60,
+    // Одна сторона 15 минут, отвезти и вернуться — итого 30.
+    travel_one_way_minutes: 15,
+    travel_legs: 2,
     travel_minutes: 30,
     default_user_id: null,
     is_active: true,
@@ -97,7 +100,8 @@ describe('createRecurringRule', () => {
       address: '  ул. Ленина 5  ',
       weekday: 6,
       plannedMinutes: 60,
-      travelMinutes: 30,
+      travelOneWayMinutes: 15,
+      travelLegs: 2,
       defaultUserId: null,
     })
 
@@ -105,7 +109,8 @@ describe('createRecurringRule', () => {
     expect(row.title).toBe('Занятие у Саши')
     expect(row.address).toBe('ул. Ленина 5')
     expect(row.weekday).toBe(6)
-    expect(row.travel_minutes).toBe(30)
+    expect(row.travel_one_way_minutes).toBe(15)
+    expect(row.travel_legs).toBe(2)
     // NULL — задача будет появляться ничьей.
     expect(row.default_user_id).toBeNull()
   })
@@ -157,9 +162,23 @@ describe('materialiseRules: подстановка задач в дни неде
 
     const row = mockUpsert.mock.calls[0][0][0]
     expect(row.address).toBe('ул. Ленина 5')
-    expect(row.travel_minutes).toBe(30)
+    expect(row.travel_one_way_minutes).toBe(15)
+    expect(row.travel_legs).toBe(2)
     expect(row.planned_minutes).toBe(60)
     expect(row.status).toBe('planned')
+  })
+
+  it('переносит форму поездки: отвезти и забрать это четыре конца', async () => {
+    // 15 минут в одну сторону × 4 отрезка = час в дороге.
+    // Общее время база посчитает сама, мы шлём исходные значения.
+    await materialiseRules({
+      rules: [saturdayRule({ travel_one_way_minutes: 15, travel_legs: 4 })],
+      days,
+    })
+
+    const row = mockUpsert.mock.calls[0][0][0]
+    expect(row.travel_one_way_minutes).toBe(15)
+    expect(row.travel_legs).toBe(4)
   })
 
   it('без назначенного делает задачу НИЧЬЕЙ', async () => {

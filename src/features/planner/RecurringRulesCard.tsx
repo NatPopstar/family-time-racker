@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { fetchRecurringRules, createRecurringRule, deactivateRecurringRule } from './rulesApi'
+import { TravelInput, type TravelLegs } from './TravelInput'
 
 const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const
 
@@ -32,6 +33,7 @@ export function RecurringRulesCard() {
   const [hours, setHours] = useState('')
   const [minutes, setMinutes] = useState('')
   const [travel, setTravel] = useState('')
+  const [travelLegs, setTravelLegs] = useState<TravelLegs>(2)
   const [assigneeId, setAssigneeId] = useState('')
   const [errorKey, setErrorKey] = useState<TranslationKey | null>(null)
 
@@ -82,7 +84,8 @@ export function RecurringRulesCard() {
       address,
       weekday: Number(weekday),
       plannedMinutes,
-      travelMinutes: Number(travel) || 0,
+      travelOneWayMinutes: Number(travel) || 0,
+      travelLegs,
       // Пусто — задача будет появляться ничьей.
       defaultUserId: assigneeId || null,
     })
@@ -117,8 +120,8 @@ export function RecurringRulesCard() {
                 </span>
                 <span className="tabular-nums text-slate-500">
                   {formatMinutes(rule.planned_minutes, locale)}
-                  {rule.travel_minutes > 0 && (
-                    <> {' + '}🚗 {formatMinutes(rule.travel_minutes, locale)}</>
+                  {(rule.travel_minutes ?? 0) > 0 && (
+                    <> {' + '}🚗 {formatMinutes(rule.travel_minutes ?? 0, locale)}</>
                   )}
                 </span>
                 {rule.address && <span className="text-slate-400">📍 {rule.address}</span>}
@@ -234,13 +237,14 @@ export function RecurringRulesCard() {
               </div>
             </div>
 
-            <Input
-              label={t('activity.travel')}
-              type="number"
-              min={0}
-              value={travel}
-              onChange={(e) => setTravel(e.target.value)}
-            />
+            <div className="sm:col-span-2">
+              <TravelInput
+                oneWayMinutes={travel}
+                legs={travelLegs}
+                onOneWayChange={setTravel}
+                onLegsChange={setTravelLegs}
+              />
+            </div>
           </div>
 
           {errorKey && (

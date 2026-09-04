@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { updatePlannedActivity } from './rulesApi'
+import { TravelInput, type TravelLegs } from './TravelInput'
 
 const MAX_MINUTES = 24 * 60
 
@@ -41,7 +42,10 @@ export function EditPlannedTaskDialog({
   const [date, setDate] = useState(task.date ?? '')
   const [hours, setHours] = useState(String(initial.hours))
   const [minutes, setMinutes] = useState(String(initial.minutes))
-  const [travel, setTravel] = useState(String(task.travel_minutes ?? 0))
+  const [travel, setTravel] = useState(String(task.travel_one_way_minutes ?? 0))
+  const [travelLegs, setTravelLegs] = useState<TravelLegs>(
+    (task.travel_legs ?? 2) as TravelLegs,
+  )
   const [assigneeId, setAssigneeId] = useState(task.user_id ?? '')
   const [errorKey, setErrorKey] = useState<TranslationKey | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -55,7 +59,8 @@ export function EditPlannedTaskDialog({
 
   const visibleSubcategories = (subcategories ?? []).filter((s) => s.category_id === categoryId)
   const plannedMinutes = hoursAndMinutesToMinutes(Number(hours) || 0, Number(minutes) || 0)
-  const travelMinutes = Number(travel) || 0
+  const travelOneWay = Number(travel) || 0
+  const travelMinutes = travelOneWay * travelLegs
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -63,7 +68,8 @@ export function EditPlannedTaskDialog({
         title,
         date,
         plannedMinutes,
-        travelMinutes,
+        travelOneWayMinutes: travelOneWay,
+        travelLegs,
         address,
         subcategoryId,
         // Пустая строка означает «сделать задачу общей».
@@ -189,16 +195,12 @@ export function EditPlannedTaskDialog({
             </div>
           </div>
 
-          <div>
-            <Input
-              label={t('activity.travel')}
-              type="number"
-              min={0}
-              value={travel}
-              onChange={(e) => setTravel(e.target.value)}
-            />
-            <p className="mt-1 text-xs text-slate-500">{t('activity.travelHint')}</p>
-          </div>
+          <TravelInput
+            oneWayMinutes={travel}
+            legs={travelLegs}
+            onOneWayChange={setTravel}
+            onLegsChange={setTravelLegs}
+          />
 
           {errorKey && (
             <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">

@@ -10,6 +10,7 @@ import { createPlannedActivity } from '@/features/activities/api'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
+import { TravelInput, type TravelLegs } from './TravelInput'
 
 const MAX_MINUTES = 24 * 60
 
@@ -32,6 +33,7 @@ export function AddPlannedTaskDialog({
   const [hours, setHours] = useState('')
   const [minutes, setMinutes] = useState('')
   const [travel, setTravel] = useState('')
+  const [travelLegs, setTravelLegs] = useState<TravelLegs>(2)
   // Пустая строка означает «ничья задача»: договоримся потом,
   // а отметит тот, кто в итоге сделает.
   const [assigneeId, setAssigneeId] = useState<string>(user?.id ?? '')
@@ -46,7 +48,8 @@ export function AddPlannedTaskDialog({
 
   const visibleSubcategories = (subcategories ?? []).filter((s) => s.category_id === categoryId)
   const plannedMinutes = hoursAndMinutesToMinutes(Number(hours) || 0, Number(minutes) || 0)
-  const travelMinutes = Number(travel) || 0
+  const travelOneWay = Number(travel) || 0
+  const travelMinutes = travelOneWay * travelLegs
 
   const mutation = useMutation({
     mutationFn: createPlannedActivity,
@@ -72,7 +75,8 @@ export function AddPlannedTaskDialog({
       date,
       plannedMinutes,
       address,
-      travelMinutes,
+      travelOneWayMinutes: travelOneWay,
+      travelLegs,
     })
   }
 
@@ -171,16 +175,12 @@ export function AddPlannedTaskDialog({
             </div>
           </div>
 
-          <div>
-            <Input
-              label={t('activity.travel')}
-              type="number"
-              min={0}
-              value={travel}
-              onChange={(e) => setTravel(e.target.value)}
-            />
-            <p className="mt-1 text-xs text-slate-500">{t('activity.travelHint')}</p>
-          </div>
+          <TravelInput
+            oneWayMinutes={travel}
+            legs={travelLegs}
+            onOneWayChange={setTravel}
+            onLegsChange={setTravelLegs}
+          />
 
           {errorKey && (
             <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
