@@ -8,27 +8,48 @@ import { fetchCategories, fetchSubcategoriesWithRates } from '@/features/categor
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
+import { PomodoroPanel } from './PomodoroPanel'
 import {
   startTimer,
+  startPomodoro,
   stopTimer,
   fetchRunningTimer,
   deleteActivity,
   elapsedMinutes,
 } from './api'
 
+type TimerMode = 'simple' | 'pomodoro'
+const MODE_STORAGE_KEY = 'ftt-timer-mode'
+
+/** Запоминаем выбранный режим: каждый раз переключать заново — раздражает. */
+function readStoredMode(): TimerMode {
+  try {
+    const saved = localStorage.getItem(MODE_STORAGE_KEY)
+    if (saved === 'simple' || saved === 'pomodoro') return saved
+  } catch {
+    // Хранилище недоступно — берём режим по умолчанию.
+  }
+  return 'simple'
+}
+
 /**
- * Таймер: второй способ учёта времени, кроме ручного ввода.
+ * Таймер с двумя режимами.
  *
- * Время старта хранится В БАЗЕ, а не в памяти браузера. Благодаря этому
- * таймер переживает перезагрузку страницы и закрытие вкладки: вернувшись,
- * человек увидит, что он всё ещё идёт. Если бы мы держали старт в памяти,
- * случайное закрытие вкладки стирало бы час работы.
+ * ОБЫЧНЫЙ — просто считает время вперёд. Годится для дел, которые
+ * нельзя резать на отрезки: прогулка с ребёнком, готовка.
+ *
+ * ПОМИДОР — 25 минут работы, 5 минут перерыва, после четвёртого
+ * помидора длинный перерыв. Годится для сосредоточенной работы и учёбы.
+ *
+ * В обоих случаях время старта хранится в базе, поэтому таймер
+ * переживает перезагрузку страницы.
  */
 export function TimerCard() {
   const { t, locale } = useI18n()
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
+  const [mode, setMode] = useState<TimerMode>(readStoredMode)
   const [categoryId, setCategoryId] = useState('')
   const [subcategoryId, setSubcategoryId] = useState('')
   const [title, setTitle] = useState('')
@@ -46,15 +67,13 @@ export function TimerCard() {
     enabled: Boolean(user?.id),
   })
 
-  // «Тик» раз в секунду, чтобы счётчик на экране рос.
-  // Само значение мы каждый раз считаем заново от времени старта,
-  // а не прибавляем по секунде: так счётчик не «уплывёт», если вкладка
-  // была свёрнута и браузер приостанавливал таймеры.
+  // Тик раз в секунду для обычного режима. Значение каждый раз считаем
+  // заново от времени старта, а не прибавляем по секунде: так счётчик
+  // не уплывёт, если вкладка была свёрнута.
   const [, setTick] = useState(0)
   useEffect(() => {
     if (!running) return
     const id = setInterval(() => setTick((n) => n + 1), 1000)
-    // Уборка: без неё таймеры накапливались бы при каждой перерисовке.
     return () => clearInterval(id)
   }, [running])
 
@@ -66,7 +85,7 @@ export function TimerCard() {
     queryClient.invalidateQueries({ queryKey: ['activities'] })
   }
 
-  const start = useMutation({
+  const startSimple = useMutation({
     mutationFn: startTimer,
     onSuccess: () => {
       refresh()
@@ -74,15 +93,25 @@ export function TimerCard() {
     },
   })
 
-  const stop = useMutation({
-    mutationFn: stopTimer,
-    onSuccess: refresh,
+  const startTomato = useMutation({
+    mutationFn: startPomodoro,
+    onSuccess: () => {
+      refresh()
+      setTitle('')
+    },
   })
 
-  const cancel = useMutation({
-    mutationFn: deleteActivity,
-    onSuccess: refresh,
-  })
+  const stop = useMutation({ mutationFn: stopTimer, onSuccess: refresh })
+  const cancel = useMutation({ mutationFn: deleteActivity, onSuccess: refresh })
+
+  function changeMode(next: TimerMode) {
+    setMode(next)
+    try {
+      localStorage.setItem(MODE_STORAGE_KEY, next)
+    } catch {
+      // Не смогли запомнить — не страшно.
+    }
+  }
 
   function handleStart(event: FormEvent) {
     event.preventDefault()
@@ -93,10 +122,17 @@ export function TimerCard() {
     if (running) return setErrorKey('timer.alreadyRunning')
     if (!user) return
 
-    start.mutate({ userId: user.id, subcategoryId, title, date: todayISO() })
+    const input = { userId: user.id, subcategoryId, title, date: todayISO() }
+    if (mode === 'pomodoro') startTomato.mutate(input)
+    else startSimple.mutate(input)
   }
 
-  // ── Таймер идёт: показываем счётчик и кнопку остановки ──
+  // ── Идёт помидор ──
+  if (running && running.timer_phase) {
+    return <PomodoroPanel activity={running} subcategory={runningSubcategory} />
+  }
+
+  // ── Идёт обычный таймер ──
   if (running) {
     const minutes = elapsedMinutes(running.timer_started_at ?? new Date().toISOString())
 
@@ -109,8 +145,6 @@ export function TimerCard() {
           {running.category_name} · {running.subcategory_name}
         </p>
 
-        {/* aria-live: программа чтения с экрана объявит изменение,
-            но не будет перебивать человека каждую секунду. */}
         <p aria-live="polite" className="mt-3 text-3xl font-bold tabular-nums text-indigo-700">
           {formatMinutes(minutes, locale)}
         </p>
@@ -142,11 +176,35 @@ export function TimerCard() {
     )
   }
 
-  // ── Таймер не запущен: показываем форму запуска ──
+  // ── Таймер не запущен: форма с выбором режима ──
   return (
     <form onSubmit={handleStart} className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-      <h2 className="text-base font-semibold text-slate-900">{t('timer.title')}</h2>
-      <p className="mt-1 text-sm text-slate-500">{t('timer.hint')}</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-base font-semibold text-slate-900">{t('timer.title')}</h2>
+
+        <div role="group" aria-label={t('timer.modeLabel')} className="flex gap-1">
+          {(['simple', 'pomodoro'] as const).map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => changeMode(option)}
+              // aria-pressed сообщает выбранный режим тем, кто не видит подсветку.
+              aria-pressed={mode === option}
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+                mode === option
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              {option === 'simple' ? t('timer.modeSimple') : t('timer.modePomodoro')}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <p className="mt-1 text-sm text-slate-500">
+        {mode === 'pomodoro' ? t('timer.pomodoroHint') : t('timer.hint')}
+      </p>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
         <Select
@@ -193,7 +251,11 @@ export function TimerCard() {
         </p>
       )}
 
-      <Button type="submit" disabled={start.isPending} className="mt-4">
+      <Button
+        type="submit"
+        disabled={startSimple.isPending || startTomato.isPending}
+        className="mt-4"
+      >
         {t('timer.start')}
       </Button>
     </form>

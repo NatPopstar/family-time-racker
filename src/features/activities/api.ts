@@ -268,6 +268,94 @@ export async function startTimer(input: {
   if (error) throw new Error(error.message)
 }
 
+/**
+ * Запускает ПОМИДОРНЫЙ таймер: первая фаза — работа.
+ *
+ * Отличие от обычного таймера только в двух полях: timer_phase
+ * и pomodoros_done. Всё остальное — та же запись со статусом
+ * «запланировано», которую мы завершим при остановке.
+ */
+export async function startPomodoro(input: {
+  userId: string
+  subcategoryId: string
+  title: string
+  date: string
+}): Promise<void> {
+  const { error } = await supabase.from('activities').insert({
+    user_id: input.userId,
+    subcategory_id: input.subcategoryId,
+    title: input.title.trim(),
+    date: input.date,
+    status: 'planned',
+    timer_started_at: new Date().toISOString(),
+    timer_phase: 'work',
+    pomodoros_done: 0,
+    // Накопленное время работы держим прямо в actual_minutes:
+    // отдельное поле не нужно, а при остановке ничего не придётся сшивать.
+    actual_minutes: 0,
+  })
+
+  if (error) throw new Error(error.message)
+}
+
+/**
+ * Переводит помидор в следующую фазу.
+ *
+ * workMinutesToAdd — сколько минут РАБОТЫ добавить к накопленным.
+ * При переходе «работа → перерыв» это 25, при «перерыв → работа» — ноль.
+ * Само число считает вызывающий код через чистые функции из lib/pomodoro.
+ */
+export async function advancePomodoro(params: {
+  activityId: string
+  toPhase: 'work' | 'short_break' | 'long_break'
+  pomodorosDone: number
+  accumulatedMinutes: number
+}): Promise<void> {
+  const { error } = await supabase
+    .from('activities')
+    .update({
+      timer_phase: params.toPhase,
+      pomodoros_done: params.pomodorosDone,
+      actual_minutes: params.accumulatedMinutes,
+      // Новая фаза начинается сейчас.
+      timer_started_at: new Date().toISOString(),
+    })
+    .eq('id', params.activityId)
+
+  if (error) throw new Error(error.message)
+}
+
+/**
+ * Завершает помидорную задачу.
+ *
+ * Минуты сюда приходят уже посчитанными: перерывы исключены,
+ * рабочие фазы ограничены 25 минутами. Ставку замораживаем здесь же —
+ * работа только что закончилась.
+ */
+export async function stopPomodoro(params: {
+  activityId: string
+  totalMinutes: number
+  subcategory: SubcategoryWithRate
+}): Promise<void> {
+  const rate = params.subcategory.market_rates
+
+  const { error } = await supabase
+    .from('activities')
+    .update({
+      // Минимум одна минута: запись с нулём выглядела бы поломкой.
+      actual_minutes: Math.max(1, params.totalMinutes),
+      status: 'done',
+      completed_at: new Date().toISOString(),
+      timer_started_at: null,
+      timer_phase: null,
+      rate_snapshot: rate ? rate.hourly_rate : null,
+      currency_snapshot: rate ? rate.currency : null,
+    })
+    .eq('id', params.activityId)
+
+  if (error) throw new Error(error.message)
+}
+
 /** Идущий сейчас таймер пользователя, если он есть. */
 export async function fetchRunningTimer(userId: string): Promise<ActivityWithValue | null> {
   const { data, error } = await supabase

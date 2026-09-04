@@ -131,6 +131,26 @@ const ru = {
   'timer.hint': 'Запустите таймер — время посчитается само и сохранится при остановке.',
   'timer.alreadyRunning': 'Таймер уже идёт. Остановите его, прежде чем запускать новый.',
 
+  'timer.modeSimple': 'Обычный',
+  'timer.modePomodoro': '🍅 Помидор',
+  'timer.modeLabel': 'Режим таймера',
+  'timer.pomodoroHint':
+    '25 минут работы, потом 5 минут перерыва. После четвёртого помидора — длинный перерыв 15 минут. Перерывы в учтённое время не идут.',
+
+  'pomodoro.phase.work': 'Работа',
+  'pomodoro.phase.short_break': 'Короткий перерыв',
+  'pomodoro.phase.long_break': 'Длинный перерыв',
+  'pomodoro.done': 'Помидоров завершено',
+  'pomodoro.counted': 'Засчитано работы',
+  'pomodoro.workFinished': 'Помидор завершён. Пора отдохнуть.',
+  'pomodoro.breakFinished': 'Перерыв окончен. Готовы продолжить?',
+  'pomodoro.startBreak': 'Перерыв',
+  'pomodoro.startWork': 'Следующий помидор',
+  'pomodoro.skipBreak': 'Пропустить перерыв',
+  'pomodoro.finish': 'Завершить задачу',
+  'pomodoro.soundOn': 'Звук включён',
+  'pomodoro.soundOff': 'Звук выключен',
+
   'planner.prevWeek': '← Прошлая неделя',
   'planner.nextWeek': 'Следующая неделя →',
   'planner.thisWeek': 'Текущая неделя',
@@ -332,6 +352,26 @@ const en: Record<keyof typeof ru, string> = {
   'timer.running': 'Running since',
   'timer.hint': 'Start the timer — the time counts itself and is saved when you stop.',
   'timer.alreadyRunning': 'A timer is already running. Stop it before starting another.',
+
+  'timer.modeSimple': 'Plain',
+  'timer.modePomodoro': '🍅 Pomodoro',
+  'timer.modeLabel': 'Timer mode',
+  'timer.pomodoroHint':
+    '25 minutes of work, then a 5 minute break. After the fourth pomodoro, a 15 minute long break. Breaks are not counted as time worked.',
+
+  'pomodoro.phase.work': 'Work',
+  'pomodoro.phase.short_break': 'Short break',
+  'pomodoro.phase.long_break': 'Long break',
+  'pomodoro.done': 'Pomodoros completed',
+  'pomodoro.counted': 'Work counted',
+  'pomodoro.workFinished': 'Pomodoro finished. Time for a break.',
+  'pomodoro.breakFinished': 'Break is over. Ready to continue?',
+  'pomodoro.startBreak': 'Take a break',
+  'pomodoro.startWork': 'Next pomodoro',
+  'pomodoro.skipBreak': 'Skip the break',
+  'pomodoro.finish': 'Finish task',
+  'pomodoro.soundOn': 'Sound on',
+  'pomodoro.soundOff': 'Sound off',
 
   'planner.prevWeek': '← Last week',
   'planner.nextWeek': 'Next week →',

@@ -44,9 +44,11 @@ export type Database = {
           date: string
           id: string
           planned_minutes: number | null
+          pomodoros_done: number
           rate_snapshot: number | null
           status: string
           subcategory_id: string
+          timer_phase: string | null
           timer_started_at: string | null
           title: string
           user_id: string
@@ -60,9 +62,11 @@ export type Database = {
           date: string
           id?: string
           planned_minutes?: number | null
+          pomodoros_done?: number
           rate_snapshot?: number | null
           status?: string
           subcategory_id: string
+          timer_phase?: string | null
           timer_started_at?: string | null
           title: string
           user_id: string
@@ -76,9 +80,11 @@ export type Database = {
           date?: string
           id?: string
           planned_minutes?: number | null
+          pomodoros_done?: number
           rate_snapshot?: number | null
           status?: string
           subcategory_id?: string
+          timer_phase?: string | null
           timer_started_at?: string | null
           title?: string
           user_id?: string
@@ -242,10 +248,12 @@ export type Database = {
           date: string | null
           id: string | null
           planned_minutes: number | null
+          pomodoros_done: number | null
           rate_snapshot: number | null
           status: string | null
           subcategory_id: string | null
           subcategory_name: string | null
+          timer_phase: string | null
           timer_started_at: string | null
           title: string | null
           user_id: string | null

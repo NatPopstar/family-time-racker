@@ -22,6 +22,9 @@ vi.mock('@/features/activities/api', () => ({
   stopTimer: vi.fn(),
   fetchRunningTimer: vi.fn(),
   elapsedMinutes: vi.fn(() => 0),
+  startPomodoro: vi.fn(),
+  advancePomodoro: vi.fn(),
+  stopPomodoro: vi.fn(),
 }))
 
 vi.mock('@/features/categories/api', () => ({
