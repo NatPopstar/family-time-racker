@@ -183,6 +183,10 @@ const ru = {
   'planner.forWhom': 'Кто делает',
   'planner.nobody': '— договоримся потом —',
   'planner.onlyAdultsCanClaim': 'Забрать общую задачу может только взрослый.',
+  'planner.edit': 'Изменить',
+  'planner.editTitle': 'Изменить задачу',
+  'planner.childTask': 'Задача ребёнка',
+  'planner.childTaskHint': 'Останется записанной на ребёнка, кто бы ни отметил выполнение.',
 
   'recurring.title': 'Повторяющиеся события',
   'recurring.hint':
@@ -460,6 +464,10 @@ const en: Record<keyof typeof ru, string> = {
   'planner.forWhom': 'Who does it',
   'planner.nobody': '— decide later —',
   'planner.onlyAdultsCanClaim': 'Only an adult can take a shared task.',
+  'planner.edit': 'Edit',
+  'planner.editTitle': 'Edit task',
+  'planner.childTask': "Child's task",
+  'planner.childTaskHint': 'Stays recorded to the child, whoever marks it done.',
 
   'recurring.title': 'Repeating events',
   'recurring.hint':

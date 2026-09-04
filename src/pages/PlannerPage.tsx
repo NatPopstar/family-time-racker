@@ -44,18 +44,16 @@ export function PlannerPage() {
   const { data: rules } = useQuery({ queryKey: ['recurring-rules'], queryFn: fetchRecurringRules })
 
   const { data: tasks, isPending } = useQuery({
-    queryKey: ['planner', range.from, range.to, user?.id],
+    queryKey: ['planner', range.from, range.to],
     // status 'all': Планеру нужны и запланированные, и уже выполненные —
     // иначе отмеченная задача исчезала бы с глаз, и сравнить план
     // с фактом было бы негде.
     queryFn: () =>
-      fetchActivities({
-        from: range.from,
-        to: range.to,
-        userId: user?.id,
-        status: 'all',
-        includeUnassigned: true,
-      }),
+      // БЕЗ фильтра по человеку: запланированные задачи — это
+      // договорённость семьи, и видеть их должны оба родителя.
+      // Иначе задача, назначенная на одного, была бы невидима
+      // второму, и отметить её он бы не смог.
+      fetchActivities({ from: range.from, to: range.to, status: 'all' }),
     enabled: Boolean(user?.id),
   })
 

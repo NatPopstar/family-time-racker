@@ -21,6 +21,20 @@ vi.mock('@/features/activities/api', () => ({
   deleteActivity: vi.fn(),
 }))
 
+vi.mock('@/features/profile/api', () => ({
+  fetchAllProfiles: vi.fn(),
+  fetchMyProfile: vi.fn(),
+}))
+
+vi.mock('@/features/planner/rulesApi', () => ({
+  fetchRecurringRules: vi.fn(),
+  createRecurringRule: vi.fn(),
+  deactivateRecurringRule: vi.fn(),
+  materialiseRules: vi.fn(),
+  claimActivity: vi.fn(),
+  updatePlannedActivity: vi.fn(),
+}))
+
 vi.mock('@/features/categories/api', () => ({
   fetchCategories: vi.fn(),
   fetchSubcategories: vi.fn(),
@@ -29,6 +43,14 @@ vi.mock('@/features/categories/api', () => ({
 
 import { fetchActivities, completePlannedActivity, deleteActivity } from '@/features/activities/api'
 import { fetchCategories, fetchSubcategoriesWithRates } from '@/features/categories/api'
+import { fetchAllProfiles } from '@/features/profile/api'
+import { fetchRecurringRules, materialiseRules } from '@/features/planner/rulesApi'
+
+const people = [
+  { id: 'user-1', display_name: 'Мама', color: '#6366f1', role: 'adult', created_at: '' },
+  { id: 'papa', display_name: 'Папа', color: '#eb6834', role: 'adult', created_at: '' },
+  { id: 'kid', display_name: 'Даня', color: '#1baf7a', role: 'child', created_at: '' },
+]
 
 const subcategories = [
   {
@@ -81,6 +103,9 @@ describe('PlannerPage', () => {
     vi.mocked(fetchCategories).mockResolvedValue(categories)
     vi.mocked(completePlannedActivity).mockResolvedValue(undefined)
     vi.mocked(deleteActivity).mockResolvedValue(undefined)
+    vi.mocked(fetchAllProfiles).mockResolvedValue(people as never)
+    vi.mocked(fetchRecurringRules).mockResolvedValue([])
+    vi.mocked(materialiseRules).mockResolvedValue(undefined)
   })
 
   it('показывает все семь дней недели', async () => {
@@ -235,5 +260,113 @@ describe('PlannerPage', () => {
 
     await waitFor(() => expect(deleteActivity).toHaveBeenCalledTimes(1))
     expect(vi.mocked(deleteActivity).mock.calls[0][0]).toBe('task-1')
+  })
+})
+
+describe('PlannerPage: задачи общие для родителей', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    localStorage.clear()
+    vi.mocked(fetchActivities).mockResolvedValue([])
+    vi.mocked(fetchSubcategoriesWithRates).mockResolvedValue(subcategories)
+    vi.mocked(fetchCategories).mockResolvedValue(categories)
+    vi.mocked(completePlannedActivity).mockResolvedValue(undefined)
+    vi.mocked(deleteActivity).mockResolvedValue(undefined)
+    vi.mocked(fetchAllProfiles).mockResolvedValue(people as never)
+    vi.mocked(fetchRecurringRules).mockResolvedValue([])
+    vi.mocked(materialiseRules).mockResolvedValue(undefined)
+  })
+
+  it('запрашивает задачи ВСЕЙ семьи, а не только свои', async () => {
+    // Иначе задача, назначенная на второго родителя, была бы ему
+    // не видна, и отметить её он бы не смог.
+    renderWithProviders(<PlannerPage />)
+
+    await waitFor(() => expect(fetchActivities).toHaveBeenCalled())
+    expect(vi.mocked(fetchActivities).mock.calls[0][0].userId).toBeUndefined()
+  })
+
+  it('показывает задачу, назначенную на другого родителя', async () => {
+    vi.mocked(fetchActivities).mockResolvedValue([
+      task({ user_id: 'papa', title: 'Отвести с Show lab' }),
+    ] as never)
+
+    renderWithProviders(<PlannerPage />)
+
+    expect(await screen.findByText('Отвести с Show lab')).toBeInTheDocument()
+    expect(screen.getByText(/Назначено: Папа/)).toBeInTheDocument()
+  })
+
+  it('отметку записывает на того, кто нажал, а не на назначенного', async () => {
+    const user = userEvent.setup()
+    vi.mocked(fetchActivities).mockResolvedValue([task({ user_id: 'papa' })] as never)
+
+    renderWithProviders(<PlannerPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Выполнено' }))
+    await user.type(screen.getByLabelText('часов'), '1')
+    await user.click(screen.getByRole('button', { name: 'Отметить выполненной' }))
+
+    await waitFor(() => expect(completePlannedActivity).toHaveBeenCalledTimes(1))
+    // Назначена была на папу, отметила мама — значит труд мамин.
+    expect(vi.mocked(completePlannedActivity).mock.calls[0][0].claimForUserId).toBe('user-1')
+  })
+
+  it('ЗАДАЧУ РЕБЁНКА не забирает себе', async () => {
+    const user = userEvent.setup()
+    vi.mocked(fetchActivities).mockResolvedValue([
+      task({ user_id: 'kid', title: 'Сделать уроки' }),
+    ] as never)
+
+    renderWithProviders(<PlannerPage />)
+
+    await screen.findByText('Сделать уроки')
+    expect(screen.getByText(/Задача ребёнка/)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Выполнено' }))
+    await user.type(screen.getByLabelText('часов'), '1')
+    await user.click(screen.getByRole('button', { name: 'Отметить выполненной' }))
+
+    await waitFor(() => expect(completePlannedActivity).toHaveBeenCalledTimes(1))
+    // null означает «владельца не менять»: труд остаётся ребёнкиным,
+    // иначе родитель обнулил бы его статистику одной кнопкой.
+    expect(vi.mocked(completePlannedActivity).mock.calls[0][0].claimForUserId).toBeNull()
+  })
+
+  it('даёт кнопку правки у запланированной задачи', async () => {
+    vi.mocked(fetchActivities).mockResolvedValue([task({})] as never)
+
+    renderWithProviders(<PlannerPage />)
+
+    expect(await screen.findByRole('button', { name: 'Изменить' })).toBeInTheDocument()
+  })
+
+  it('открывает окно правки с заполненными полями', async () => {
+    const user = userEvent.setup()
+    vi.mocked(fetchActivities).mockResolvedValue([
+      task({ title: 'Отвести с Show lab', address: 'Vukalovica, 6', travel_minutes: 15 }),
+    ] as never)
+
+    renderWithProviders(<PlannerPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Изменить' }))
+
+    const dialog = await screen.findByRole('dialog')
+    expect(within(dialog).getByLabelText('Что делали')).toHaveValue('Отвести с Show lab')
+    expect(within(dialog).getByLabelText('Адрес')).toHaveValue('Vukalovica, 6')
+    expect(within(dialog).getByLabelText('Дорога туда и обратно')).toHaveValue(15)
+  })
+
+  it('у выполненной задачи правки нет', async () => {
+    // Выполненная запись — уже история труда её владельца,
+    // и чужие руки в ней не нужны.
+    vi.mocked(fetchActivities).mockResolvedValue([
+      task({ status: 'done', actual_minutes: 60 }),
+    ] as never)
+
+    renderWithProviders(<PlannerPage />)
+
+    await screen.findByText('Уборка ванной')
+    expect(screen.queryByRole('button', { name: 'Изменить' })).not.toBeInTheDocument()
   })
 })

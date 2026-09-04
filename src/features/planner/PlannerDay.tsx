@@ -7,6 +7,7 @@ import type { ActivityWithValue, Profile } from '@/types/models'
 import type { SubcategoryWithRate } from '@/features/categories/api'
 import { completePlannedActivity, deleteActivity } from '@/features/activities/api'
 import { claimActivity } from './rulesApi'
+import { EditPlannedTaskDialog } from './EditPlannedTaskDialog'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 
@@ -89,6 +90,7 @@ function PlannerTask({
   const queryClient = useQueryClient()
 
   const [isCompleting, setIsCompleting] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   const [hours, setHours] = useState('')
   const [minutes, setMinutes] = useState('')
 
@@ -99,6 +101,11 @@ function PlannerTask({
   // Ничья задача: договорённости не было, отметит тот, кто сделает.
   const isUnassigned = task.user_id === null
   const owner = people.find((p) => p.id === task.user_id)
+
+  // Задача ребёнка остаётся записанной на него, кто бы ни нажал
+  // «Выполнено». Иначе родитель, отметив «уроки сделаны», забрал бы
+  // себе его труд, и статистика ребёнка обнулилась бы.
+  const ownerIsChild = owner?.role === 'child'
 
   function refresh() {
     queryClient.invalidateQueries({ queryKey: ['planner'] })
@@ -144,6 +151,7 @@ function PlannerTask({
         ) : (
           <span className="text-slate-500">
             {t('planner.assignedTo')}: {owner?.display_name ?? '—'}
+            {ownerIsChild && <> · {t('planner.childTask')}</>}
           </span>
         )}
       </p>
@@ -185,6 +193,12 @@ function PlannerTask({
             {t('planner.done')}
           </Button>
 
+          {/* Править запланированную задачу может любой взрослый:
+              это договорённость семьи, а не личная запись. */}
+          <Button variant="ghost" onClick={() => setIsEditing(true)} className="text-xs">
+            {t('planner.edit')}
+          </Button>
+
           {/* Забрать задачу можно и не выполняя её — например, когда
               родители договорились утром, а занятие только вечером. */}
           {isUnassigned && currentUserId && (
@@ -202,6 +216,14 @@ function PlannerTask({
 
       {isUnassigned && !isDone && (
         <p className="mt-1 text-xs text-amber-700">{t('planner.unassignedHint')}</p>
+      )}
+
+      {ownerIsChild && !isDone && (
+        <p className="mt-1 text-xs text-slate-400">{t('planner.childTaskHint')}</p>
+      )}
+
+      {isEditing && (
+        <EditPlannedTaskDialog task={task} onClose={() => setIsEditing(false)} />
       )}
 
       {!isDone && isCompleting && (
@@ -238,8 +260,11 @@ function PlannerTask({
                     Number(minutes) || 0,
                   ),
                   subcategory: subcategory!,
-                  // Ничья задача становится задачей того, кто её отметил.
-                  claimForUserId: isUnassigned ? currentUserId : null,
+                  // Кто нажал «Выполнено» — на того и записывается,
+                  // даже если заранее назначен был другой: по факту
+                  // отвезти мог кто угодно, и труд принадлежит ему.
+                  // Исключение — задача ребёнка: она остаётся его.
+                  claimForUserId: ownerIsChild ? null : currentUserId,
                 })
               }
               className="text-xs"

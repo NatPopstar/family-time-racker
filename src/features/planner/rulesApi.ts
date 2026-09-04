@@ -111,6 +111,48 @@ export async function materialiseRules(params: {
   if (error) throw new Error(error.message)
 }
 
+/** Что можно поменять в запланированной задаче. */
+export type EditPlannedInput = {
+  title: string
+  date: string
+  plannedMinutes: number
+  travelMinutes: number
+  address: string | null
+  subcategoryId: string
+  /** NULL — сделать задачу общей. */
+  userId: string | null
+}
+
+/**
+ * Правит запланированную задачу.
+ *
+ * Менять её может любой взрослый, пока она не выполнена: это
+ * договорённость семьи, а не чья-то личная запись. Право проверяет
+ * сама база.
+ *
+ * Ставку здесь НЕ трогаем: работа ещё не сделана, замораживать нечего.
+ * Она встанет в момент отметки о выполнении.
+ */
+export async function updatePlannedActivity(
+  id: string,
+  input: EditPlannedInput,
+): Promise<void> {
+  const { error } = await supabase
+    .from('activities')
+    .update({
+      title: input.title.trim(),
+      date: input.date,
+      planned_minutes: input.plannedMinutes,
+      travel_minutes: input.travelMinutes,
+      address: input.address?.trim() || null,
+      subcategory_id: input.subcategoryId,
+      user_id: input.userId,
+    })
+    .eq('id', id)
+
+  if (error) throw new Error(error.message)
+}
+
 /**
  * Забирает ничью задачу себе.
  *
