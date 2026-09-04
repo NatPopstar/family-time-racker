@@ -3,24 +3,35 @@ import { formatHours } from '@/lib/time'
 import { formatMoney } from '@/lib/money'
 
 /**
- * Карточка с одним показателем: подпись, крупное число, стоимость.
+ * Карточка с одним показателем: подпись, крупное число, деньги.
  *
  * Это НЕ график. Для одного числа диаграмма из одного столбика была бы
  * лишней — число само по себе и есть визуализация. Графики начинаются
  * там, где чисел несколько и их надо сравнивать.
+ *
+ * ДЕНЬГИ ПОКАЗЫВАЕМ ДВУМЯ СТРОКАМИ, а не одной суммой. «Заработано»
+ * это реальная зарплата, «Оценка труда» — сколько стоило бы купить
+ * ту же работу на стороне. Сложить их в одно число значит получить
+ * величину, которая ничего не означает.
  */
 export function StatTile({
   label,
   minutes,
-  value,
-  currency,
+  earnings,
+  estimated,
+  earningsCurrency,
+  estimatedCurrency,
   isLoading,
 }: {
   label: string
   minutes: number
-  value: number
-  /** Валюта берётся из самих записей, а не зашита в код. */
-  currency: string
+  /** Реально заработано — зарплата за оплачиваемую работу. */
+  earnings: number
+  /** Оценка неоплачиваемого труда по рыночным ставкам. */
+  estimated: number
+  /** У двух сумм валюта может отличаться, поэтому их две. */
+  earningsCurrency: string
+  estimatedCurrency: string
   isLoading?: boolean
 }) {
   const { t, locale } = useI18n()
@@ -39,9 +50,22 @@ export function StatTile({
           <p className="mt-2 text-3xl font-bold text-slate-900">
             {formatHours(minutes, locale)}
           </p>
-          <p className="mt-1 text-sm font-medium text-emerald-700">
-            {value > 0 ? formatMoney(value, currency, locale) : ' '}
-          </p>
+
+          {earnings > 0 && (
+            <p className="mt-1 text-sm font-medium text-emerald-700">
+              {t('report.earned')}: {formatMoney(earnings, earningsCurrency, locale)}
+            </p>
+          )}
+
+          {estimated > 0 && (
+            <p className="mt-0.5 text-sm font-medium text-indigo-700">
+              {t('family.marketValue')}: {formatMoney(estimated, estimatedCurrency, locale)}
+            </p>
+          )}
+
+          {/* Пустая строка держит высоту карточек одинаковой,
+              иначе соседние карточки прыгали бы по высоте. */}
+          {earnings === 0 && estimated === 0 && <p className="mt-1 text-sm">&nbsp;</p>}
         </>
       )}
     </div>

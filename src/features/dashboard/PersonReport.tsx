@@ -15,12 +15,14 @@ import { percentOfTotal } from './stats'
 export function PersonReport({
   person,
   categories,
-  currency,
+  earningsCurrency,
+  estimatedCurrency,
 }: {
   person: PersonRow
   categories: CategorySummary[]
-  /** Валюта берётся из самих записей, а не зашита в код. */
-  currency: string
+  /** У двух сумм валюта может отличаться, поэтому их две. */
+  earningsCurrency: string
+  estimatedCurrency: string
 }) {
   const { t, locale } = useI18n()
 
@@ -61,11 +63,23 @@ export function PersonReport({
 
       {/* Оценка стоимости — главная цифра отчёта, поэтому она
           отделена чертой и набрана крупнее остальных. */}
-      <div className="mt-4 flex items-baseline justify-between border-t border-slate-100 pt-3">
-        <span className="text-sm font-medium text-slate-600">{t('report.estimatedValue')}</span>
-        <span className="text-xl font-bold text-emerald-700">
-          {formatMoney(person.totalValue, currency, locale)}
-        </span>
+      {/* Две цифры раздельно: реальная зарплата и условная оценка
+          неоплачиваемого труда. Их сумма не имела бы смысла. */}
+      <div className="mt-4 space-y-1 border-t border-slate-100 pt-3">
+        {person.totalEarnings > 0 && (
+          <div className="flex items-baseline justify-between">
+            <span className="text-sm font-medium text-slate-600">{t('report.earned')}</span>
+            <span className="text-xl font-bold text-emerald-700">
+              {formatMoney(person.totalEarnings, earningsCurrency, locale)}
+            </span>
+          </div>
+        )}
+        <div className="flex items-baseline justify-between">
+          <span className="text-sm font-medium text-slate-600">{t('report.estimatedValue')}</span>
+          <span className="text-xl font-bold text-indigo-700">
+            {formatMoney(person.totalEstimated, estimatedCurrency, locale)}
+          </span>
+        </div>
       </div>
     </section>
   )

@@ -6,7 +6,7 @@ import { formatHours } from '@/lib/time'
 import { formatMoney } from '@/lib/money'
 import { fetchActivities } from '@/features/activities/api'
 import { fetchAllProfiles } from '@/features/profile/api'
-import { summarize, summarizeByPerson, detectCurrency } from '@/features/dashboard/stats'
+import { summarize, summarizeByPerson, detectCurrencies } from '@/features/dashboard/stats'
 import { PersonReport } from '@/features/dashboard/PersonReport'
 import { Button } from '@/components/ui/Button'
 
@@ -40,7 +40,7 @@ export function ReportsPage() {
   const rows = summarizeByPerson(all, people)
   const familyTotal = summarize(all)
   // Валюта итогов берётся из самих записей, а не зашита в код.
-  const { currency } = detectCurrency(all)
+  const { earnings: earningsCurrency, estimated: estimatedCurrency } = detectCurrencies(all)
 
   /** Переключение режима сбрасывает сдвиг: «неделя назад» и «месяц назад» — разное. */
   function switchMode(next: 'week' | 'month') {
@@ -113,7 +113,8 @@ export function ReportsPage() {
                 person={row}
                 // Разбивку по категориям считаем из записей именно
                 // этого человека, а не делим общую.
-                currency={currency}
+                earningsCurrency={earningsCurrency}
+                estimatedCurrency={estimatedCurrency}
                 categories={
                   summarize(all.filter((a) => a.user_id === row.userId)).byCategory
                 }
@@ -128,12 +129,15 @@ export function ReportsPage() {
                 <span className="text-lg font-semibold tabular-nums">
                   {formatHours(familyTotal.totalMinutes, locale)}
                 </span>
-                <span className="text-2xl font-bold tabular-nums text-emerald-400">
-                  {formatMoney(familyTotal.totalValue, currency, locale)}
+                <span className="text-lg font-semibold tabular-nums text-emerald-400">
+                  {t('report.earned')}: {formatMoney(familyTotal.totalEarnings, earningsCurrency, locale)}
+                </span>
+                <span className="text-lg font-semibold tabular-nums text-indigo-300">
+                  {t('report.estimatedValue')}: {formatMoney(familyTotal.totalEstimated, estimatedCurrency, locale)}
                 </span>
               </span>
             </div>
-            <p className="mt-1 text-xs text-slate-400">{t('report.unpaidShare')}</p>
+            <p className="mt-1 text-xs text-slate-400">{t('money.bothHint')}</p>
           </div>
         </>
       )}

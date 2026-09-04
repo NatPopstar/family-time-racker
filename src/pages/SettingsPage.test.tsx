@@ -30,8 +30,8 @@ import {
 import { fetchCategories, fetchSubcategoriesWithRates } from '@/features/categories/api'
 
 const rates = [
-  { id: 'rate-clean', name: 'Cleaning', hourly_rate: 20, currency: 'GBP', is_active: true, created_at: '' },
-  { id: 'rate-chef', name: 'Private Chef', hourly_rate: 35, currency: 'GBP', is_active: true, created_at: '' },
+  { id: 'rate-clean', name: 'Cleaning', hourly_rate: 20, currency: 'GBP', is_active: true, is_earnings: false, created_at: '' },
+  { id: 'rate-chef', name: 'Private Chef', hourly_rate: 35, currency: 'GBP', is_active: true, is_earnings: false, created_at: '' },
 ]
 
 const categories = [

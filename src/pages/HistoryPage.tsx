@@ -9,7 +9,7 @@ import { formatDateShort } from '@/lib/dates'
 import { fetchActivities, deleteActivity } from '@/features/activities/api'
 import { fetchCategories } from '@/features/categories/api'
 import { fetchAllProfiles } from '@/features/profile/api'
-import { detectCurrency } from '@/features/dashboard/stats'
+import { detectCurrencies } from '@/features/dashboard/stats'
 import { PeriodFilter } from '@/features/activities/PeriodFilter'
 import { EditActivityDialog } from '@/features/activities/EditActivityDialog'
 import { Select } from '@/components/ui/Select'
@@ -61,7 +61,8 @@ export function HistoryPage() {
   })
 
   // Валюта итога берётся из самих записей, а не зашита в код.
-  const { currency } = detectCurrency(visible)
+  // В истории у каждой записи своя валюта; для ИТОГА берём валюту оценки.
+  const { estimated: currency } = detectCurrencies(visible)
   const totalMinutes = visible.reduce((sum, a) => sum + (a.actual_minutes ?? 0), 0)
   const totalValue = visible.reduce((sum, a) => sum + (a.value ?? 0), 0)
 

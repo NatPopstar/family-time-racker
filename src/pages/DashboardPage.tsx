@@ -9,7 +9,7 @@ import { ActivityList } from '@/features/activities/ActivityList'
 import { TimerCard } from '@/features/activities/TimerCard'
 import { StatTile } from '@/features/dashboard/StatTile'
 import { CategoryDonut } from '@/features/dashboard/CategoryDonut'
-import { summarize, filterByRange, detectCurrency } from '@/features/dashboard/stats'
+import { summarize, filterByRange, detectCurrencies } from '@/features/dashboard/stats'
 
 /**
  * «Мой день» — личный кабинет.
@@ -50,7 +50,8 @@ export function DashboardPage() {
   // Валюту берём из самих записей: каждая помнит ту, что была
   // на момент выполнения. Раньше здесь стояло жёсткое 'GBP',
   // и после смены валюты в настройках дашборд продолжал рисовать фунты.
-  const { currency, isMixed } = detectCurrency(all)
+  const { earnings: earningsCurrency, estimated: estimatedCurrency, isMixed } =
+    detectCurrencies(all)
 
   return (
     <div className="space-y-8">
@@ -63,22 +64,28 @@ export function DashboardPage() {
         <StatTile
           label={t('dashboard.today')}
           minutes={todayStats.totalMinutes}
-          value={todayStats.totalValue}
-          currency={currency}
+          earnings={todayStats.totalEarnings}
+          estimated={todayStats.totalEstimated}
+          earningsCurrency={earningsCurrency}
+          estimatedCurrency={estimatedCurrency}
           isLoading={isPending}
         />
         <StatTile
           label={t('dashboard.week')}
           minutes={weekStats.totalMinutes}
-          value={weekStats.totalValue}
-          currency={currency}
+          earnings={weekStats.totalEarnings}
+          estimated={weekStats.totalEstimated}
+          earningsCurrency={earningsCurrency}
+          estimatedCurrency={estimatedCurrency}
           isLoading={isPending}
         />
         <StatTile
           label={t('dashboard.month')}
           minutes={monthStats.totalMinutes}
-          value={monthStats.totalValue}
-          currency={currency}
+          earnings={monthStats.totalEarnings}
+          estimated={monthStats.totalEstimated}
+          earningsCurrency={earningsCurrency}
+          estimatedCurrency={estimatedCurrency}
           isLoading={isPending}
         />
       </div>
@@ -96,7 +103,7 @@ export function DashboardPage() {
       <CategoryDonut
         data={weekStats.byCategory}
         totalMinutes={weekStats.totalMinutes}
-        currency={currency}
+        currency={estimatedCurrency}
       />
 
       <TimerCard />

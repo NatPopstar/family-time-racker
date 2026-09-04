@@ -352,3 +352,58 @@ describe('дорога попадает в итоги', () => {
     expect(result[0].mama).toBe(90)
   })
 })
+
+describe('заработок и оценка труда НЕ СКЛАДЫВАЮТСЯ', () => {
+  it('summarize держит их раздельно', () => {
+    // «Заработал 2000» и «его труд стоил бы 2000, если бы его покупали» —
+    // разные утверждения. Их сумма не значит ничего.
+    const result = summarize([
+      entry({ value: 1000, is_earnings_snapshot: true }),
+      entry({ value: 300, is_earnings_snapshot: false }),
+    ])
+
+    expect(result.totalEarnings).toBe(1000)
+    expect(result.totalEstimated).toBe(300)
+  })
+
+  it('запись без признака считается оценкой', () => {
+    // Так устроены все записи, сделанные до появления зарплат.
+    const result = summarize([entry({ value: 50, is_earnings_snapshot: false })])
+
+    expect(result.totalEarnings).toBe(0)
+    expect(result.totalEstimated).toBe(50)
+  })
+
+  it('summarizeByPerson тоже делит по людям', () => {
+    const rows = summarizeByPerson(
+      [
+        entry({ user_id: 'papa', value: 1000, is_earnings_snapshot: true }),
+        entry({ user_id: 'mama', value: 300, is_earnings_snapshot: false }),
+      ],
+      [
+        { id: 'papa', display_name: 'Папа' },
+        { id: 'mama', display_name: 'Мама' },
+      ],
+    )
+
+    const papa = rows.find((r) => r.userId === 'papa')!
+    const mama = rows.find((r) => r.userId === 'mama')!
+
+    // У папы зарплата, у мамы оценка неоплачиваемого труда.
+    expect(papa.totalEarnings).toBe(1000)
+    expect(papa.totalEstimated).toBe(0)
+    expect(mama.totalEarnings).toBe(0)
+    expect(mama.totalEstimated).toBe(300)
+  })
+
+  it('считает пример с настоящими данными', () => {
+    // Андрей: 22.93 ч по 47.45 и 21.43 ч по 43.75.
+    const result = summarize([
+      entry({ value: 1088.2, is_earnings_snapshot: true }),
+      entry({ value: 937.71, is_earnings_snapshot: true }),
+    ])
+
+    expect(Math.round(result.totalEarnings)).toBe(2026)
+    expect(result.totalEstimated).toBe(0)
+  })
+})

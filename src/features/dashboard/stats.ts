@@ -29,7 +29,24 @@ export type CategorySummary = {
 
 export type Summary = {
   totalMinutes: number
+  /**
+   * Сумма всех денег. Оставлена для совместимости, но показывать её
+   * человеку НЕ НАДО: она складывает разные по смыслу вещи.
+   */
   totalValue: number
+  /**
+   * РЕАЛЬНО ЗАРАБОТАНО — зарплата за оплачиваемую работу.
+   */
+  totalEarnings: number
+  /**
+   * ОЦЕНКА НЕОПЛАЧИВАЕМОГО ТРУДА — сколько стоило бы купить эту работу
+   * на стороне. Денег за неё никто не платил.
+   *
+   * Эти два числа НЕ СКЛАДЫВАЮТСЯ. «Заработал 2000» и «его труд стоил бы
+   * 2000, если бы его покупали» — разные утверждения, и их сумма
+   * не значит ничего.
+   */
+  totalEstimated: number
   /** По категориям, от большей к меньшей. Пустые категории не включаются. */
   byCategory: CategorySummary[]
 }
@@ -40,6 +57,8 @@ export function summarize(activities: ActivityWithValue[]): Summary {
 
   let totalMinutes = 0
   let totalValue = 0
+  let totalEarnings = 0
+  let totalEstimated = 0
 
   for (const activity of activities) {
     const minutes = activityMinutes(activity)
@@ -47,6 +66,10 @@ export function summarize(activities: ActivityWithValue[]): Summary {
 
     totalMinutes += minutes
     totalValue += value
+    // Признак заморожен в самой записи, поэтому смена настроек
+    // не превратит задним числом заработок в оценку.
+    if (activity.is_earnings_snapshot) totalEarnings += value
+    else totalEstimated += value
 
     const slug = activity.category_slug ?? 'unknown'
     const existing = buckets.get(slug)
@@ -67,6 +90,8 @@ export function summarize(activities: ActivityWithValue[]): Summary {
   return {
     totalMinutes,
     totalValue,
+    totalEarnings,
+    totalEstimated,
     // Сортируем по убыванию: читателю важнее всего самая крупная доля,
     // и она должна быть первой и в легенде, и в диаграмме.
     byCategory: [...buckets.values()].sort((a, b) => b.minutes - a.minutes),
@@ -115,6 +140,32 @@ export function detectCurrency(
   return { currency: first, isMixed: found.size > 1 }
 }
 
+/**
+ * Валюты для ДВУХ разных сумм.
+ *
+ * Заработок и оценка неоплачиваемого труда — разные цифры, и валюта
+ * у них может отличаться. Так и вышло на живых данных: зарплата
+ * записана в евро, а домашний труд оценён в фунтах. Одна общая валюта
+ * подписала бы евро значком фунта — то есть соврала.
+ */
+export function detectCurrencies(activities: ActivityWithValue[]): {
+  earnings: string
+  estimated: string
+  isMixed: boolean
+} {
+  const earnings = detectCurrency(activities.filter((a) => a.is_earnings_snapshot))
+  const estimated = detectCurrency(activities.filter((a) => !a.is_earnings_snapshot))
+
+  return {
+    earnings: earnings.currency,
+    estimated: estimated.currency,
+    // «Смешано» — это когда РАЗНЫЕ валюты внутри одной и той же цифры.
+    // Разные валюты у заработка и у оценки бедой не являются:
+    // это два независимых числа.
+    isMixed: earnings.isMixed || estimated.isMixed,
+  }
+}
+
 /** Строка семейной таблицы: один человек и его время по категориям. */
 export type PersonRow = {
   userId: string
@@ -126,6 +177,10 @@ export type PersonRow = {
   childcare: number
   totalMinutes: number
   totalValue: number
+  /** Реально заработано. */
+  totalEarnings: number
+  /** Оценка неоплачиваемого труда. */
+  totalEstimated: number
 }
 
 /**
@@ -152,6 +207,8 @@ export function summarizeByPerson(
         childcare: 0,
         totalMinutes: 0,
         totalValue: 0,
+        totalEarnings: 0,
+        totalEstimated: 0,
       },
     ]),
   )
@@ -163,8 +220,11 @@ export function summarizeByPerson(
     if (!row) continue
 
     const minutes = activityMinutes(activity)
+    const value = activity.value ?? 0
     row.totalMinutes += minutes
-    row.totalValue += activity.value ?? 0
+    row.totalValue += value
+    if (activity.is_earnings_snapshot) row.totalEarnings += value
+    else row.totalEstimated += value
 
     switch (activity.category_slug) {
       case 'work':

@@ -44,6 +44,7 @@ export type Database = {
           currency_snapshot: string | null
           date: string
           id: string
+          is_earnings_snapshot: boolean
           planned_minutes: number | null
           pomodoros_done: number
           rate_snapshot: number | null
@@ -65,6 +66,7 @@ export type Database = {
           currency_snapshot?: string | null
           date: string
           id?: string
+          is_earnings_snapshot?: boolean
           planned_minutes?: number | null
           pomodoros_done?: number
           rate_snapshot?: number | null
@@ -86,6 +88,7 @@ export type Database = {
           currency_snapshot?: string | null
           date?: string
           id?: string
+          is_earnings_snapshot?: boolean
           planned_minutes?: number | null
           pomodoros_done?: number
           rate_snapshot?: number | null
@@ -160,6 +163,7 @@ export type Database = {
           hourly_rate: number
           id: string
           is_active: boolean
+          is_earnings: boolean
           name: string
         }
         Insert: {
@@ -168,6 +172,7 @@ export type Database = {
           hourly_rate: number
           id?: string
           is_active?: boolean
+          is_earnings?: boolean
           name: string
         }
         Update: {
@@ -176,6 +181,7 @@ export type Database = {
           hourly_rate?: number
           id?: string
           is_active?: boolean
+          is_earnings?: boolean
           name?: string
         }
         Relationships: []
@@ -338,6 +344,7 @@ export type Database = {
           currency_snapshot: string | null
           date: string | null
           id: string | null
+          is_earnings_snapshot: boolean | null
           planned_minutes: number | null
           pomodoros_done: number | null
           rate_snapshot: number | null

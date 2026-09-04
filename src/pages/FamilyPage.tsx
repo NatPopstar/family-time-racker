@@ -7,7 +7,7 @@ import { formatMoney } from '@/lib/money'
 import { fetchActivities } from '@/features/activities/api'
 import { fetchAllProfiles } from '@/features/profile/api'
 import { PeriodFilter } from '@/features/activities/PeriodFilter'
-import { summarizeByPerson, buildTimeline, detectCurrency } from '@/features/dashboard/stats'
+import { summarizeByPerson, buildTimeline, detectCurrencies } from '@/features/dashboard/stats'
 import { FamilyBars } from '@/features/dashboard/FamilyBars'
 import { FamilyTimeline } from '@/features/dashboard/FamilyTimeline'
 
@@ -36,7 +36,9 @@ export function FamilyPage() {
   const people = profiles ?? []
   const rows = summarizeByPerson(activities ?? [], people)
   // Валюта итогов берётся из самих записей, а не зашита в код.
-  const { currency } = detectCurrency(activities ?? [])
+  const { earnings: earningsCurrency, estimated: estimatedCurrency } = detectCurrencies(
+    activities ?? [],
+  )
 
   // Шкала недели показывается только для недельных периодов:
   // растягивать её на месяц значило бы рисовать 30 точек на узкой оси.
@@ -47,9 +49,10 @@ export function FamilyPage() {
   const totals = rows.reduce(
     (acc, row) => ({
       minutes: acc.minutes + row.totalMinutes,
-      value: acc.value + row.totalValue,
+      earnings: acc.earnings + row.totalEarnings,
+      estimated: acc.estimated + row.totalEstimated,
     }),
-    { minutes: 0, value: 0 },
+    { minutes: 0, earnings: 0, estimated: 0 },
   )
 
   return (
@@ -93,6 +96,7 @@ export function FamilyPage() {
                   <th scope="col" className="px-4 py-3 text-right font-medium">{t('family.household')}</th>
                   <th scope="col" className="px-4 py-3 text-right font-medium">{t('family.childcare')}</th>
                   <th scope="col" className="px-4 py-3 text-right font-medium">{t('family.totalHours')}</th>
+                  <th scope="col" className="px-4 py-3 text-right font-medium">{t('family.earnings')}</th>
                   <th scope="col" className="px-4 py-3 text-right font-medium">{t('family.marketValue')}</th>
                 </tr>
               </thead>
@@ -109,8 +113,13 @@ export function FamilyPage() {
                     <td className="px-4 py-3 text-right font-semibold tabular-nums">
                       {formatHours(row.totalMinutes, locale)}
                     </td>
+                    {/* Две колонки, а не одна сумма: зарплата и оценка
+                        неоплачиваемого труда — разные по смыслу вещи. */}
                     <td className="px-4 py-3 text-right tabular-nums text-emerald-700">
-                      {row.totalValue > 0 ? formatMoney(row.totalValue, currency, locale) : '—'}
+                      {row.totalEarnings > 0 ? formatMoney(row.totalEarnings, earningsCurrency, locale) : '—'}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-indigo-700">
+                      {row.totalEstimated > 0 ? formatMoney(row.totalEstimated, estimatedCurrency, locale) : '—'}
                     </td>
                   </tr>
                 ))}
@@ -123,7 +132,10 @@ export function FamilyPage() {
                     {formatHours(totals.minutes, locale)}
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums text-emerald-700">
-                    {totals.value > 0 ? formatMoney(totals.value, currency, locale) : '—'}
+                    {totals.earnings > 0 ? formatMoney(totals.earnings, earningsCurrency, locale) : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums text-indigo-700">
+                    {totals.estimated > 0 ? formatMoney(totals.estimated, estimatedCurrency, locale) : '—'}
                   </td>
                 </tr>
               </tfoot>
