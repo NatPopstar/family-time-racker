@@ -6,7 +6,7 @@ import { formatHours } from '@/lib/time'
 import { formatMoney } from '@/lib/money'
 import { fetchActivities } from '@/features/activities/api'
 import { fetchAllProfiles } from '@/features/profile/api'
-import { summarize, summarizeByPerson } from '@/features/dashboard/stats'
+import { summarize, summarizeByPerson, detectCurrency } from '@/features/dashboard/stats'
 import { PersonReport } from '@/features/dashboard/PersonReport'
 import { Button } from '@/components/ui/Button'
 
@@ -39,6 +39,8 @@ export function ReportsPage() {
   const all = activities ?? []
   const rows = summarizeByPerson(all, people)
   const familyTotal = summarize(all)
+  // Валюта итогов берётся из самих записей, а не зашита в код.
+  const { currency } = detectCurrency(all)
 
   /** Переключение режима сбрасывает сдвиг: «неделя назад» и «месяц назад» — разное. */
   function switchMode(next: 'week' | 'month') {
@@ -111,6 +113,7 @@ export function ReportsPage() {
                 person={row}
                 // Разбивку по категориям считаем из записей именно
                 // этого человека, а не делим общую.
+                currency={currency}
                 categories={
                   summarize(all.filter((a) => a.user_id === row.userId)).byCategory
                 }
@@ -126,7 +129,7 @@ export function ReportsPage() {
                   {formatHours(familyTotal.totalMinutes, locale)}
                 </span>
                 <span className="text-2xl font-bold tabular-nums text-emerald-400">
-                  {formatMoney(familyTotal.totalValue, 'GBP', locale)}
+                  {formatMoney(familyTotal.totalValue, currency, locale)}
                 </span>
               </span>
             </div>

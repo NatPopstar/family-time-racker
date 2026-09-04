@@ -70,6 +70,9 @@ const ru = {
   'common.delete': 'Удалить',
   'common.total': 'Всего',
 
+  'money.mixedWarning':
+    'Внимание: записи за этот период сделаны в разных валютах. Складывать их вместе нельзя — итог показан условно. Так бывает после смены валюты в настройках: старые записи хранят прежнюю.',
+
   'activity.formTitle': 'Записать выполненную работу',
   'activity.title': 'Что делали',
   'activity.titlePlaceholder': 'Например: уборка кухни',
@@ -291,6 +294,9 @@ const en: Record<keyof typeof ru, string> = {
   'common.cancel': 'Cancel',
   'common.delete': 'Delete',
   'common.total': 'Total',
+
+  'money.mixedWarning':
+    'Careful: entries in this period use different currencies. Adding them together is not meaningful, so the total is only indicative. This happens after changing the currency in settings: older entries keep the previous one.',
 
   'activity.formTitle': 'Log completed work',
   'activity.title': 'What you did',

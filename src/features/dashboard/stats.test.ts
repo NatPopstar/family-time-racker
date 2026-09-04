@@ -5,6 +5,7 @@ import {
   percentOfTotal,
   summarizeByPerson,
   buildTimeline,
+  detectCurrency,
 } from './stats'
 import type { ActivityWithValue } from '@/types/models'
 
@@ -253,5 +254,54 @@ describe('percentOfTotal', () => {
 
   it('не делит на ноль', () => {
     expect(percentOfTotal(0, 0)).toBe(0)
+  })
+})
+
+describe('detectCurrency', () => {
+  it('берёт валюту из самих записей, а не из кода', () => {
+    // Ошибка, ради которой написана эта функция: в итогах было
+    // жёстко напечатано 'GBP', и после смены валюты в настройках
+    // дашборд продолжал рисовать фунты.
+    const result = detectCurrency([entry({ currency_snapshot: 'EUR' })])
+
+    expect(result.currency).toBe('EUR')
+    expect(result.isMixed).toBe(false)
+  })
+
+  it('без записей возвращает валюту по умолчанию', () => {
+    expect(detectCurrency([]).currency).toBe('GBP')
+    expect(detectCurrency([], 'USD').currency).toBe('USD')
+  })
+
+  it('не сбивается на записях без денежной оценки', () => {
+    // У работы и учёбы валюты нет — они на выбор влиять не должны.
+    const result = detectCurrency([
+      entry({ currency_snapshot: null }),
+      entry({ currency_snapshot: 'EUR' }),
+    ])
+
+    expect(result.currency).toBe('EUR')
+    expect(result.isMixed).toBe(false)
+  })
+
+  it('ЧЕСТНО СООБЩАЕТ о смешанных валютах', () => {
+    // Складывать фунты с евро бессмысленно. Интерфейс обязан сказать
+    // об этом, а не тихо показать сумму с одним значком.
+    const result = detectCurrency([
+      entry({ currency_snapshot: 'GBP' }),
+      entry({ currency_snapshot: 'EUR' }),
+    ])
+
+    expect(result.isMixed).toBe(true)
+  })
+
+  it('одна валюта у всех записей смешанной не считается', () => {
+    const result = detectCurrency([
+      entry({ currency_snapshot: 'EUR' }),
+      entry({ currency_snapshot: 'EUR' }),
+      entry({ currency_snapshot: null }),
+    ])
+
+    expect(result.isMixed).toBe(false)
   })
 })

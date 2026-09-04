@@ -72,6 +72,37 @@ export function filterByRange(
   return activities.filter((a) => a.date !== null && a.date >= from && a.date <= to)
 }
 
+/**
+ * Определяет, в какой валюте показывать ИТОГОВЫЕ суммы.
+ *
+ * Раньше здесь было жёстко написано 'GBP', и после смены валюты
+ * в настройках дашборд продолжал рисовать фунты. Теперь валюту
+ * берём из самих записей: каждая хранит ту, что была на момент
+ * выполнения (currency_snapshot).
+ *
+ * isMixed — честный признак беды. Если часть записей в фунтах,
+ * а часть в евро, складывать их вместе бессмысленно: получится
+ * число, которое не значит ничего. Интерфейс обязан об этом сказать,
+ * а не тихо показать сумму с одним значком.
+ */
+export function detectCurrency(
+  activities: ActivityWithValue[],
+  fallback = 'GBP',
+): { currency: string; isMixed: boolean } {
+  const found = new Set<string>()
+
+  for (const activity of activities) {
+    // Записи без денежной оценки (работа, учёба) валюты не имеют
+    // и на выбор не влияют.
+    if (activity.currency_snapshot) found.add(activity.currency_snapshot)
+  }
+
+  if (found.size === 0) return { currency: fallback, isMixed: false }
+
+  const [first] = found
+  return { currency: first, isMixed: found.size > 1 }
+}
+
 /** Строка семейной таблицы: один человек и его время по категориям. */
 export type PersonRow = {
   userId: string

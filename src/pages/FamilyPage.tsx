@@ -7,7 +7,7 @@ import { formatMoney } from '@/lib/money'
 import { fetchActivities } from '@/features/activities/api'
 import { fetchAllProfiles } from '@/features/profile/api'
 import { PeriodFilter } from '@/features/activities/PeriodFilter'
-import { summarizeByPerson, buildTimeline } from '@/features/dashboard/stats'
+import { summarizeByPerson, buildTimeline, detectCurrency } from '@/features/dashboard/stats'
 import { FamilyBars } from '@/features/dashboard/FamilyBars'
 import { FamilyTimeline } from '@/features/dashboard/FamilyTimeline'
 
@@ -35,6 +35,8 @@ export function FamilyPage() {
 
   const people = profiles ?? []
   const rows = summarizeByPerson(activities ?? [], people)
+  // Валюта итогов берётся из самих записей, а не зашита в код.
+  const { currency } = detectCurrency(activities ?? [])
 
   // Шкала недели показывается только для недельных периодов:
   // растягивать её на месяц значило бы рисовать 30 точек на узкой оси.
@@ -108,7 +110,7 @@ export function FamilyPage() {
                       {formatHours(row.totalMinutes, locale)}
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums text-emerald-700">
-                      {row.totalValue > 0 ? formatMoney(row.totalValue, 'GBP', locale) : '—'}
+                      {row.totalValue > 0 ? formatMoney(row.totalValue, currency, locale) : '—'}
                     </td>
                   </tr>
                 ))}
@@ -121,7 +123,7 @@ export function FamilyPage() {
                     {formatHours(totals.minutes, locale)}
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums text-emerald-700">
-                    {totals.value > 0 ? formatMoney(totals.value, 'GBP', locale) : '—'}
+                    {totals.value > 0 ? formatMoney(totals.value, currency, locale) : '—'}
                   </td>
                 </tr>
               </tfoot>

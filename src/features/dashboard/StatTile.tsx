@@ -13,11 +13,14 @@ export function StatTile({
   label,
   minutes,
   value,
+  currency,
   isLoading,
 }: {
   label: string
   minutes: number
   value: number
+  /** Валюта берётся из самих записей, а не зашита в код. */
+  currency: string
   isLoading?: boolean
 }) {
   const { t, locale } = useI18n()
@@ -37,7 +40,7 @@ export function StatTile({
             {formatHours(minutes, locale)}
           </p>
           <p className="mt-1 text-sm font-medium text-emerald-700">
-            {value > 0 ? formatMoney(value, 'GBP', locale) : ' '}
+            {value > 0 ? formatMoney(value, currency, locale) : ' '}
           </p>
         </>
       )}

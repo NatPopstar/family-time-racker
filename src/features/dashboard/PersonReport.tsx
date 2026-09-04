@@ -15,9 +15,12 @@ import { percentOfTotal } from './stats'
 export function PersonReport({
   person,
   categories,
+  currency,
 }: {
   person: PersonRow
   categories: CategorySummary[]
+  /** Валюта берётся из самих записей, а не зашита в код. */
+  currency: string
 }) {
   const { t, locale } = useI18n()
 
@@ -61,7 +64,7 @@ export function PersonReport({
       <div className="mt-4 flex items-baseline justify-between border-t border-slate-100 pt-3">
         <span className="text-sm font-medium text-slate-600">{t('report.estimatedValue')}</span>
         <span className="text-xl font-bold text-emerald-700">
-          {formatMoney(person.totalValue, 'GBP', locale)}
+          {formatMoney(person.totalValue, currency, locale)}
         </span>
       </div>
     </section>

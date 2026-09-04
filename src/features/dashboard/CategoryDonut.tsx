@@ -20,9 +20,12 @@ import { percentOfTotal } from './stats'
 export function CategoryDonut({
   data,
   totalMinutes,
+  currency,
 }: {
   data: CategorySummary[]
   totalMinutes: number
+  /** Валюта берётся из самих записей, а не зашита в код. */
+  currency: string
 }) {
   const { t, locale } = useI18n()
 
@@ -104,7 +107,7 @@ export function CategoryDonut({
                 {percentOfTotal(entry.minutes, totalMinutes)}%
               </span>
               <span className="w-14 text-right tabular-nums text-emerald-700">
-                {entry.value > 0 ? formatMoney(entry.value, 'GBP', locale) : ''}
+                {entry.value > 0 ? formatMoney(entry.value, currency, locale) : ''}
               </span>
             </li>
           ))}

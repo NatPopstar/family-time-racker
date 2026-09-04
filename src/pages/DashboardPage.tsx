@@ -9,7 +9,7 @@ import { ActivityList } from '@/features/activities/ActivityList'
 import { TimerCard } from '@/features/activities/TimerCard'
 import { StatTile } from '@/features/dashboard/StatTile'
 import { CategoryDonut } from '@/features/dashboard/CategoryDonut'
-import { summarize, filterByRange } from '@/features/dashboard/stats'
+import { summarize, filterByRange, detectCurrency } from '@/features/dashboard/stats'
 
 /**
  * «Мой день» — личный кабинет.
@@ -47,6 +47,11 @@ export function DashboardPage() {
   const weekStats = summarize(filterByRange(all, week.from, week.to))
   const monthStats = summarize(filterByRange(all, month.from, month.to))
 
+  // Валюту берём из самих записей: каждая помнит ту, что была
+  // на момент выполнения. Раньше здесь стояло жёсткое 'GBP',
+  // и после смены валюты в настройках дашборд продолжал рисовать фунты.
+  const { currency, isMixed } = detectCurrency(all)
+
   return (
     <div className="space-y-8">
       <div>
@@ -59,25 +64,40 @@ export function DashboardPage() {
           label={t('dashboard.today')}
           minutes={todayStats.totalMinutes}
           value={todayStats.totalValue}
+          currency={currency}
           isLoading={isPending}
         />
         <StatTile
           label={t('dashboard.week')}
           minutes={weekStats.totalMinutes}
           value={weekStats.totalValue}
+          currency={currency}
           isLoading={isPending}
         />
         <StatTile
           label={t('dashboard.month')}
           minutes={monthStats.totalMinutes}
           value={monthStats.totalValue}
+          currency={currency}
           isLoading={isPending}
         />
       </div>
 
       {/* Распределение показываем за НЕДЕЛЮ: за день данных обычно
           слишком мало, за месяц картина слишком усреднена. */}
-      <CategoryDonut data={weekStats.byCategory} totalMinutes={weekStats.totalMinutes} />
+      {/* Складывать фунты с евро бессмысленно — говорим об этом прямо,
+          а не показываем сумму с одним значком. */}
+      {isMixed && (
+        <p role="alert" className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
+          {t('money.mixedWarning')}
+        </p>
+      )}
+
+      <CategoryDonut
+        data={weekStats.byCategory}
+        totalMinutes={weekStats.totalMinutes}
+        currency={currency}
+      />
 
       <TimerCard />
 
