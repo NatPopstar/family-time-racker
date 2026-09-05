@@ -83,7 +83,7 @@ export function PersonReport({
         )}
         <div className="flex items-baseline justify-between">
           <span className="text-sm font-medium text-ink-3">{t('report.estimatedValue')}</span>
-          <span className="text-xl font-bold text-accent-deep">
+          <span className="text-xl font-bold text-estimate">
             {formatMoney(person.totalEstimated, estimatedCurrency, locale)}
           </span>
         </div>

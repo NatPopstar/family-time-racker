@@ -58,7 +58,7 @@ export function StatTile({
           )}
 
           {estimated > 0 && (
-            <p className="mt-0.5 text-sm font-medium text-accent-deep">
+            <p className="mt-0.5 text-sm font-medium text-estimate">
               {t('family.marketValue')}: {formatMoney(estimated, estimatedCurrency, locale)}
             </p>
           )}

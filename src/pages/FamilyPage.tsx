@@ -116,7 +116,7 @@ export function FamilyPage() {
                     <td className="px-4 py-3 text-right tabular-nums text-positive">
                       {row.totalEarnings > 0 ? formatMoney(row.totalEarnings, earningsCurrency, locale) : '—'}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-accent-deep">
+                    <td className="px-4 py-3 text-right tabular-nums text-estimate">
                       {row.totalEstimated > 0 ? formatMoney(row.totalEstimated, estimatedCurrency, locale) : '—'}
                     </td>
                   </tr>
@@ -132,7 +132,7 @@ export function FamilyPage() {
                   <td className="px-4 py-3 text-right tabular-nums text-positive">
                     {totals.earnings > 0 ? formatMoney(totals.earnings, earningsCurrency, locale) : '—'}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-accent-deep">
+                  <td className="px-4 py-3 text-right tabular-nums text-estimate">
                     {totals.estimated > 0 ? formatMoney(totals.estimated, estimatedCurrency, locale) : '—'}
                   </td>
                 </tr>
