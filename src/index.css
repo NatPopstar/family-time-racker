@@ -26,9 +26,13 @@
 @theme {
   /* — Поверхности ——————————————————————————————————— */
   --color-canvas: #eef1e6; /* фон страницы — бледный лист */
-  --color-surface: #fbfcf7; /* карточка — выбеленный пергамент */
-  --color-surface-2: #f2f4ea; /* плашка внутри карточки */
-  --color-surface-3: #e7ebdb; /* плашка потемнее, наведение */
+  /* Полупрозрачные, чтобы сквозь них проступала фоновая карта.
+     Здесь плотнее, чем в тёмной теме (92% против 85%): под светлой
+     темой лежит разлинованный пергамент, и его линии, просвечивая
+     сквозь мелкий текст, читались бы как помарки. */
+  --color-surface: #fbfcf7d9; /* карточка — выбеленный пергамент */
+  --color-surface-2: #f2f4ead9; /* плашка внутри карточки */
+  --color-surface-3: #e7ebdbe6; /* плашка потемнее, наведение */
   --color-line: #d8ded0; /* границы и кольца */
   --color-line-soft: #e6eadc; /* еле заметный разделитель */
   --color-line-strong: #bfc9b3; /* граница поля ввода */
@@ -136,6 +140,12 @@
 html {
   background-color: var(--color-canvas);
   color-scheme: light;
+  background-size: cover;
+  background-position: center;
+  /* Картина не уезжает вместе с текстом: она — окно, за которым лежит
+     комната, а не длинный свиток. */
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
 html[data-theme='dark'] {
@@ -165,8 +175,17 @@ html[data-theme='dark'] {
        спорит со светлым текстом. */
     linear-gradient(#0f112066, #0f112066),
     url('/moon-backdrop.jpg');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
+}
+
+/* Светлая тема — пергамент с картой Средиземья.
+   :not([data-theme='dark']) — чтобы правило не сработало в тёмной теме.
+
+   Осветляющая вуаль здесь нужна по другой причине, чем затемнение
+   в тёмной теме: не ради контраста (тёмный текст на пергаменте читается
+   отлично), а чтобы приглушить линовку и рисунки — иначе они спорят
+   с цифрами за внимание. */
+html:not([data-theme='dark']) {
+  background-image:
+    linear-gradient(#faf8ec80, #faf8ec80),
+    url('/hobbit_bright.jpg');
 }
