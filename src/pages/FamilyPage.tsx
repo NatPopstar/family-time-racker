@@ -10,7 +10,7 @@ import { PeriodFilter } from '@/features/activities/PeriodFilter'
 import { summarizeByPerson, buildTimeline, detectCurrencies } from '@/features/dashboard/stats'
 import { FamilyBars } from '@/features/dashboard/FamilyBars'
 import { FamilyTimeline } from '@/features/dashboard/FamilyTimeline'
-import { LeafRule } from '@/components/ornaments'
+import { PageHeader } from '@/components/PageHeader'
 
 /**
  * Семейный дашборд: таблица с точными числами, сравнение по людям
@@ -58,11 +58,7 @@ export function FamilyPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{t('page.family.title')}</h1>
-        <p className="mt-1 text-sm text-ink-4">{t('page.family.subtitle')}</p>
-        <LeafRule className="mt-3" />
-      </div>
+      <PageHeader title={t('page.family.title')} subtitle={t('page.family.subtitle')} />
 
       <div className="rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
         <PeriodFilter

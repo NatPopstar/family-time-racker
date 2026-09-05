@@ -10,7 +10,7 @@ import { TimerCard } from '@/features/activities/TimerCard'
 import { StatTile } from '@/features/dashboard/StatTile'
 import { CategoryDonut } from '@/features/dashboard/CategoryDonut'
 import { summarize, filterByRange, detectCurrencies } from '@/features/dashboard/stats'
-import { LeafRule } from '@/components/ornaments'
+import { PageHeader } from '@/components/PageHeader'
 
 /**
  * «Мой день» — личный кабинет.
@@ -56,11 +56,7 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{t('page.dashboard.title')}</h1>
-        <p className="mt-1 text-sm text-ink-4">{t('page.dashboard.subtitle')}</p>
-        <LeafRule className="mt-3" />
-      </div>
+      <PageHeader title={t('page.dashboard.title')} subtitle={t('page.dashboard.subtitle')} />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <StatTile

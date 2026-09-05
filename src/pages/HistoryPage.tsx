@@ -14,7 +14,7 @@ import { PeriodFilter } from '@/features/activities/PeriodFilter'
 import { EditActivityDialog } from '@/features/activities/EditActivityDialog'
 import { Select } from '@/components/ui/Select'
 import type { ActivityWithValue } from '@/types/models'
-import { LeafRule } from '@/components/ornaments'
+import { PageHeader } from '@/components/PageHeader'
 
 /**
  * «История» — все записи семьи с фильтрами, правкой и удалением.
@@ -74,11 +74,7 @@ export function HistoryPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{t('page.history.title')}</h1>
-        <p className="mt-1 text-sm text-ink-4">{t('page.history.subtitle')}</p>
-        <LeafRule className="mt-3" />
-      </div>
+      <PageHeader title={t('page.history.title')} subtitle={t('page.history.subtitle')} />
 
       <div className="space-y-3 rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
         <PeriodFilter

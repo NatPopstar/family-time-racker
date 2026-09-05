@@ -13,7 +13,7 @@ import { AddPlannedTaskDialog } from '@/features/planner/AddPlannedTaskDialog'
 import { RecurringRulesCard } from '@/features/planner/RecurringRulesCard'
 import { fetchRecurringRules, materialiseRules } from '@/features/planner/rulesApi'
 import { Button } from '@/components/ui/Button'
-import { LeafRule } from '@/components/ornaments'
+import { PageHeader } from '@/components/PageHeader'
 
 /**
  * Планер недели — сетка из семи дней с задачами.
@@ -88,11 +88,7 @@ export function PlannerPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{t('page.planner.title')}</h1>
-        <p className="mt-1 text-sm text-ink-4">{t('page.planner.subtitle')}</p>
-        <LeafRule className="mt-3" />
-      </div>
+      <PageHeader title={t('page.planner.title')} subtitle={t('page.planner.subtitle')} />
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-surface p-4 shadow-sm ring-1 ring-line">
         <div className="flex gap-2">

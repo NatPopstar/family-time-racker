@@ -9,7 +9,7 @@ import { fetchAllProfiles } from '@/features/profile/api'
 import { summarize, summarizeByPerson, detectCurrencies } from '@/features/dashboard/stats'
 import { PersonReport } from '@/features/dashboard/PersonReport'
 import { Button } from '@/components/ui/Button'
-import { LeafRule } from '@/components/ornaments'
+import { PageHeader } from '@/components/PageHeader'
 
 /**
  * Отчёты за неделю и за месяц.
@@ -51,11 +51,7 @@ export function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{t('page.reports.title')}</h1>
-        <p className="mt-1 text-sm text-ink-4">{t('page.reports.subtitle')}</p>
-        <LeafRule className="mt-3" />
-      </div>
+      <PageHeader title={t('page.reports.title')} subtitle={t('page.reports.subtitle')} />
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-surface p-4 shadow-sm ring-1 ring-line">
         <div className="flex gap-2">
