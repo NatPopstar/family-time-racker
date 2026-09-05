@@ -247,6 +247,11 @@ export async function completePlannedActivity(params: {
    * тот и отметил».
    */
   claimForUserId?: string | null
+  /**
+   * Комментарий, если задачу закрывают из формы «Мой день»:
+   * человек уже описал там, как всё прошло, и терять это описание жаль.
+   */
+  comment?: string
 }): Promise<void> {
   const rate = params.subcategory.market_rates
 
@@ -254,8 +259,17 @@ export async function completePlannedActivity(params: {
     actual_minutes: params.actualMinutes,
     status: 'done',
     completed_at: new Date().toISOString(),
+    // Вид работы берём тот, что выбран в момент отметки. В Планере это
+    // тот же самый, что был в задаче, и запись не меняется. А вот при
+    // закрытии задачи из формы человек мог уточнить вид работы —
+    // и тогда ставка и вид работы обязаны остаться согласованными.
+    subcategory_id: params.subcategory.id,
     rate_snapshot: rate ? rate.hourly_rate : null,
     currency_snapshot: rate ? rate.currency : null,
+  }
+
+  if (params.comment?.trim()) {
+    patch.comment = params.comment.trim()
   }
 
   // user_id трогаем ТОЛЬКО когда его передали. Иначе отметка чужой

@@ -17,6 +17,7 @@ vi.mock('@/features/auth/AuthProvider', () => ({
 vi.mock('@/features/activities/api', () => ({
   fetchActivities: vi.fn(),
   createActivity: vi.fn(),
+  completePlannedActivity: vi.fn(),
   deleteActivity: vi.fn(),
   startTimer: vi.fn(),
   stopTimer: vi.fn(),
@@ -84,16 +85,29 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Этот месяц')).toBeInTheDocument()
   })
 
-  it('берёт данные ОДНИМ запросом, а не тремя', async () => {
-    // Три отдельных запроса дали бы мерцание «одна карточка загрузилась,
-    // другая ещё нет» и лишнюю нагрузку на базу.
+  it('на три карточки берёт данные ОДНИМ запросом', async () => {
+    // Три отдельных запроса на «сегодня», «неделю» и «месяц» дали бы
+    // мерцание «одна карточка загрузилась, другая ещё нет» и лишнюю
+    // нагрузку на базу. Поэтому дашборд берёт месяц разом и режет его
+    // на периоды уже у себя.
+    //
+    // Три запроса на странице — потолок, и каждый со своей причиной:
+    //   1. месяц выполненных записей — три карточки и круговая диаграмма
+    //   2. сегодняшние записи — список «Записи за сегодня»
+    //   3. всё за выбранный в форме день, включая НЕЗАКРЫТЫЕ задачи, —
+    //      проверка на дубль. Первые два тут не годятся: они берут
+    //      только выполненное и только своё, а дубль чаще всего
+    //      прячется именно в незакрытой или ничьей задаче.
+    //
+    // Четвёртый запрос — повод остановиться и подумать, а не поднять
+    // это число ещё раз.
     renderWithProviders(<DashboardPage />)
 
     await screen.findByText('Сегодня')
     const activityCalls = vi
       .mocked(fetchActivities)
       .mock.calls.filter((c) => c[0].from !== undefined)
-    expect(activityCalls.length).toBeLessThanOrEqual(2) // сам дашборд + список за сегодня
+    expect(activityCalls.length).toBeLessThanOrEqual(3)
   })
 
   it('разделяет сегодняшнее время и месячное', async () => {

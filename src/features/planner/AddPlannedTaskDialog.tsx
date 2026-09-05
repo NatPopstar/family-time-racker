@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useI18n, type TranslationKey } from '@/lib/i18n'
 import { useAuth } from '@/features/auth/AuthProvider'
 import { hoursAndMinutesToMinutes } from '@/lib/time'
-import { formatDateShort } from '@/lib/dates'
+import { formatDateShort, isoWeekday } from '@/lib/dates'
+import { createRecurringRule } from './rulesApi'
 import { fetchCategories, fetchSubcategoriesWithRates } from '@/features/categories/api'
 import { fetchAllProfiles } from '@/features/profile/api'
 import { createPlannedActivity } from '@/features/activities/api'
@@ -14,7 +15,16 @@ import { TravelInput, type TravelLegs } from './TravelInput'
 
 const MAX_MINUTES = 24 * 60
 
-/** Окно добавления запланированной задачи на конкретный день. */
+/**
+ * Окно добавления запланированной задачи на конкретный день.
+ *
+ * Здесь же живёт галочка «повторять каждую неделю». Раньше повтор
+ * настраивался только в отдельной карточке вверху страницы, и связи
+ * между ней и этой формой не было никакой: человек добавлял дело
+ * на понедельник и справедливо ждал, что оно появится и в следующий
+ * понедельник. Не появлялось — потому что это была разовая задача.
+ * Решение спрятано не там, где возникает вопрос, — значит его нет.
+ */
 export function AddPlannedTaskDialog({
   date,
   onClose,
@@ -37,7 +47,13 @@ export function AddPlannedTaskDialog({
   // Пустая строка означает «ничья задача»: договоримся потом,
   // а отметит тот, кто в итоге сделает.
   const [assigneeId, setAssigneeId] = useState<string>(user?.id ?? '')
+  const [repeatWeekly, setRepeatWeekly] = useState(false)
   const [errorKey, setErrorKey] = useState<TranslationKey | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+
+  // 1 — понедельник, 7 — воскресенье. Спрашивать день недели незачем:
+  // он однозначно следует из даты, на которую добавляют задачу.
+  const weekday = isoWeekday(date)
 
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: fetchCategories })
   const { data: profiles } = useQuery({ queryKey: ['profiles'], queryFn: fetchAllProfiles })
@@ -51,22 +67,62 @@ export function AddPlannedTaskDialog({
   const travelOneWay = Number(travel) || 0
   const travelMinutes = travelOneWay * travelLegs
 
+  function handleSaved() {
+    queryClient.invalidateQueries({ queryKey: ['planner'] })
+    onClose()
+  }
+
   const mutation = useMutation({
     mutationFn: createPlannedActivity,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['planner'] })
-      onClose()
-    },
+    onSuccess: handleSaved,
+    onError: (error: Error) => setSaveError(error.message),
   })
+
+  /**
+   * Повторяющаяся задача создаётся ПРАВИЛОМ, а не задачей.
+   *
+   * Саму задачу на этот день мы здесь не делаем намеренно: её подставит
+   * Планер из правила, как только обновится список правил. Создай мы
+   * ещё и задачу вручную — на день пришлись бы сразу две одинаковые,
+   * наша и подставленная.
+   */
+  const createRule = useMutation({
+    mutationFn: createRecurringRule,
+    onSuccess: () => {
+      // Правила обновились — Планер сам подставит задачу в нужный день.
+      queryClient.invalidateQueries({ queryKey: ['recurring-rules'] })
+      handleSaved()
+    },
+    onError: (error: Error) => setSaveError(error.message),
+  })
+
+  const isSaving = mutation.isPending || createRule.isPending
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
     setErrorKey(null)
+    setSaveError(null)
 
     if (title.trim() === '') return setErrorKey('activity.error.titleRequired')
     if (!subcategoryId) return setErrorKey('activity.error.subcategoryRequired')
     if (plannedMinutes <= 0) return setErrorKey('activity.error.timeRequired')
     if (plannedMinutes + travelMinutes > MAX_MINUTES) return setErrorKey('activity.error.timeTooLong')
+
+    if (repeatWeekly) {
+      if (!user) return
+      return createRule.mutate({
+        createdBy: user.id,
+        subcategoryId,
+        title,
+        address,
+        weekday,
+        plannedMinutes,
+        travelOneWayMinutes: travelOneWay,
+        travelLegs,
+        // Пусто — задача будет появляться ничьей каждую неделю.
+        defaultUserId: assigneeId || null,
+      })
+    }
 
     mutation.mutate({
       userId: assigneeId || null,
@@ -182,15 +238,53 @@ export function AddPlannedTaskDialog({
             onLegsChange={setTravelLegs}
           />
 
+          {/* Повтор спрашиваем прямо здесь: вопрос «а на следующей
+              неделе тоже?» возникает именно в этот момент. */}
+          <div className="rounded-lg bg-slate-50 p-3">
+            <label className="flex items-start gap-2.5">
+              <input
+                type="checkbox"
+                checked={repeatWeekly}
+                onChange={(e) => setRepeatWeekly(e.target.checked)}
+                className="mt-0.5 size-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <span className="text-sm">
+                <span className="font-medium text-slate-800">
+                  {t('recurring.repeatWeekly')}
+                </span>
+                {/* Показываем, КАКОЙ это день недели: человек выбрал
+                    дату, а повторяться будет день недели. */}
+                <span className="text-slate-500">
+                  {' — '}
+                  {t(`weekday.every.${weekday}` as TranslationKey)}
+                </span>
+              </span>
+            </label>
+
+            {/* Отступ pl-[1.625rem] ставит подсказку ровно под текстом
+                галочки: ширина квадратика (1rem) плюс зазор (0.625rem). */}
+            {repeatWeekly && (
+              <p className="mt-2 pl-[1.625rem] text-xs text-slate-500">
+                {t('recurring.repeatWeeklyHint')}
+              </p>
+            )}
+          </div>
+
           {errorKey && (
             <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
               {t(errorKey)}
             </p>
           )}
 
+          {saveError && (
+            <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+              {t('activity.error.saveFailed')} {saveError}
+            </p>
+          )}
+
           <div className="flex gap-2">
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? t('common.saving') : t('common.save')}
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? t('common.saving') : t('common.save')}
             </Button>
             <Button type="button" variant="secondary" onClick={onClose}>
               {t('common.cancel')}

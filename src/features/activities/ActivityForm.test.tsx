@@ -21,11 +21,18 @@ vi.mock('@/features/categories/api', () => ({
 
 vi.mock('./api', async () => {
   const actual = await vi.importActual<typeof import('./api')>('./api')
-  return { ...actual, createActivity: vi.fn() }
+  return {
+    ...actual,
+    createActivity: vi.fn(),
+    fetchActivities: vi.fn(),
+    completePlannedActivity: vi.fn(),
+  }
 })
 
 import { fetchCategories, fetchSubcategoriesWithRates } from '@/features/categories/api'
-import { createActivity } from './api'
+import { createActivity, fetchActivities, completePlannedActivity } from './api'
+import { todayISO } from '@/lib/dates'
+import type { ActivityWithValue } from '@/types/models'
 
 const categories = [
   { id: 'cat-household', slug: 'household', name: 'Домашние обязанности', icon: '🏠', sort_order: 3 },
@@ -91,6 +98,9 @@ describe('ActivityForm', () => {
     vi.mocked(fetchCategories).mockResolvedValue(categories)
     vi.mocked(fetchSubcategoriesWithRates).mockResolvedValue(subcategories)
     vi.mocked(createActivity).mockResolvedValue(undefined)
+    vi.mocked(completePlannedActivity).mockResolvedValue(undefined)
+    // По умолчанию за день ничего нет — значит и предупреждений нет.
+    vi.mocked(fetchActivities).mockResolvedValue([])
   })
 
   it('пока категория не выбрана, список видов работы заблокирован', async () => {
@@ -256,5 +266,151 @@ describe('ActivityForm', () => {
     await waitFor(() => expect(screen.getByLabelText('Что делали')).toHaveValue(''))
     // Категорию оставляем: подряд обычно записывают несколько дел одного дня.
     expect(screen.getByLabelText('Категория')).toHaveValue('cat-household')
+  })
+})
+
+/**
+ * Дубли: одно и то же дело, записанное дважды за день.
+ *
+ * Чаще всего так: задача была запланирована, человек её сделал,
+ * но вместо кнопки «Выполнено» в Планере записал дело заново здесь.
+ */
+describe('ActivityForm: похожие записи за тот же день', () => {
+  const today = todayISO()
+
+  /** Незакрытая задача «отвести/забрать» на сегодня. */
+  const plannedSchoolRun = {
+    id: 'planned-1',
+    user_id: 'user-1',
+    title: 'Отвести/Привести из школы',
+    date: today,
+    status: 'planned',
+    subcategory_id: 'sub-cleaning',
+    subcategory_name: 'Уборка',
+    planned_minutes: 60,
+    actual_minutes: null,
+  } as unknown as ActivityWithValue
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    localStorage.clear()
+    vi.mocked(fetchCategories).mockResolvedValue(categories)
+    vi.mocked(fetchSubcategoriesWithRates).mockResolvedValue(subcategories)
+    vi.mocked(createActivity).mockResolvedValue(undefined)
+    vi.mocked(completePlannedActivity).mockResolvedValue(undefined)
+    vi.mocked(fetchActivities).mockResolvedValue([])
+  })
+
+  it('предупреждает вместо сохранения, когда на день висит похожая задача', async () => {
+    vi.mocked(fetchActivities).mockResolvedValue([plannedSchoolRun])
+
+    const user = userEvent.setup()
+    renderWithProviders(<ActivityForm />)
+
+    await screen.findByRole('option', { name: /Домашние обязанности/ })
+    await fillForm(user, {
+      category: 'cat-household',
+      subcategory: 'sub-cleaning',
+      title: 'Забрала ребенка из школы',
+      minutes: '30',
+    })
+    await user.click(screen.getByRole('button', { name: 'Записать' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Похоже, такая запись за этот день уже есть',
+    )
+    expect(screen.getByText('Отвести/Привести из школы')).toBeInTheDocument()
+    // Главное: в базу ничего не ушло, решение за человеком.
+    expect(createActivity).not.toHaveBeenCalled()
+  })
+
+  it('«отметить выполненной» закрывает найденную задачу вместо новой записи', async () => {
+    vi.mocked(fetchActivities).mockResolvedValue([plannedSchoolRun])
+
+    const user = userEvent.setup()
+    renderWithProviders(<ActivityForm />)
+
+    await screen.findByRole('option', { name: /Домашние обязанности/ })
+    await fillForm(user, {
+      category: 'cat-household',
+      subcategory: 'sub-cleaning',
+      title: 'Забрала ребенка из школы',
+      minutes: '30',
+    })
+    await user.click(screen.getByRole('button', { name: 'Записать' }))
+    await user.click(await screen.findByRole('button', { name: /отметить выполненной/i }))
+
+    await waitFor(() => expect(completePlannedActivity).toHaveBeenCalled())
+
+    // React Query передаёт в mutationFn второй аргумент, поэтому
+    // проверяем первый по отдельности, а не через toHaveBeenCalledWith.
+    const call = vi.mocked(completePlannedActivity).mock.calls[0][0]
+    expect(call.activityId).toBe('planned-1')
+    expect(call.actualMinutes).toBe(30)
+    // Кто отметил — на того и записывается.
+    expect(call.claimForUserId).toBe('user-1')
+
+    // Второй записи не появилось — в этом весь смысл.
+    expect(createActivity).not.toHaveBeenCalled()
+  })
+
+  it('«всё равно записать» сохраняет вторую запись', async () => {
+    // Убралась утром и вечером — это два честных дела.
+    // Поэтому предупреждаем, но не запрещаем.
+    vi.mocked(fetchActivities).mockResolvedValue([plannedSchoolRun])
+
+    const user = userEvent.setup()
+    renderWithProviders(<ActivityForm />)
+
+    await screen.findByRole('option', { name: /Домашние обязанности/ })
+    await fillForm(user, {
+      category: 'cat-household',
+      subcategory: 'sub-cleaning',
+      title: 'Забрала ребенка из школы',
+      minutes: '30',
+    })
+    await user.click(screen.getByRole('button', { name: 'Записать' }))
+    await user.click(await screen.findByRole('button', { name: /это отдельное дело/i }))
+
+    await waitFor(() => expect(createActivity).toHaveBeenCalled())
+    expect(vi.mocked(createActivity).mock.calls[0][0].title).toBe('Забрала ребенка из школы')
+  })
+
+  it('когда похожего нет, сохраняет сразу и ни о чём не спрашивает', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<ActivityForm />)
+
+    await screen.findByRole('option', { name: /Домашние обязанности/ })
+    await fillForm(user, {
+      category: 'cat-household',
+      subcategory: 'sub-cleaning',
+      title: 'Уборка кухни',
+      hours: '1',
+    })
+    await user.click(screen.getByRole('button', { name: 'Записать' }))
+
+    await waitFor(() => expect(createActivity).toHaveBeenCalled())
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('чужую запись за дубль не считает', async () => {
+    // Оба родителя могут по-своему поучаствовать в одном деле.
+    vi.mocked(fetchActivities).mockResolvedValue([
+      { ...plannedSchoolRun, id: 'other-1', user_id: 'user-2' },
+    ])
+
+    const user = userEvent.setup()
+    renderWithProviders(<ActivityForm />)
+
+    await screen.findByRole('option', { name: /Домашние обязанности/ })
+    await fillForm(user, {
+      category: 'cat-household',
+      subcategory: 'sub-cleaning',
+      title: 'Отвести из школы',
+      minutes: '30',
+    })
+    await user.click(screen.getByRole('button', { name: 'Записать' }))
+
+    await waitFor(() => expect(createActivity).toHaveBeenCalled())
   })
 })

@@ -170,11 +170,12 @@ export function detectCurrencies(activities: ActivityWithValue[]): {
 export type PersonRow = {
   userId: string
   name: string
-  /** Минуты по каждой из четырёх категорий. Отсутствующие — нули. */
+  /** Минуты по каждой категории. Отсутствующие — нули. */
   work: number
   study: number
   household: number
   childcare: number
+  admin: number
   totalMinutes: number
   totalValue: number
   /** Реально заработано. */
@@ -205,6 +206,7 @@ export function summarizeByPerson(
         study: 0,
         household: 0,
         childcare: 0,
+        admin: 0,
         totalMinutes: 0,
         totalValue: 0,
         totalEarnings: 0,
@@ -238,6 +240,9 @@ export function summarizeByPerson(
         break
       case 'childcare':
         row.childcare += minutes
+        break
+      case 'admin':
+        row.admin += minutes
         break
     }
   }

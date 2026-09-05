@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { todayISO, formatDateShort } from './dates'
+import { todayISO, formatDateShort, isoWeekday } from './dates'
 
 describe('todayISO', () => {
   it('собирает дату в формате YYYY-MM-DD', () => {
@@ -42,5 +42,26 @@ describe('formatDateShort', () => {
     // Без добавления 'T00:00:00' первое число месяца могло бы
     // показаться как последнее число предыдущего.
     expect(formatDateShort('2026-09-01', 'ru')).toBe('1 сентября')
+  })
+})
+
+describe('isoWeekday', () => {
+  it('понедельник это 1, воскресенье — 7', () => {
+    // Неделя 31 августа — 6 сентября 2026 года.
+    expect(isoWeekday('2026-08-31')).toBe(1)
+    expect(isoWeekday('2026-09-06')).toBe(7)
+  })
+
+  it('совпадает с порядком дней в неделе Планера', () => {
+    const week = [
+      '2026-08-31',
+      '2026-09-01',
+      '2026-09-02',
+      '2026-09-03',
+      '2026-09-04',
+      '2026-09-05',
+      '2026-09-06',
+    ]
+    expect(week.map(isoWeekday)).toEqual([1, 2, 3, 4, 5, 6, 7])
   })
 })

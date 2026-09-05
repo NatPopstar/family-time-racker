@@ -137,6 +137,50 @@ describe('summarizeByPerson', () => {
     { id: 'kid', display_name: 'Даня' },
   ]
 
+  /**
+   * СТОРОЖ ПРОТИВ ПОТЕРЯННОЙ КАТЕГОРИИ.
+   *
+   * Разбор по категориям сделан через switch по slug. Стоит завести
+   * в базе новую категорию и забыть добавить сюда ветку — её минуты
+   * попадут в общий итог, но исчезнут из полос семейного сравнения.
+   * Полоса станет короче своего же итога, и заметить это на глаз
+   * почти невозможно.
+   *
+   * Этот тест ловит именно такой разрыв. Если он упал — в switch
+   * не хватает ветки, а в CATEGORY_COLORS и FamilyBars — категории.
+   */
+  it('сумма по категориям сходится с общим временем', () => {
+    const rows = summarizeByPerson(
+      [
+        entry({ user_id: 'mama', category_slug: 'work', actual_minutes: 30 }),
+        entry({ user_id: 'mama', category_slug: 'study', actual_minutes: 40 }),
+        entry({ user_id: 'mama', category_slug: 'household', actual_minutes: 50 }),
+        entry({ user_id: 'mama', category_slug: 'childcare', actual_minutes: 60 }),
+        entry({ user_id: 'mama', category_slug: 'admin', actual_minutes: 70 }),
+      ],
+      people,
+    )
+
+    const mama = rows.find((r) => r.userId === 'mama')!
+    const byCategory =
+      mama.work + mama.study + mama.household + mama.childcare + mama.admin
+
+    expect(byCategory).toBe(mama.totalMinutes)
+    expect(mama.totalMinutes).toBe(250)
+  })
+
+  it('считает время администрирования отдельной категорией', () => {
+    const rows = summarizeByPerson(
+      [entry({ user_id: 'mama', category_slug: 'admin', actual_minutes: 90, value: 37.5 })],
+      people,
+    )
+
+    const mama = rows.find((r) => r.userId === 'mama')!
+    expect(mama.admin).toBe(90)
+    // В быт не утекло.
+    expect(mama.household).toBe(0)
+  })
+
   it('раскладывает время по людям и категориям', () => {
     const rows = summarizeByPerson(
       [

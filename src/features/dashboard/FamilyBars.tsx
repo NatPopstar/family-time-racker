@@ -33,6 +33,7 @@ export function FamilyBars({ rows }: { rows: PersonRow[] }) {
     { key: 'study' as const, slug: 'study', label: t('family.study') },
     { key: 'household' as const, slug: 'household', label: t('family.household') },
     { key: 'childcare' as const, slug: 'childcare', label: t('family.childcare') },
+    { key: 'admin' as const, slug: 'admin', label: t('family.admin') },
   ]
 
   // Recharts работает с часами удобнее, чем с минутами: ось получается
@@ -43,6 +44,7 @@ export function FamilyBars({ rows }: { rows: PersonRow[] }) {
     study: row.study / 60,
     household: row.household / 60,
     childcare: row.childcare / 60,
+    admin: row.admin / 60,
   }))
 
   return (
@@ -98,7 +100,10 @@ export function FamilyBars({ rows }: { rows: PersonRow[] }) {
                 dataKey={segment.key}
                 name={segment.label}
                 stackId="total"
-                fill={CATEGORY_COLORS[segment.slug]}
+                // Запасной серый на случай категории, которой нет
+                // в палитре: без него сегмент рисовался бы невидимым,
+                // и полоса молча не сходилась бы с общим временем.
+                fill={CATEGORY_COLORS[segment.slug] ?? CHART_INK.muted}
                 // Обводка цветом фона — тот самый зазор в 2 пикселя,
                 // который отделяет соседние сегменты друг от друга.
                 stroke={CHART_SURFACE}
@@ -123,7 +128,7 @@ export function FamilyBars({ rows }: { rows: PersonRow[] }) {
             <span
               aria-hidden="true"
               className="h-3 w-3 rounded-sm"
-              style={{ backgroundColor: CATEGORY_COLORS[segment.slug] }}
+              style={{ backgroundColor: CATEGORY_COLORS[segment.slug] ?? CHART_INK.muted }}
             />
             {/* Подпись обычного цвета: текст никогда не красим
                 в цвет данных — светлые оттенки нечитаемы. */}

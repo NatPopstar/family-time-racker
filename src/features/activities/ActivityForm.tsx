@@ -9,7 +9,9 @@ import { fetchCategories, fetchSubcategoriesWithRates } from '@/features/categor
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
-import { createActivity } from './api'
+import { createActivity, fetchActivities, completePlannedActivity } from './api'
+import { findDuplicates, type DuplicateMatch } from './duplicates'
+import { DuplicateWarning } from './DuplicateWarning'
 
 /** Максимум 24 часа: больше в сутки не помещается, значит это опечатка. */
 const MAX_MINUTES = 24 * 60
@@ -35,11 +37,34 @@ export function ActivityForm() {
   const [comment, setComment] = useState('')
   const [errorKey, setErrorKey] = useState<TranslationKey | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
+  // Похожие записи, найденные при попытке сохранить. Пока список
+  // не пуст, форма ждёт решения человека и ничего не пишет в базу.
+  const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([])
 
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: fetchCategories })
   const { data: subcategories } = useQuery({
     queryKey: ['subcategories-with-rates'],
     queryFn: fetchSubcategoriesWithRates,
+  })
+
+  // Всё, что уже есть за выбранный день — и записанное, и запланированное.
+  // Нужно, чтобы поймать дубль ДО сохранения.
+  //
+  // Загружаем заранее, а не в момент нажатия кнопки: иначе между
+  // нажатием и предупреждением был бы заметный провал, и человек
+  // успел бы нажать второй раз.
+  const { data: dayActivities } = useQuery({
+    queryKey: ['activities', 'day', date, user?.id],
+    queryFn: () =>
+      fetchActivities({
+        from: date,
+        to: date,
+        userId: user!.id,
+        status: 'all',
+        // Ничьи задачи тоже наши: их может закрыть любой взрослый.
+        includeUnassigned: true,
+      }),
+    enabled: Boolean(user?.id) && date !== '',
   })
 
   // Виды работы только выбранной категории.
@@ -71,6 +96,18 @@ export function ActivityForm() {
     onError: (error: Error) => setSaveError(error.message),
   })
 
+  // Закрытие уже запланированной задачи вместо создания второй записи.
+  const completePlanned = useMutation({
+    mutationFn: completePlannedActivity,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['activities'] })
+      // Планер показывает те же задачи — его список тоже устарел.
+      queryClient.invalidateQueries({ queryKey: ['planner'] })
+      resetForm()
+    },
+    onError: (error: Error) => setSaveError(error.message),
+  })
+
   function resetForm() {
     // Категорию и дату НЕ сбрасываем: обычно подряд записывают
     // несколько дел одного дня, и повторный выбор только раздражал бы.
@@ -80,6 +117,21 @@ export function ActivityForm() {
     setComment('')
     setErrorKey(null)
     setSaveError(null)
+    setDuplicates([])
+  }
+
+  /** Сохраняет запись без дальнейших проверок. */
+  function save() {
+    if (!user || !selectedSubcategory) return
+
+    mutation.mutate({
+      userId: user.id,
+      subcategory: selectedSubcategory,
+      title,
+      date,
+      actualMinutes: totalMinutes,
+      comment,
+    })
   }
 
   function handleSubmit(event: FormEvent) {
@@ -93,12 +145,38 @@ export function ActivityForm() {
     if (totalMinutes > MAX_MINUTES) return setErrorKey('activity.error.timeTooLong')
     if (!user) return
 
-    mutation.mutate({
-      userId: user.id,
-      subcategory: selectedSubcategory,
+    const similar = findDuplicates({
       title,
       date,
+      subcategoryId: selectedSubcategory.id,
+      userId: user.id,
+      existing: dayActivities ?? [],
+    })
+
+    // Нашли похожее — показываем и ждём. Решает человек, не приложение.
+    if (similar.length > 0) return setDuplicates(similar)
+
+    save()
+  }
+
+  /**
+   * «Это она» — закрываем найденную задачу вместо новой записи.
+   *
+   * Время и комментарий берём из формы: человек только что их ввёл,
+   * и это и есть факт по этой задаче.
+   *
+   * Записываем задачу на себя без оговорок — и это безопасно:
+   * findDuplicates показывает только СВОИ и НИЧЬИ задачи, поэтому
+   * чужая (в том числе детская) сюда просто не попадёт.
+   */
+  function handleCompleteExisting(match: DuplicateMatch) {
+    if (!user || !selectedSubcategory) return
+
+    completePlanned.mutate({
+      activityId: match.activity.id!,
       actualMinutes: totalMinutes,
+      subcategory: selectedSubcategory,
+      claimForUserId: user.id,
       comment,
     })
   }
@@ -221,9 +299,23 @@ export function ActivityForm() {
         </p>
       )}
 
-      <Button type="submit" disabled={mutation.isPending} className="mt-4">
-        {mutation.isPending ? t('common.saving') : t('activity.add')}
-      </Button>
+      {duplicates.length > 0 && (
+        <DuplicateWarning
+          matches={duplicates}
+          isBusy={mutation.isPending || completePlanned.isPending}
+          onComplete={handleCompleteExisting}
+          onSaveAnyway={save}
+          onCancel={() => setDuplicates([])}
+        />
+      )}
+
+      {/* Пока показано предупреждение, кнопку прячем: два способа
+          сохранить на экране одновременно только путали бы. */}
+      {duplicates.length === 0 && (
+        <Button type="submit" disabled={mutation.isPending} className="mt-4">
+          {mutation.isPending ? t('common.saving') : t('activity.add')}
+        </Button>
+      )}
     </form>
   )
 }

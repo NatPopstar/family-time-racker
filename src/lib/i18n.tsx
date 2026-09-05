@@ -205,6 +205,19 @@ const ru = {
   'recurring.remove': 'Убрать повтор',
   'recurring.every': 'каждый',
   'recurring.everyFeminine': 'каждую',
+  'recurring.repeatWeekly': 'Повторять каждую неделю',
+  'recurring.repeatWeeklyHint':
+    'Задача будет сама появляться в этот день недели. Убрать повтор можно в карточке «Повторяющиеся события» вверху страницы.',
+  'recurring.createdAsRule': 'Задача добавлена как повторяющаяся',
+
+  // ── Похожие записи ──────────────────────────────────────────────
+  'duplicate.title': 'Похоже, такая запись за этот день уже есть',
+  'duplicate.plannedLead': 'Незакрытая задача на этот день:',
+  'duplicate.doneLead': 'Уже записано за этот день:',
+  'duplicate.completeThis': 'Это она — отметить выполненной',
+  'duplicate.saveAnyway': 'Нет, это отдельное дело — записать',
+  'duplicate.keepEditing': 'Вернуться к форме',
+  'duplicate.completed': 'Задача отмечена выполненной.',
 
   // Отдельные фразы «каждый/каждую/каждое X»: в русском нужен
   // винительный падеж, и род у дней недели разный. Склеивать
@@ -244,6 +257,7 @@ const ru = {
   'family.study': 'Учёба',
   'family.household': 'Быт',
   'family.childcare': 'Ребёнок',
+  'family.admin': 'Дела',
   'family.totalHours': 'Всего часов',
   'family.marketValue': 'Оценка труда',
   'family.earnings': 'Заработано',
@@ -494,6 +508,18 @@ const en: Record<keyof typeof ru, string> = {
   'recurring.remove': 'Remove repeat',
   'recurring.every': 'every',
   'recurring.everyFeminine': 'every',
+  'recurring.repeatWeekly': 'Repeat every week',
+  'recurring.repeatWeeklyHint':
+    'The task will appear on this weekday by itself. You can stop it in the “Repeating events” card at the top of the page.',
+  'recurring.createdAsRule': 'Task added as a repeating one',
+
+  'duplicate.title': 'It looks like you already have this for that day',
+  'duplicate.plannedLead': 'Open task for that day:',
+  'duplicate.doneLead': 'Already recorded for that day:',
+  'duplicate.completeThis': 'That’s the one — mark it done',
+  'duplicate.saveAnyway': 'No, this is separate — record it',
+  'duplicate.keepEditing': 'Back to the form',
+  'duplicate.completed': 'Task marked as done.',
 
   'weekday.every.1': 'every Monday',
   'weekday.every.2': 'every Tuesday',
@@ -530,6 +556,7 @@ const en: Record<keyof typeof ru, string> = {
   'family.study': 'Study',
   'family.household': 'Home',
   'family.childcare': 'Child',
+  'family.admin': 'Admin',
   'family.totalHours': 'Total hours',
   'family.marketValue': 'Market value',
   'family.earnings': 'Earned',
