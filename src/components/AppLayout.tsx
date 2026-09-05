@@ -42,7 +42,7 @@ export function AppLayout() {
   return (
     <div className="min-h-screen text-ink">
       <header className="border-b border-line bg-surface">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="mx-auto max-w-(--app-width) px-4 sm:px-6">
           <div className="flex h-16 items-center justify-between gap-4">
             {/* truncate обрезает длинное название многоточием вместо того,
                 чтобы растягивать шапку и выдавливать кнопки за экран. */}
@@ -112,7 +112,7 @@ export function AppLayout() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+      <main className="mx-auto max-w-(--app-width) px-4 py-8 sm:px-6">
         <Outlet />
       </main>
     </div>
