@@ -19,14 +19,14 @@ export function Input({ label, className = '', ...props }: InputProps) {
 
   return (
     <div className={className}>
-      <label htmlFor={id} className="block text-sm font-medium text-slate-700">
+      <label htmlFor={id} className="block text-sm font-medium text-ink-2">
         {label}
       </label>
       <input
         id={id}
-        className="mt-1 block w-full rounded-md border-0 px-3 py-2 text-slate-900
-          shadow-sm ring-1 ring-slate-300 placeholder:text-slate-400
-          focus:ring-2 focus:ring-indigo-600 focus:outline-none"
+        className="mt-1 block w-full rounded-md border-0 px-3 py-2 text-ink
+          shadow-sm ring-1 ring-line-strong placeholder:text-ink-5
+          focus:ring-2 focus:ring-accent focus:outline-none"
         {...props}
       />
     </div>

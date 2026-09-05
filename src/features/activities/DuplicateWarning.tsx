@@ -2,6 +2,7 @@ import { useI18n } from '@/lib/i18n'
 import { formatMinutes } from '@/lib/time'
 import { Button } from '@/components/ui/Button'
 import type { DuplicateMatch } from './duplicates'
+import { RowanBerries } from '@/components/ornaments'
 
 /**
  * Предупреждение о похожей записи за тот же день.
@@ -38,9 +39,12 @@ export function DuplicateWarning({
   return (
     <div
       role="alert"
-      className="mt-4 rounded-lg bg-amber-50 p-4 ring-1 ring-amber-200"
+      className="mt-4 rounded-lg bg-warn-soft p-4 ring-1 ring-warn-line"
     >
-      <p className="text-sm font-semibold text-amber-900">{t('duplicate.title')}</p>
+      <p className="flex items-center gap-2 text-sm font-semibold text-warn-deep">
+        <RowanBerries className="size-4 shrink-0 text-danger" />
+        {t('duplicate.title')}
+      </p>
 
       <ul className="mt-3 space-y-3">
         {matches.map((match) => {
@@ -50,14 +54,14 @@ export function DuplicateWarning({
             : (match.activity.actual_minutes ?? 0)
 
           return (
-            <li key={match.activity.id} className="rounded-md bg-white p-3">
-              <p className="text-xs text-amber-800">
+            <li key={match.activity.id} className="rounded-md bg-surface p-3">
+              <p className="text-xs text-warn-deep">
                 {isPlanned ? t('duplicate.plannedLead') : t('duplicate.doneLead')}
               </p>
-              <p className="mt-0.5 text-sm font-medium text-slate-900">
+              <p className="mt-0.5 text-sm font-medium text-ink">
                 {match.activity.title}
               </p>
-              <p className="text-xs text-slate-500 tabular-nums">
+              <p className="text-xs text-ink-4 tabular-nums">
                 {match.activity.subcategory_name} ·{' '}
                 {isPlanned ? t('planner.plan') : t('planner.fact')}:{' '}
                 {formatMinutes(minutes, locale)}

@@ -23,7 +23,7 @@ export function NotFoundPage() {
   return (
     <div className="text-center">
       <h1 className="text-2xl font-bold tracking-tight">{t('page.notFound.title')}</h1>
-      <Link to="/" className="mt-4 inline-block text-sm text-indigo-600 hover:text-indigo-500">
+      <Link to="/" className="mt-4 inline-block text-sm text-accent hover:text-accent-lite">
         {t('page.notFound.back')}
       </Link>
     </div>

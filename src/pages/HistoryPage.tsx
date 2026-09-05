@@ -14,6 +14,7 @@ import { PeriodFilter } from '@/features/activities/PeriodFilter'
 import { EditActivityDialog } from '@/features/activities/EditActivityDialog'
 import { Select } from '@/components/ui/Select'
 import type { ActivityWithValue } from '@/types/models'
+import { LeafRule } from '@/components/ornaments'
 
 /**
  * «История» — все записи семьи с фильтрами, правкой и удалением.
@@ -75,10 +76,11 @@ export function HistoryPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{t('page.history.title')}</h1>
-        <p className="mt-1 text-sm text-slate-500">{t('page.history.subtitle')}</p>
+        <p className="mt-1 text-sm text-ink-4">{t('page.history.subtitle')}</p>
+        <LeafRule className="mt-3" />
       </div>
 
-      <div className="space-y-3 rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+      <div className="space-y-3 rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
         <PeriodFilter
           period={period}
           range={range}
@@ -117,16 +119,16 @@ export function HistoryPage() {
         </div>
       </div>
 
-      {isPending && <p className="text-slate-400">{t('common.loading')}</p>}
+      {isPending && <p className="text-ink-5">{t('common.loading')}</p>}
 
       {error && (
-        <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+        <p role="alert" className="rounded-md bg-danger-soft p-3 text-sm text-danger">
           {t('activity.loadFailed')} {error.message}
         </p>
       )}
 
       {activities && visible.length === 0 && (
-        <p className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">
+        <p className="rounded-lg border border-dashed border-line-strong bg-surface p-6 text-center text-sm text-ink-4">
           {t('history.empty')}
         </p>
       )}
@@ -135,9 +137,9 @@ export function HistoryPage() {
         <>
           {/* overflow-x-auto: на телефоне таблица прокручивается вбок,
               а не растягивает страницу. */}
-          <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+          <div className="overflow-x-auto rounded-xl bg-surface shadow-sm ring-1 ring-line">
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 text-left text-slate-500">
+              <thead className="border-b border-line text-left text-ink-4">
                 <tr>
                   <th scope="col" className="px-4 py-3 font-medium">{t('history.date')}</th>
                   <th scope="col" className="px-4 py-3 font-medium">{t('history.person')}</th>
@@ -153,17 +155,17 @@ export function HistoryPage() {
                   const isMine = activity.user_id === user?.id
                   return (
                     <tr key={activity.id}>
-                      <td className="px-4 py-3 whitespace-nowrap text-slate-600">
+                      <td className="px-4 py-3 whitespace-nowrap text-ink-3">
                         {formatDateShort(activity.date!, locale)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">{nameOf(activity.user_id)}</td>
                       <td className="px-4 py-3">
-                        <span className="font-medium text-slate-900">{activity.title}</span>
+                        <span className="font-medium text-ink">{activity.title}</span>
                         {activity.comment && (
-                          <span className="block text-slate-400">{activity.comment}</span>
+                          <span className="block text-ink-5">{activity.comment}</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 text-ink-3">
                         {activity.category_name} · {activity.subcategory_name}
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">
@@ -171,11 +173,11 @@ export function HistoryPage() {
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">
                         {activity.value && activity.value > 0 ? (
-                          <span className="text-emerald-700">
+                          <span className="text-positive">
                             {formatMoney(activity.value, activity.currency_snapshot ?? 'GBP', locale)}
                           </span>
                         ) : (
-                          <span className="text-slate-300">—</span>
+                          <span className="text-ink-6">—</span>
                         )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
@@ -187,7 +189,7 @@ export function HistoryPage() {
                             <button
                               type="button"
                               onClick={() => setEditing(activity)}
-                              className="text-indigo-600 hover:text-indigo-500"
+                              className="text-accent hover:text-accent-lite"
                             >
                               {t('history.edit')}
                             </button>
@@ -198,26 +200,26 @@ export function HistoryPage() {
                                   removal.mutate(activity.id!)
                                 }
                               }}
-                              className="text-slate-400 hover:text-red-600"
+                              className="text-ink-5 hover:text-danger-hover"
                             >
                               {t('common.delete')}
                             </button>
                           </span>
                         ) : (
-                          <span className="text-slate-300">—</span>
+                          <span className="text-ink-6">—</span>
                         )}
                       </td>
                     </tr>
                   )
                 })}
               </tbody>
-              <tfoot className="border-t border-slate-200 bg-slate-50 font-semibold">
+              <tfoot className="border-t border-line bg-surface-2 font-semibold">
                 <tr>
                   <td colSpan={4} className="px-4 py-3">{t('common.total')}</td>
                   <td className="px-4 py-3 text-right tabular-nums">
                     {formatHours(totalMinutes, locale)}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-emerald-700">
+                  <td className="px-4 py-3 text-right tabular-nums text-positive">
                     {totalValue > 0 ? formatMoney(totalValue, currency, locale) : '—'}
                   </td>
                   <td />
@@ -226,7 +228,7 @@ export function HistoryPage() {
             </table>
           </div>
 
-          <p className="text-xs text-slate-400">{t('history.foreignHint')}</p>
+          <p className="text-xs text-ink-5">{t('history.foreignHint')}</p>
         </>
       )}
 

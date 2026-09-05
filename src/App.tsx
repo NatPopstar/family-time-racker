@@ -32,8 +32,8 @@ export default function App() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-slate-500">{t('common.loading')}</p>
+      <div className="flex min-h-screen items-center justify-center bg-surface-2">
+        <p className="text-ink-4">{t('common.loading')}</p>
       </div>
     )
   }

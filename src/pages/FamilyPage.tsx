@@ -10,6 +10,7 @@ import { PeriodFilter } from '@/features/activities/PeriodFilter'
 import { summarizeByPerson, buildTimeline, detectCurrencies } from '@/features/dashboard/stats'
 import { FamilyBars } from '@/features/dashboard/FamilyBars'
 import { FamilyTimeline } from '@/features/dashboard/FamilyTimeline'
+import { LeafRule } from '@/components/ornaments'
 
 /**
  * Семейный дашборд: таблица с точными числами, сравнение по людям
@@ -59,10 +60,11 @@ export function FamilyPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{t('page.family.title')}</h1>
-        <p className="mt-1 text-sm text-slate-500">{t('page.family.subtitle')}</p>
+        <p className="mt-1 text-sm text-ink-4">{t('page.family.subtitle')}</p>
+        <LeafRule className="mt-3" />
       </div>
 
-      <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+      <div className="rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
         <PeriodFilter
           period={period}
           range={range}
@@ -73,22 +75,22 @@ export function FamilyPage() {
         />
       </div>
 
-      {isPending && <p className="text-slate-400">{t('common.loading')}</p>}
+      {isPending && <p className="text-ink-5">{t('common.loading')}</p>}
 
       {!isPending && people.length === 0 && (
-        <p className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">
+        <p className="rounded-lg border border-dashed border-line-strong bg-surface p-6 text-center text-sm text-ink-4">
           {t('family.noPeople')}
         </p>
       )}
 
       {people.length > 0 && (
         <>
-          <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+          <div className="overflow-x-auto rounded-xl bg-surface shadow-sm ring-1 ring-line">
             <table className="w-full text-sm">
-              <caption className="px-4 pt-4 text-left text-base font-semibold text-slate-900">
+              <caption className="px-4 pt-4 text-left text-base font-semibold text-ink">
                 {t('family.tableTitle')}
               </caption>
-              <thead className="border-b border-slate-200 text-left text-slate-500">
+              <thead className="border-b border-line text-left text-ink-4">
                 <tr>
                   <th scope="col" className="px-4 py-3 font-medium">{t('family.person')}</th>
                   <th scope="col" className="px-4 py-3 text-right font-medium">{t('family.work')}</th>
@@ -103,7 +105,7 @@ export function FamilyPage() {
               <tbody className="divide-y divide-slate-100">
                 {rows.map((row) => (
                   <tr key={row.userId}>
-                    <th scope="row" className="px-4 py-3 text-left font-medium text-slate-900">
+                    <th scope="row" className="px-4 py-3 text-left font-medium text-ink">
                       {row.name}
                     </th>
                     <td className="px-4 py-3 text-right tabular-nums">{formatHours(row.work, locale)}</td>
@@ -115,26 +117,26 @@ export function FamilyPage() {
                     </td>
                     {/* Две колонки, а не одна сумма: зарплата и оценка
                         неоплачиваемого труда — разные по смыслу вещи. */}
-                    <td className="px-4 py-3 text-right tabular-nums text-emerald-700">
+                    <td className="px-4 py-3 text-right tabular-nums text-positive">
                       {row.totalEarnings > 0 ? formatMoney(row.totalEarnings, earningsCurrency, locale) : '—'}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-indigo-700">
+                    <td className="px-4 py-3 text-right tabular-nums text-accent-deep">
                       {row.totalEstimated > 0 ? formatMoney(row.totalEstimated, estimatedCurrency, locale) : '—'}
                     </td>
                   </tr>
                 ))}
               </tbody>
-              <tfoot className="border-t border-slate-200 bg-slate-50 font-semibold">
+              <tfoot className="border-t border-line bg-surface-2 font-semibold">
                 <tr>
                   <td className="px-4 py-3">{t('common.total')}</td>
                   <td colSpan={4} />
                   <td className="px-4 py-3 text-right tabular-nums">
                     {formatHours(totals.minutes, locale)}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-emerald-700">
+                  <td className="px-4 py-3 text-right tabular-nums text-positive">
                     {totals.earnings > 0 ? formatMoney(totals.earnings, earningsCurrency, locale) : '—'}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-indigo-700">
+                  <td className="px-4 py-3 text-right tabular-nums text-accent-deep">
                     {totals.estimated > 0 ? formatMoney(totals.estimated, estimatedCurrency, locale) : '—'}
                   </td>
                 </tr>

@@ -16,10 +16,10 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 }
 
 const variantClasses: Record<Variant, string> = {
-  primary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600',
+  primary: 'bg-accent text-accent-ink hover:bg-accent-hover focus-visible:outline-accent',
   secondary:
-    'bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 focus-visible:outline-slate-400',
-  ghost: 'text-slate-600 hover:bg-slate-100 focus-visible:outline-slate-400',
+    'bg-surface text-ink-2 shadow-sm ring-1 ring-line hover:bg-surface-2 focus-visible:outline-ink-5',
+  ghost: 'text-ink-3 hover:bg-surface-3 focus-visible:outline-ink-5',
 }
 
 export function Button({ variant = 'primary', className = '', ...props }: ButtonProps) {

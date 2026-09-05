@@ -2,7 +2,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { useI18n } from '@/lib/i18n'
 import { formatMinutes } from '@/lib/time'
 import { formatMoney } from '@/lib/money'
-import { CATEGORY_COLORS, CHART_SURFACE, CHART_INK } from '@/lib/chartColors'
+import { useChartPalette } from '@/lib/chartColors'
 import type { CategorySummary } from './stats'
 import { percentOfTotal } from './stats'
 
@@ -28,19 +28,22 @@ export function CategoryDonut({
   currency: string
 }) {
   const { t, locale } = useI18n()
+  // Цвета зависят от темы: Recharts принимает значения,
+  // а не классы, поэтому берём их хуком, а не из CSS.
+  const palette = useChartPalette()
 
   if (data.length === 0) {
     return (
-      <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-        <h2 className="text-base font-semibold text-slate-900">{t('dashboard.byCategory')}</h2>
-        <p className="mt-3 text-sm text-slate-400">{t('dashboard.noData')}</p>
+      <div className="rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
+        <h2 className="text-base font-semibold text-ink">{t('dashboard.byCategory')}</h2>
+        <p className="mt-3 text-sm text-ink-5">{t('dashboard.noData')}</p>
       </div>
     )
   }
 
   return (
-    <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-      <h2 className="text-base font-semibold text-slate-900">{t('dashboard.byCategory')}</h2>
+    <div className="rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
+      <h2 className="text-base font-semibold text-ink">{t('dashboard.byCategory')}</h2>
 
       <div className="mt-4 flex flex-col items-center gap-6 sm:flex-row">
         <div className="h-48 w-48 shrink-0">
@@ -58,7 +61,7 @@ export function CategoryDonut({
                 // пустоты», которые отделяют соседние сегменты. Рамку
                 // вокруг сегмента не рисуем: это была бы лишняя краска.
                 paddingAngle={2}
-                stroke={CHART_SURFACE}
+                stroke={palette.surface}
                 strokeWidth={2}
                 isAnimationActive={false}
               >
@@ -68,7 +71,7 @@ export function CategoryDonut({
                     // Цвет привязан к категории, а не к её месту в списке:
                     // при фильтрации «Дом» остаётся бирюзовым, а не
                     // перекрашивается в цвет первого места.
-                    fill={CATEGORY_COLORS[entry.slug] ?? CHART_INK.muted}
+                    fill={palette.categoryColors[entry.slug] ?? palette.ink.muted}
                   />
                 ))}
               </Pie>
@@ -79,7 +82,7 @@ export function CategoryDonut({
                 formatter={(value, name) => [formatMinutes(Number(value), locale), String(name)]}
                 contentStyle={{
                   borderRadius: 8,
-                  border: `1px solid ${CHART_INK.grid}`,
+                  border: `1px solid ${palette.ink.grid}`,
                   fontSize: 13,
                 }}
               />
@@ -95,18 +98,18 @@ export function CategoryDonut({
               <span
                 aria-hidden="true"
                 className="h-3 w-3 shrink-0 rounded-sm"
-                style={{ backgroundColor: CATEGORY_COLORS[entry.slug] ?? CHART_INK.muted }}
+                style={{ backgroundColor: palette.categoryColors[entry.slug] ?? palette.ink.muted }}
               />
               {/* Текст остаётся обычного цвета: подписи не красим
                   в цвет данных — светлые оттенки нечитаемы как текст. */}
-              <span className="flex-1 text-slate-700">{entry.name}</span>
-              <span className="tabular-nums text-slate-900">
+              <span className="flex-1 text-ink-2">{entry.name}</span>
+              <span className="tabular-nums text-ink">
                 {formatMinutes(entry.minutes, locale)}
               </span>
-              <span className="w-10 text-right tabular-nums text-slate-400">
+              <span className="w-10 text-right tabular-nums text-ink-5">
                 {percentOfTotal(entry.minutes, totalMinutes)}%
               </span>
-              <span className="w-14 text-right tabular-nums text-emerald-700">
+              <span className="w-14 text-right tabular-nums text-positive">
                 {entry.value > 0 ? formatMoney(entry.value, currency, locale) : ''}
               </span>
             </li>

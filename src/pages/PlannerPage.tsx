@@ -13,6 +13,7 @@ import { AddPlannedTaskDialog } from '@/features/planner/AddPlannedTaskDialog'
 import { RecurringRulesCard } from '@/features/planner/RecurringRulesCard'
 import { fetchRecurringRules, materialiseRules } from '@/features/planner/rulesApi'
 import { Button } from '@/components/ui/Button'
+import { LeafRule } from '@/components/ornaments'
 
 /**
  * Планер недели — сетка из семи дней с задачами.
@@ -89,10 +90,11 @@ export function PlannerPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{t('page.planner.title')}</h1>
-        <p className="mt-1 text-sm text-slate-500">{t('page.planner.subtitle')}</p>
+        <p className="mt-1 text-sm text-ink-4">{t('page.planner.subtitle')}</p>
+        <LeafRule className="mt-3" />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-surface p-4 shadow-sm ring-1 ring-line">
         <div className="flex gap-2">
           <Button variant="secondary" onClick={() => setWeekOffset((n) => n - 1)}>
             {t('planner.prevWeek')}
@@ -107,7 +109,7 @@ export function PlannerPage() {
           </Button>
         </div>
 
-        <p className="text-sm text-slate-500 tabular-nums">
+        <p className="text-sm text-ink-4 tabular-nums">
           {formatDateShort(range.from, locale)} — {formatDateShort(range.to, locale)}
         </p>
       </div>
@@ -115,12 +117,12 @@ export function PlannerPage() {
       <RecurringRulesCard />
 
       {materialiseError && (
-        <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+        <p role="alert" className="rounded-md bg-danger-soft p-3 text-sm text-danger">
           {t('activity.error.saveFailed')} {materialiseError}
         </p>
       )}
 
-      {isPending && <p className="text-slate-400">{t('common.loading')}</p>}
+      {isPending && <p className="text-ink-5">{t('common.loading')}</p>}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {days.map((date) => (
@@ -138,8 +140,8 @@ export function PlannerPage() {
       </div>
 
       {plannedTotal > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-100 px-4 py-3">
-          <span className="text-sm font-medium text-slate-600">{t('planner.weekTotal')}</span>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-surface-3 px-4 py-3">
+          <span className="text-sm font-medium text-ink-3">{t('planner.weekTotal')}</span>
           <span className="flex gap-4 text-sm font-semibold tabular-nums">
             <span>
               {t('planner.plan')}: {formatHours(plannedTotal, locale)}

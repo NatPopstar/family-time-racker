@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { fetchRecurringRules, createRecurringRule, deactivateRecurringRule } from './rulesApi'
 import { TravelInput, type TravelLegs } from './TravelInput'
+import { RuneStone } from '@/components/ornaments'
 
 const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const
 
@@ -92,17 +93,20 @@ export function RecurringRulesCard() {
   }
 
   return (
-    <section className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+    <section className="rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-base font-semibold text-slate-900">{t('recurring.title')}</h2>
+        <h2 className="text-base font-semibold text-ink">{t('recurring.title')}</h2>
         <Button variant="secondary" onClick={() => setIsOpen((open) => !open)}>
           {isOpen ? t('common.cancel') : `+ ${t('recurring.add')}`}
         </Button>
       </div>
-      <p className="mt-1 text-sm text-slate-500">{t('recurring.hint')}</p>
+      <p className="mt-1 text-sm text-ink-4">{t('recurring.hint')}</p>
 
       {rules && rules.length === 0 && (
-        <p className="mt-3 text-sm text-slate-400">{t('recurring.none')}</p>
+        <p className="mt-3 flex items-center gap-2 text-sm text-ink-5">
+          <RuneStone className="size-4 shrink-0" />
+          {t('recurring.none')}
+        </p>
       )}
 
       {rules && rules.length > 0 && (
@@ -112,26 +116,26 @@ export function RecurringRulesCard() {
             return (
               <li
                 key={rule.id}
-                className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-slate-50 p-3 text-sm"
+                className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-surface-2 p-3 text-sm"
               >
-                <span className="font-medium text-slate-900">{rule.title}</span>
-                <span className="text-slate-500">
+                <span className="font-medium text-ink">{rule.title}</span>
+                <span className="text-ink-4">
                   {t(`weekday.every.${rule.weekday}` as TranslationKey)}
                 </span>
-                <span className="tabular-nums text-slate-500">
+                <span className="tabular-nums text-ink-4">
                   {formatMinutes(rule.planned_minutes, locale)}
                   {(rule.travel_minutes ?? 0) > 0 && (
                     <> {' + '}🚗 {formatMinutes(rule.travel_minutes ?? 0, locale)}</>
                   )}
                 </span>
-                {rule.address && <span className="text-slate-400">📍 {rule.address}</span>}
-                <span className="text-slate-400">
+                {rule.address && <span className="text-ink-5">📍 {rule.address}</span>}
+                <span className="text-ink-5">
                   {owner ? owner.display_name : t('planner.nobody')}
                 </span>
                 <button
                   type="button"
                   onClick={() => remove.mutate(rule.id)}
-                  className="ml-auto text-xs text-slate-400 hover:text-red-600"
+                  className="ml-auto text-xs text-ink-5 hover:text-danger-hover"
                 >
                   {t('recurring.remove')}
                 </button>
@@ -142,7 +146,7 @@ export function RecurringRulesCard() {
       )}
 
       {isOpen && (
-        <form onSubmit={handleSubmit} className="mt-4 border-t border-slate-100 pt-4">
+        <form onSubmit={handleSubmit} className="mt-4 border-t border-line-soft pt-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <Select
               label={t('activity.category')}
@@ -214,7 +218,7 @@ export function RecurringRulesCard() {
             </Select>
 
             <div>
-              <span className="block text-sm font-medium text-slate-700">
+              <span className="block text-sm font-medium text-ink-2">
                 {t('planner.plannedTime')}
               </span>
               <div className="mt-1 flex gap-2">
@@ -248,7 +252,7 @@ export function RecurringRulesCard() {
           </div>
 
           {errorKey && (
-            <p role="alert" className="mt-3 rounded-md bg-red-50 p-3 text-sm text-red-700">
+            <p role="alert" className="mt-3 rounded-md bg-danger-soft p-3 text-sm text-danger">
               {t(errorKey)}
             </p>
           )}

@@ -68,12 +68,12 @@ export function TravelInput({
       {/* Итог показываем сразу: человек видит, что получилось,
           и не считает в уме. */}
       {total > 0 && (
-        <p className="mt-2 text-sm font-medium text-slate-700">
+        <p className="mt-2 text-sm font-medium text-ink-2">
           {t('travel.total')}: {formatMinutes(total, locale)}
         </p>
       )}
 
-      <p className="mt-1 text-xs text-slate-500">{t('activity.travelHint')}</p>
+      <p className="mt-1 text-xs text-ink-4">{t('activity.travelHint')}</p>
     </div>
   )
 }

@@ -35,12 +35,12 @@ export function ActivityList({ from, to }: { from: string; to: string }) {
   })
 
   if (isPending) {
-    return <p className="text-slate-400">{t('common.loading')}</p>
+    return <p className="text-ink-5">{t('common.loading')}</p>
   }
 
   if (error) {
     return (
-      <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+      <p role="alert" className="rounded-md bg-danger-soft p-3 text-sm text-danger">
         {t('activity.loadFailed')} {error.message}
       </p>
     )
@@ -48,7 +48,7 @@ export function ActivityList({ from, to }: { from: string; to: string }) {
 
   if (activities.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">
+      <p className="rounded-lg border border-dashed border-line-strong bg-surface p-6 text-center text-sm text-ink-4">
         {t('activity.empty')}
       </p>
     )
@@ -66,35 +66,35 @@ export function ActivityList({ from, to }: { from: string; to: string }) {
         {activities.map((activity) => (
           <li
             key={activity.id}
-            className="flex items-start justify-between gap-4 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200"
+            className="flex items-start justify-between gap-4 rounded-lg bg-surface p-4 shadow-sm ring-1 ring-line"
           >
             <div className="min-w-0">
-              <p className="truncate font-medium text-slate-900">{activity.title}</p>
-              <p className="mt-0.5 text-sm text-slate-500">
+              <p className="truncate font-medium text-ink">{activity.title}</p>
+              <p className="mt-0.5 text-sm text-ink-4">
                 {activity.category_name} · {activity.subcategory_name}
               </p>
               {activity.comment && (
-                <p className="mt-1 text-sm text-slate-400">{activity.comment}</p>
+                <p className="mt-1 text-sm text-ink-5">{activity.comment}</p>
               )}
             </div>
 
             <div className="shrink-0 text-right">
-              <p className="font-semibold tabular-nums text-slate-900">
+              <p className="font-semibold tabular-nums text-ink">
                 {formatMinutes(activity.actual_minutes ?? 0, locale)}
               </p>
-              <p className="mt-0.5 text-sm tabular-nums text-emerald-700">
+              <p className="mt-0.5 text-sm tabular-nums text-positive">
                 {activity.value && activity.value > 0
                   ? formatMoney(activity.value, activity.currency_snapshot ?? 'GBP', locale)
                   : // Работа и учёба деньгами не оцениваются — говорим об этом прямо,
                     // иначе пустое место выглядит как потерянные данные.
-                    <span className="text-slate-400">{t('activity.notPriced')}</span>}
+                    <span className="text-ink-5">{t('activity.notPriced')}</span>}
               </p>
               {activity.user_id === user?.id && (
                 <button
                   type="button"
                   onClick={() => removal.mutate(activity.id!)}
                   disabled={removal.isPending}
-                  className="mt-1 text-xs text-slate-400 hover:text-red-600 disabled:opacity-50"
+                  className="mt-1 text-xs text-ink-5 hover:text-danger-hover disabled:opacity-50"
                 >
                   {t('common.delete')}
                 </button>
@@ -104,12 +104,12 @@ export function ActivityList({ from, to }: { from: string; to: string }) {
         ))}
       </ul>
 
-      <div className="flex items-center justify-between rounded-lg bg-slate-100 px-4 py-3">
-        <span className="text-sm font-medium text-slate-600">{t('common.total')}</span>
+      <div className="flex items-center justify-between rounded-lg bg-surface-3 px-4 py-3">
+        <span className="text-sm font-medium text-ink-3">{t('common.total')}</span>
         <span className="flex gap-4 font-semibold tabular-nums">
           <span>{formatHours(totalMinutes, locale)}</span>
           {totalValue > 0 && (
-            <span className="text-emerald-700">{formatMoney(totalValue, currency, locale)}</span>
+            <span className="text-positive">{formatMoney(totalValue, currency, locale)}</span>
           )}
         </span>
       </div>

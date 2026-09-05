@@ -1,9 +1,10 @@
 import { useI18n } from '@/lib/i18n'
 import { formatHours } from '@/lib/time'
 import { formatMoney } from '@/lib/money'
-import { CATEGORY_COLORS, CHART_INK } from '@/lib/chartColors'
+import { useChartPalette } from '@/lib/chartColors'
 import type { PersonRow, CategorySummary } from './stats'
 import { percentOfTotal } from './stats'
+import { LoneMountain } from '@/components/ornaments'
 
 /**
  * Отчёт по одному человеку — карточка из технического задания:
@@ -25,21 +26,27 @@ export function PersonReport({
   estimatedCurrency: string
 }) {
   const { t, locale } = useI18n()
+  // Цвета зависят от темы: Recharts принимает значения,
+  // а не классы, поэтому берём их хуком, а не из CSS.
+  const palette = useChartPalette()
 
   return (
-    <section className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+    <section className="rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-lg font-semibold text-slate-900">{person.name}</h3>
-        <p className="text-sm text-slate-500">
+        <h3 className="text-lg font-semibold text-ink">{person.name}</h3>
+        <p className="text-sm text-ink-4">
           {t('report.totalTime')}:{' '}
-          <span className="font-semibold text-slate-900">
+          <span className="font-semibold text-ink">
             {formatHours(person.totalMinutes, locale)}
           </span>
         </p>
       </div>
 
       {categories.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-400">{t('report.noData')}</p>
+        <p className="mt-3 flex items-center gap-2 text-sm text-ink-5">
+          <LoneMountain className="size-4 shrink-0" />
+          {t('report.noData')}
+        </p>
       ) : (
         <ul className="mt-4 space-y-2">
           {categories.map((category) => (
@@ -47,13 +54,13 @@ export function PersonReport({
               <span
                 aria-hidden="true"
                 className="h-3 w-3 shrink-0 rounded-sm"
-                style={{ backgroundColor: CATEGORY_COLORS[category.slug] ?? CHART_INK.muted }}
+                style={{ backgroundColor: palette.categoryColors[category.slug] ?? palette.ink.muted }}
               />
-              <span className="flex-1 text-slate-700">{category.name}</span>
-              <span className="tabular-nums text-slate-900">
+              <span className="flex-1 text-ink-2">{category.name}</span>
+              <span className="tabular-nums text-ink">
                 {formatHours(category.minutes, locale)}
               </span>
-              <span className="w-10 text-right tabular-nums text-slate-400">
+              <span className="w-10 text-right tabular-nums text-ink-5">
                 {percentOfTotal(category.minutes, person.totalMinutes)}%
               </span>
             </li>
@@ -65,18 +72,18 @@ export function PersonReport({
           отделена чертой и набрана крупнее остальных. */}
       {/* Две цифры раздельно: реальная зарплата и условная оценка
           неоплачиваемого труда. Их сумма не имела бы смысла. */}
-      <div className="mt-4 space-y-1 border-t border-slate-100 pt-3">
+      <div className="mt-4 space-y-1 border-t border-line-soft pt-3">
         {person.totalEarnings > 0 && (
           <div className="flex items-baseline justify-between">
-            <span className="text-sm font-medium text-slate-600">{t('report.earned')}</span>
-            <span className="text-xl font-bold text-emerald-700">
+            <span className="text-sm font-medium text-ink-3">{t('report.earned')}</span>
+            <span className="text-xl font-bold text-positive">
               {formatMoney(person.totalEarnings, earningsCurrency, locale)}
             </span>
           </div>
         )}
         <div className="flex items-baseline justify-between">
-          <span className="text-sm font-medium text-slate-600">{t('report.estimatedValue')}</span>
-          <span className="text-xl font-bold text-indigo-700">
+          <span className="text-sm font-medium text-ink-3">{t('report.estimatedValue')}</span>
+          <span className="text-xl font-bold text-accent-deep">
             {formatMoney(person.totalEstimated, estimatedCurrency, locale)}
           </span>
         </div>

@@ -98,14 +98,14 @@ export function EditPlannedTaskDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4">
       <div
         role="dialog"
         aria-modal="true"
         aria-label={t('planner.editTitle')}
-        className="max-h-full w-full max-w-md overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
+        className="max-h-full w-full max-w-md overflow-y-auto rounded-xl bg-surface p-6 shadow-xl"
       >
-        <h2 className="text-lg font-semibold text-slate-900">{t('planner.editTitle')}</h2>
+        <h2 className="text-lg font-semibold text-ink">{t('planner.editTitle')}</h2>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <Select
@@ -172,7 +172,7 @@ export function EditPlannedTaskDialog({
           />
 
           <div>
-            <span className="block text-sm font-medium text-slate-700">
+            <span className="block text-sm font-medium text-ink-2">
               {t('planner.plannedTime')}
             </span>
             <div className="mt-1 flex gap-2">
@@ -203,13 +203,13 @@ export function EditPlannedTaskDialog({
           />
 
           {errorKey && (
-            <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+            <p role="alert" className="rounded-md bg-danger-soft p-3 text-sm text-danger">
               {t(errorKey)}
             </p>
           )}
 
           {saveError && (
-            <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+            <p role="alert" className="rounded-md bg-danger-soft p-3 text-sm text-danger">
               {t('activity.error.saveFailed')} {saveError}
             </p>
           )}

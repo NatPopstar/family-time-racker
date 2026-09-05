@@ -20,8 +20,8 @@ export function LocaleSwitcher() {
           aria-pressed={locale === option}
           className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
             locale === option
-              ? 'bg-indigo-600 text-white'
-              : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
+              ? 'bg-accent text-accent-ink'
+              : 'bg-surface text-ink-3 ring-1 ring-line hover:bg-surface-2'
           }`}
         >
           {option.toUpperCase()}

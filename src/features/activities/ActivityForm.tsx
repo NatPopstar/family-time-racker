@@ -184,9 +184,9 @@ export function ActivityForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200"
+      className="rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line"
     >
-      <h2 className="text-base font-semibold text-slate-900">{t('activity.formTitle')}</h2>
+      <h2 className="text-base font-semibold text-ink">{t('activity.formTitle')}</h2>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <Select
@@ -237,7 +237,7 @@ export function ActivityForm() {
         />
 
         <div>
-          <span className="block text-sm font-medium text-slate-700">{t('activity.time')}</span>
+          <span className="block text-sm font-medium text-ink-2">{t('activity.time')}</span>
           <div className="mt-1 flex gap-2">
             {/* Намеренно БЕЗ атрибута max.
                 С ним браузер блокирует отправку формы сам и показывает
@@ -277,7 +277,7 @@ export function ActivityForm() {
       {/* Мгновенная оценка стоимости — появляется, как только выбран
           оплачиваемый вид работы и введено время. */}
       {previewValue > 0 && (
-        <p className="mt-4 rounded-md bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800">
+        <p className="mt-4 rounded-md bg-positive-soft px-3 py-2 text-sm font-medium text-positive-deep">
           ≈{' '}
           {formatMoney(
             previewValue,
@@ -288,13 +288,13 @@ export function ActivityForm() {
       )}
 
       {errorKey && (
-        <p role="alert" className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
+        <p role="alert" className="mt-4 rounded-md bg-danger-soft p-3 text-sm text-danger">
           {t(errorKey)}
         </p>
       )}
 
       {saveError && (
-        <p role="alert" className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
+        <p role="alert" className="mt-4 rounded-md bg-danger-soft p-3 text-sm text-danger">
           {t('activity.error.saveFailed')} {saveError}
         </p>
       )}

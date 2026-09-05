@@ -18,15 +18,15 @@ export function Select({ label, className = '', children, ...props }: SelectProp
 
   return (
     <div className={className}>
-      <label htmlFor={id} className="block text-sm font-medium text-slate-700">
+      <label htmlFor={id} className="block text-sm font-medium text-ink-2">
         {label}
       </label>
       <select
         id={id}
-        className="mt-1 block w-full rounded-md border-0 bg-white px-3 py-2 text-slate-900
-          shadow-sm ring-1 ring-slate-300
-          focus:ring-2 focus:ring-indigo-600 focus:outline-none
-          disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+        className="mt-1 block w-full rounded-md border-0 bg-surface px-3 py-2 text-ink
+          shadow-sm ring-1 ring-line-strong
+          focus:ring-2 focus:ring-accent focus:outline-none
+          disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-ink-5"
         {...props}
       >
         {children}

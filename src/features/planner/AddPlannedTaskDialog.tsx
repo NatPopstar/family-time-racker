@@ -137,14 +137,14 @@ export function AddPlannedTaskDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4">
       <div
         role="dialog"
         aria-modal="true"
         aria-label={t('planner.addTask')}
-        className="max-h-full w-full max-w-md overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
+        className="max-h-full w-full max-w-md overflow-y-auto rounded-xl bg-surface p-6 shadow-xl"
       >
-        <h2 className="text-lg font-semibold text-slate-900">
+        <h2 className="text-lg font-semibold text-ink">
           {t('planner.addTask')} — {formatDateShort(date, locale)}
         </h2>
 
@@ -208,7 +208,7 @@ export function AddPlannedTaskDialog({
           </Select>
 
           <div>
-            <span className="block text-sm font-medium text-slate-700">
+            <span className="block text-sm font-medium text-ink-2">
               {t('planner.plannedTime')}
             </span>
             <div className="mt-1 flex gap-2">
@@ -240,21 +240,21 @@ export function AddPlannedTaskDialog({
 
           {/* Повтор спрашиваем прямо здесь: вопрос «а на следующей
               неделе тоже?» возникает именно в этот момент. */}
-          <div className="rounded-lg bg-slate-50 p-3">
+          <div className="rounded-lg bg-surface-2 p-3">
             <label className="flex items-start gap-2.5">
               <input
                 type="checkbox"
                 checked={repeatWeekly}
                 onChange={(e) => setRepeatWeekly(e.target.checked)}
-                className="mt-0.5 size-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                className="mt-0.5 size-4 shrink-0 rounded border-line-strong text-accent focus:ring-accent-lite"
               />
               <span className="text-sm">
-                <span className="font-medium text-slate-800">
+                <span className="font-medium text-ink-2">
                   {t('recurring.repeatWeekly')}
                 </span>
                 {/* Показываем, КАКОЙ это день недели: человек выбрал
                     дату, а повторяться будет день недели. */}
-                <span className="text-slate-500">
+                <span className="text-ink-4">
                   {' — '}
                   {t(`weekday.every.${weekday}` as TranslationKey)}
                 </span>
@@ -264,20 +264,20 @@ export function AddPlannedTaskDialog({
             {/* Отступ pl-[1.625rem] ставит подсказку ровно под текстом
                 галочки: ширина квадратика (1rem) плюс зазор (0.625rem). */}
             {repeatWeekly && (
-              <p className="mt-2 pl-[1.625rem] text-xs text-slate-500">
+              <p className="mt-2 pl-[1.625rem] text-xs text-ink-4">
                 {t('recurring.repeatWeeklyHint')}
               </p>
             )}
           </div>
 
           {errorKey && (
-            <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+            <p role="alert" className="rounded-md bg-danger-soft p-3 text-sm text-danger">
               {t(errorKey)}
             </p>
           )}
 
           {saveError && (
-            <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+            <p role="alert" className="rounded-md bg-danger-soft p-3 text-sm text-danger">
               {t('activity.error.saveFailed')} {saveError}
             </p>
           )}

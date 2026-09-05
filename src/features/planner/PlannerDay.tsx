@@ -10,6 +10,7 @@ import { claimActivity } from './rulesApi'
 import { EditPlannedTaskDialog } from './EditPlannedTaskDialog'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { FernSprig } from '@/components/ornaments'
 
 /**
  * Один день недели в Планере: список задач и кнопка добавления.
@@ -43,16 +44,19 @@ export function PlannerDay({
       className={`rounded-xl p-4 ring-1 ${
         // Сегодняшний день подсвечиваем: в сетке из семи одинаковых
         // карточек глаз иначе теряется.
-        isToday ? 'bg-indigo-50 ring-indigo-200' : 'bg-white ring-slate-200'
+        isToday ? 'bg-accent-soft ring-accent-line' : 'bg-surface ring-line'
       }`}
     >
       <header className="flex items-baseline justify-between gap-2">
-        <h3 className="font-semibold text-slate-900 capitalize">{weekdayName}</h3>
-        <span className="text-xs text-slate-400">{formatDateShort(date, locale)}</span>
+        <h3 className="font-semibold text-ink capitalize">{weekdayName}</h3>
+        <span className="text-xs text-ink-5">{formatDateShort(date, locale)}</span>
       </header>
 
       {tasks.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-400">{t('planner.noTasks')}</p>
+        <p className="mt-3 flex items-center gap-2 text-sm text-ink-5">
+          <FernSprig className="size-4 shrink-0" />
+          {t('planner.noTasks')}
+        </p>
       ) : (
         <ul className="mt-3 space-y-2">
           {tasks.map((task) => (
@@ -124,19 +128,19 @@ function PlannerTask({
   const remove = useMutation({ mutationFn: deleteActivity, onSuccess: refresh })
 
   return (
-    <li className={`rounded-lg p-3 ${isUnassigned && !isDone ? 'bg-amber-50' : 'bg-slate-50'}`}>
+    <li className={`rounded-lg p-3 ${isUnassigned && !isDone ? 'bg-warn-soft' : 'bg-surface-2'}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className={`text-sm font-medium ${isDone ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
+          <p className={`text-sm font-medium ${isDone ? 'text-ink-5 line-through' : 'text-ink'}`}>
             {task.title}
           </p>
-          <p className="text-xs text-slate-500">{task.subcategory_name}</p>
-          {task.address && <p className="mt-0.5 text-xs text-slate-400">📍 {task.address}</p>}
+          <p className="text-xs text-ink-4">{task.subcategory_name}</p>
+          {task.address && <p className="mt-0.5 text-xs text-ink-5">📍 {task.address}</p>}
         </div>
         <button
           type="button"
           onClick={() => remove.mutate(task.id!)}
-          className="shrink-0 text-xs text-slate-300 hover:text-red-600"
+          className="shrink-0 text-xs text-ink-6 hover:text-danger-hover"
           aria-label={`${t('common.delete')}: ${task.title}`}
         >
           ✕
@@ -147,16 +151,16 @@ function PlannerTask({
           принять за чужую и пройти мимо. */}
       <p className="mt-1 text-xs">
         {isUnassigned ? (
-          <span className="font-medium text-amber-700">{t('planner.unassigned')}</span>
+          <span className="font-medium text-warn">{t('planner.unassigned')}</span>
         ) : (
-          <span className="text-slate-500">
+          <span className="text-ink-4">
             {t('planner.assignedTo')}: {owner?.display_name ?? '—'}
             {ownerIsChild && <> · {t('planner.childTask')}</>}
           </span>
         )}
       </p>
 
-      <p className="mt-1 text-xs text-slate-500 tabular-nums">
+      <p className="mt-1 text-xs text-ink-4 tabular-nums">
         {t('planner.plan')}: {formatMinutes(task.planned_minutes ?? 0, locale)}
         {/* Дорогу показываем отдельным слагаемым: так видно,
             из чего складывается время. */}
@@ -175,10 +179,10 @@ function PlannerTask({
         <p
           className={`mt-1 text-xs font-medium ${
             comparison.direction === 'longer'
-              ? 'text-amber-700'
+              ? 'text-warn'
               : comparison.direction === 'shorter'
-                ? 'text-emerald-700'
-                : 'text-slate-500'
+                ? 'text-positive'
+                : 'text-ink-4'
           }`}
         >
           {comparison.direction === 'exact'
@@ -215,11 +219,11 @@ function PlannerTask({
       )}
 
       {isUnassigned && !isDone && (
-        <p className="mt-1 text-xs text-amber-700">{t('planner.unassignedHint')}</p>
+        <p className="mt-1 text-xs text-warn">{t('planner.unassignedHint')}</p>
       )}
 
       {ownerIsChild && !isDone && (
-        <p className="mt-1 text-xs text-slate-400">{t('planner.childTaskHint')}</p>
+        <p className="mt-1 text-xs text-ink-5">{t('planner.childTaskHint')}</p>
       )}
 
       {isEditing && (
@@ -228,7 +232,7 @@ function PlannerTask({
 
       {!isDone && isCompleting && (
         <div className="mt-2 space-y-2">
-          <span className="block text-xs font-medium text-slate-600">
+          <span className="block text-xs font-medium text-ink-3">
             {t('planner.actualTime')}
           </span>
           <div className="flex gap-2">

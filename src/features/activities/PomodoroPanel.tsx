@@ -121,15 +121,15 @@ export function PomodoroPanel({
         <h2 className={`text-base font-semibold ${isWork ? 'text-rose-900' : 'text-sky-900'}`}>
           {t(`pomodoro.phase.${phase}` as TranslationKey)}
         </h2>
-        <span className="text-sm text-slate-500">
+        <span className="text-sm text-ink-4">
           {t('pomodoro.done')}: {'🍅'.repeat(Math.min(pomodorosDone, POMODORO.pomodorosBeforeLongBreak))}
           {pomodorosDone > POMODORO.pomodorosBeforeLongBreak ? ` ×${pomodorosDone}` : ''}
           {pomodorosDone === 0 ? '—' : ''}
         </span>
       </div>
 
-      <p className="mt-2 text-lg font-semibold text-slate-900">{activity.title}</p>
-      <p className="text-sm text-slate-500">
+      <p className="mt-2 text-lg font-semibold text-ink">{activity.title}</p>
+      <p className="text-sm text-ink-4">
         {activity.category_name} · {activity.subcategory_name}
       </p>
 
@@ -142,12 +142,12 @@ export function PomodoroPanel({
         {formatCountdown(state.remainingSeconds)}
       </p>
 
-      <p className="mt-2 text-sm text-slate-600">
+      <p className="mt-2 text-sm text-ink-3">
         {t('pomodoro.counted')}: <strong>{formatMinutes(countedNow, locale)}</strong>
       </p>
 
       {state.isFinished && (
-        <p role="status" className="mt-3 rounded-md bg-white/70 p-3 text-sm font-medium text-slate-800">
+        <p role="status" className="mt-3 rounded-md bg-veil p-3 text-sm font-medium text-ink-2">
           {isWork ? t('pomodoro.workFinished') : t('pomodoro.breakFinished')}
         </p>
       )}

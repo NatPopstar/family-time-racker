@@ -9,7 +9,7 @@ import {
 } from 'recharts'
 import { useI18n } from '@/lib/i18n'
 import { formatMinutes } from '@/lib/time'
-import { CATEGORY_COLORS, CHART_SURFACE, CHART_INK } from '@/lib/chartColors'
+import { useChartPalette } from '@/lib/chartColors'
 import type { PersonRow } from './stats'
 
 /**
@@ -25,6 +25,9 @@ import type { PersonRow } from './stats'
  */
 export function FamilyBars({ rows }: { rows: PersonRow[] }) {
   const { t, locale } = useI18n()
+  // Цвета зависят от темы: Recharts принимает значения,
+  // а не классы, поэтому берём их хуком, а не из CSS.
+  const palette = useChartPalette()
 
   // Категории в фиксированном порядке — он же порядок сегментов
   // в каждой полосе. Одинаковый у всех, иначе полосы не сравнить.
@@ -48,21 +51,21 @@ export function FamilyBars({ rows }: { rows: PersonRow[] }) {
   }))
 
   return (
-    <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-      <h2 className="text-base font-semibold text-slate-900">{t('family.compareTitle')}</h2>
-      <p className="mt-1 text-sm text-slate-500">{t('family.compareHint')}</p>
+    <div className="rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
+      <h2 className="text-base font-semibold text-ink">{t('family.compareTitle')}</h2>
+      <p className="mt-1 text-sm text-ink-4">{t('family.compareHint')}</p>
 
       <div className="mt-4" style={{ height: Math.max(180, rows.length * 64 + 60) }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical" margin={{ left: 8, right: 16 }}>
             {/* Сетка только по горизонтали: вертикальные линии за полосами
                 добавляли бы шум, ничего не поясняя. */}
-            <CartesianGrid horizontal={false} stroke={CHART_INK.grid} />
+            <CartesianGrid horizontal={false} stroke={palette.ink.grid} />
             <XAxis
               type="number"
               tickLine={false}
-              axisLine={{ stroke: CHART_INK.axis }}
-              tick={{ fill: CHART_INK.muted, fontSize: 12 }}
+              axisLine={{ stroke: palette.ink.axis }}
+              tick={{ fill: palette.ink.muted, fontSize: 12 }}
               // Единицы подписываем один раз у оси, а не у каждого столбика.
               unit={locale === 'ru' ? ' ч' : 'h'}
             />
@@ -72,19 +75,19 @@ export function FamilyBars({ rows }: { rows: PersonRow[] }) {
               width={110}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: CHART_INK.secondary, fontSize: 13 }}
+              tick={{ fill: palette.ink.secondary, fontSize: 13 }}
             />
 
             <Tooltip
               formatter={(value, name) => [formatMinutes(Number(value) * 60, locale), String(name)]}
               contentStyle={{
                 borderRadius: 8,
-                border: `1px solid ${CHART_INK.grid}`,
+                border: `1px solid ${palette.ink.grid}`,
                 fontSize: 13,
               }}
               // Подсветка всей строки вместо одного сегмента: так понятно,
               // к кому относится подсказка.
-              cursor={{ fill: CHART_INK.grid, fillOpacity: 0.35 }}
+              cursor={{ fill: palette.ink.grid, fillOpacity: 0.35 }}
             />
 
             {/* Легенда обязательна: четыре категории нельзя различать
@@ -103,10 +106,10 @@ export function FamilyBars({ rows }: { rows: PersonRow[] }) {
                 // Запасной серый на случай категории, которой нет
                 // в палитре: без него сегмент рисовался бы невидимым,
                 // и полоса молча не сходилась бы с общим временем.
-                fill={CATEGORY_COLORS[segment.slug] ?? CHART_INK.muted}
+                fill={palette.categoryColors[segment.slug] ?? palette.ink.muted}
                 // Обводка цветом фона — тот самый зазор в 2 пикселя,
                 // который отделяет соседние сегменты друг от друга.
-                stroke={CHART_SURFACE}
+                stroke={palette.surface}
                 strokeWidth={2}
                 // Полосу не раздуваем на всю доступную высоту: воздух
                 // между полосами читается лучше, чем плотная заливка.
@@ -128,11 +131,11 @@ export function FamilyBars({ rows }: { rows: PersonRow[] }) {
             <span
               aria-hidden="true"
               className="h-3 w-3 rounded-sm"
-              style={{ backgroundColor: CATEGORY_COLORS[segment.slug] ?? CHART_INK.muted }}
+              style={{ backgroundColor: palette.categoryColors[segment.slug] ?? palette.ink.muted }}
             />
             {/* Подпись обычного цвета: текст никогда не красим
                 в цвет данных — светлые оттенки нечитаемы. */}
-            <span className="text-slate-700">{segment.label}</span>
+            <span className="text-ink-2">{segment.label}</span>
           </li>
         ))}
       </ul>

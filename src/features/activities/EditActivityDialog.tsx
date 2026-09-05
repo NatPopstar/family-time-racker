@@ -82,14 +82,14 @@ export function EditActivityDialog({
   return (
     // role="dialog" + aria-modal объясняют программам чтения с экрана,
     // что это окно поверх страницы, а не часть её содержимого.
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4">
       <div
         role="dialog"
         aria-modal="true"
         aria-label={t('history.editTitle')}
-        className="max-h-full w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
+        className="max-h-full w-full max-w-lg overflow-y-auto rounded-xl bg-surface p-6 shadow-xl"
       >
-        <h2 className="text-lg font-semibold text-slate-900">{t('history.editTitle')}</h2>
+        <h2 className="text-lg font-semibold text-ink">{t('history.editTitle')}</h2>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -160,13 +160,13 @@ export function EditActivityDialog({
           />
 
           {errorKey && (
-            <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+            <p role="alert" className="rounded-md bg-danger-soft p-3 text-sm text-danger">
               {t(errorKey)}
             </p>
           )}
 
           {saveError && (
-            <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+            <p role="alert" className="rounded-md bg-danger-soft p-3 text-sm text-danger">
               {t('activity.error.saveFailed')} {saveError}
             </p>
           )}

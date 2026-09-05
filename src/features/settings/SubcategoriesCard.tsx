@@ -61,11 +61,11 @@ export function SubcategoriesCard() {
   }
 
   return (
-    <section className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-      <h2 className="text-base font-semibold text-slate-900">
+    <section className="rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
+      <h2 className="text-base font-semibold text-ink">
         {t('settings.subcategoriesTitle')}
       </h2>
-      <p className="mt-1 text-sm text-slate-500">{t('settings.subcategoriesHint')}</p>
+      <p className="mt-1 text-sm text-ink-4">{t('settings.subcategoriesHint')}</p>
 
       <div className="mt-4 space-y-4">
         {categories?.map((category) => {
@@ -74,13 +74,13 @@ export function SubcategoriesCard() {
 
           return (
             <div key={category.id}>
-              <h3 className="text-sm font-semibold text-slate-700">
+              <h3 className="text-sm font-semibold text-ink-2">
                 {category.icon} {category.name}
               </h3>
               <ul className="mt-2 space-y-2">
                 {items.map((subcategory) => (
                   <li key={subcategory.id} className="flex flex-wrap items-center gap-3">
-                    <span className="min-w-48 flex-1 text-sm text-slate-900">
+                    <span className="min-w-48 flex-1 text-sm text-ink">
                       {subcategory.name}
                     </span>
                     <select
@@ -92,7 +92,7 @@ export function SubcategoriesCard() {
                           rateId: e.target.value || null,
                         })
                       }
-                      className="rounded-md border-0 bg-white px-3 py-1.5 text-sm text-slate-900 ring-1 ring-slate-300 focus:ring-2 focus:ring-indigo-600 focus:outline-none"
+                      className="rounded-md border-0 bg-surface px-3 py-1.5 text-sm text-ink ring-1 ring-line-strong focus:ring-2 focus:ring-accent focus:outline-none"
                     >
                       <option value="">{t('settings.noRate')}</option>
                       {rates?.map((rate) => (
@@ -109,8 +109,8 @@ export function SubcategoriesCard() {
         })}
       </div>
 
-      <form onSubmit={handleAdd} className="mt-6 border-t border-slate-100 pt-4">
-        <h3 className="text-sm font-semibold text-slate-900">{t('settings.addSubcategory')}</h3>
+      <form onSubmit={handleAdd} className="mt-6 border-t border-line-soft pt-4">
+        <h3 className="text-sm font-semibold text-ink">{t('settings.addSubcategory')}</h3>
 
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Select
@@ -154,7 +154,7 @@ export function SubcategoriesCard() {
         </div>
 
         {errorKey && (
-          <p role="alert" className="mt-3 rounded-md bg-red-50 p-3 text-sm text-red-700">
+          <p role="alert" className="mt-3 rounded-md bg-danger-soft p-3 text-sm text-danger">
             {t(errorKey)}
           </p>
         )}

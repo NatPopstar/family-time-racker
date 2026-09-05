@@ -9,6 +9,7 @@ import { fetchAllProfiles } from '@/features/profile/api'
 import { summarize, summarizeByPerson, detectCurrencies } from '@/features/dashboard/stats'
 import { PersonReport } from '@/features/dashboard/PersonReport'
 import { Button } from '@/components/ui/Button'
+import { LeafRule } from '@/components/ornaments'
 
 /**
  * Отчёты за неделю и за месяц.
@@ -52,10 +53,11 @@ export function ReportsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{t('page.reports.title')}</h1>
-        <p className="mt-1 text-sm text-slate-500">{t('page.reports.subtitle')}</p>
+        <p className="mt-1 text-sm text-ink-4">{t('page.reports.subtitle')}</p>
+        <LeafRule className="mt-3" />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-surface p-4 shadow-sm ring-1 ring-line">
         <div className="flex gap-2">
           <Button
             variant={mode === 'week' ? 'primary' : 'secondary'}
@@ -94,12 +96,12 @@ export function ReportsPage() {
         </div>
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900">{title}</h2>
+      <h2 className="text-xl font-bold text-ink">{title}</h2>
 
-      {isPending && <p className="text-slate-400">{t('common.loading')}</p>}
+      {isPending && <p className="text-ink-5">{t('common.loading')}</p>}
 
       {!isPending && all.length === 0 && (
-        <p className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">
+        <p className="rounded-lg border border-dashed border-line-strong bg-surface p-6 text-center text-sm text-ink-4">
           {t('report.noData')}
         </p>
       )}
@@ -122,22 +124,22 @@ export function ReportsPage() {
             ))}
           </div>
 
-          <div className="rounded-xl bg-slate-900 p-5 text-white">
+          <div className="rounded-xl bg-inverse p-5 text-inverse-ink">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <span className="text-sm font-medium text-slate-300">{t('report.familyTotal')}</span>
+              <span className="text-sm font-medium text-inverse-ink/70">{t('report.familyTotal')}</span>
               <span className="flex flex-wrap items-baseline gap-6">
                 <span className="text-lg font-semibold tabular-nums">
                   {formatHours(familyTotal.totalMinutes, locale)}
                 </span>
-                <span className="text-lg font-semibold tabular-nums text-emerald-400">
+                <span className="text-lg font-semibold tabular-nums text-positive-lite">
                   {t('report.earned')}: {formatMoney(familyTotal.totalEarnings, earningsCurrency, locale)}
                 </span>
-                <span className="text-lg font-semibold tabular-nums text-indigo-300">
+                <span className="text-lg font-semibold tabular-nums text-accent-lite">
                   {t('report.estimatedValue')}: {formatMoney(familyTotal.totalEstimated, estimatedCurrency, locale)}
                 </span>
               </span>
             </div>
-            <p className="mt-1 text-xs text-slate-400">{t('money.bothHint')}</p>
+            <p className="mt-1 text-xs text-ink-5">{t('money.bothHint')}</p>
           </div>
         </>
       )}

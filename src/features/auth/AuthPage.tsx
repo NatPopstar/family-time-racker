@@ -56,18 +56,18 @@ export function AuthPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6">
+    <div className="flex min-h-screen items-center justify-center bg-surface-2 px-6">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-slate-900">{t('app.title')}</h1>
+          <h1 className="text-xl font-bold text-ink">{t('app.title')}</h1>
           <LocaleSwitcher />
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-4 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
+          className="space-y-4 rounded-xl bg-surface p-6 shadow-sm ring-1 ring-line"
         >
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 className="text-lg font-semibold text-ink">
             {isSignUp ? t('auth.signUp') : t('auth.signIn')}
           </h2>
 
@@ -104,7 +104,7 @@ export function AuthPage() {
           {errorKey && (
             // role="alert" — программы для незрячих прочитают сообщение сразу,
             // не дожидаясь, пока пользователь до него доберётся.
-            <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+            <p role="alert" className="rounded-md bg-danger-soft p-3 text-sm text-danger">
               {t(errorKey)}
             </p>
           )}
@@ -125,7 +125,7 @@ export function AuthPage() {
             // Стираем старую ошибку: она относилась к другому действию.
             setErrorKey(null)
           }}
-          className="mt-4 w-full text-center text-sm text-indigo-600 hover:text-indigo-500"
+          className="mt-4 w-full text-center text-sm text-accent hover:text-accent-lite"
         >
           {isSignUp ? t('auth.toggleToSignIn') : t('auth.toggleToSignUp')}
         </button>

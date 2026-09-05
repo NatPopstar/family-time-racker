@@ -47,6 +47,10 @@ const ru = {
   'nav.menu': 'Разделы',
   'nav.openMenu': 'Открыть меню',
 
+  'theme.label': 'Оформление',
+  'theme.forest': 'Светлая — лесные эльфы',
+  'theme.moon': 'Тёмная — лунные эльфы',
+
   'page.dashboard.title': 'Мой день',
   'page.dashboard.subtitle': 'Сколько времени вы потратили сегодня, за неделю и за месяц',
   'page.family.title': 'Семейный дашборд',
@@ -351,6 +355,10 @@ const en: Record<keyof typeof ru, string> = {
   'nav.settings': 'Settings',
   'nav.menu': 'Sections',
   'nav.openMenu': 'Open menu',
+
+  'theme.label': 'Appearance',
+  'theme.forest': 'Light — wood elves',
+  'theme.moon': 'Dark — moon elves',
 
   'page.dashboard.title': 'My day',
   'page.dashboard.subtitle': 'Your time today, this week and this month',

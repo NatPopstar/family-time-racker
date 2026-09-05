@@ -5,6 +5,8 @@ import { useDisplayName } from '@/features/profile/useProfile'
 import { signOut } from '@/features/auth/api'
 import { Button } from '@/components/ui/Button'
 import { LocaleSwitcher } from '@/components/LocaleSwitcher'
+import { ThemeSwitcher } from '@/components/ThemeSwitcher'
+import { FernSprig } from '@/components/ornaments'
 
 /**
  * Общая рамка всех страниц: шапка, меню разделов и место под содержимое.
@@ -38,13 +40,16 @@ export function AppLayout() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white">
+    <div className="min-h-screen text-ink">
+      <header className="border-b border-line bg-surface">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="flex h-16 items-center justify-between gap-4">
             {/* truncate обрезает длинное название многоточием вместо того,
                 чтобы растягивать шапку и выдавливать кнопки за экран. */}
-            <span className="truncate text-base font-bold">{t('app.title')}</span>
+            <span className="flex min-w-0 items-center gap-2">
+              <FernSprig className="size-5 shrink-0 text-accent" />
+              <span className="truncate text-base font-bold">{t('app.title')}</span>
+            </span>
 
             {/* --- Широкий экран: меню и всё остальное в одну строку --- */}
             <nav aria-label={t('nav.menu')} className="hidden md:flex md:gap-1">
@@ -54,7 +59,8 @@ export function AppLayout() {
             </nav>
 
             <div className="hidden shrink-0 items-center gap-3 md:flex">
-              <span className="text-sm font-medium text-slate-600">{displayName}</span>
+              <span className="text-sm font-medium text-ink-3">{displayName}</span>
+              <ThemeSwitcher />
               <LocaleSwitcher />
               <Button variant="secondary" onClick={() => signOut()}>
                 {t('auth.signOut')}
@@ -67,7 +73,7 @@ export function AppLayout() {
               onClick={() => setIsMenuOpen((open) => !open)}
               aria-label={t('nav.openMenu')}
               aria-expanded={isMenuOpen}
-              className="shrink-0 rounded-md p-2 text-slate-600 hover:bg-slate-100 md:hidden"
+              className="shrink-0 rounded-md p-2 text-ink-3 hover:bg-surface-3 md:hidden"
             >
               <span aria-hidden="true" className="block text-lg leading-none">
                 ☰
@@ -77,7 +83,7 @@ export function AppLayout() {
 
           {/* Выпадающее меню телефона: разделы + имя, язык и выход. */}
           {isMenuOpen && (
-            <div className="border-t border-slate-100 py-3 md:hidden">
+            <div className="border-t border-line-soft py-3 md:hidden">
               <nav aria-label={t('nav.menu')} className="flex flex-col gap-1">
                 {navItems.map((item) => (
                   <NavItem
@@ -91,10 +97,11 @@ export function AppLayout() {
                 ))}
               </nav>
 
-              <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
-                <span className="truncate text-sm font-medium text-slate-600">{displayName}</span>
+              <div className="mt-3 flex items-center justify-between gap-3 border-t border-line-soft pt-3">
+                <span className="truncate text-sm font-medium text-ink-3">{displayName}</span>
                 <div className="flex shrink-0 items-center gap-2">
-                  <LocaleSwitcher />
+                  <ThemeSwitcher />
+              <LocaleSwitcher />
                   <Button variant="secondary" onClick={() => signOut()}>
                     {t('auth.signOut')}
                   </Button>
@@ -137,7 +144,7 @@ function NavItem({
       onClick={onNavigate}
       className={({ isActive }) =>
         `rounded-md px-3 py-2 text-sm font-medium transition ${
-          isActive ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100'
+          isActive ? 'bg-accent-soft text-accent-deep' : 'text-ink-3 hover:bg-surface-3'
         }`
       }
     >

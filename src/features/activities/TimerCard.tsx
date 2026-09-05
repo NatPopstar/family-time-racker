@@ -137,15 +137,15 @@ export function TimerCard() {
     const minutes = elapsedMinutes(running.timer_started_at ?? new Date().toISOString())
 
     return (
-      <div className="rounded-xl bg-indigo-50 p-5 ring-1 ring-indigo-200">
-        <h2 className="text-base font-semibold text-indigo-900">{t('timer.title')}</h2>
+      <div className="rounded-xl bg-accent-soft p-5 ring-1 ring-accent-line">
+        <h2 className="text-base font-semibold text-accent-deep">{t('timer.title')}</h2>
 
-        <p className="mt-3 text-lg font-semibold text-slate-900">{running.title}</p>
-        <p className="text-sm text-slate-500">
+        <p className="mt-3 text-lg font-semibold text-ink">{running.title}</p>
+        <p className="text-sm text-ink-4">
           {running.category_name} · {running.subcategory_name}
         </p>
 
-        <p aria-live="polite" className="mt-3 text-3xl font-bold tabular-nums text-indigo-700">
+        <p aria-live="polite" className="mt-3 text-3xl font-bold tabular-nums text-accent-deep">
           {formatMinutes(minutes, locale)}
         </p>
 
@@ -178,9 +178,9 @@ export function TimerCard() {
 
   // ── Таймер не запущен: форма с выбором режима ──
   return (
-    <form onSubmit={handleStart} className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+    <form onSubmit={handleStart} className="rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-slate-900">{t('timer.title')}</h2>
+        <h2 className="text-base font-semibold text-ink">{t('timer.title')}</h2>
 
         <div role="group" aria-label={t('timer.modeLabel')} className="flex gap-1">
           {(['simple', 'pomodoro'] as const).map((option) => (
@@ -192,8 +192,8 @@ export function TimerCard() {
               aria-pressed={mode === option}
               className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
                 mode === option
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
+                  ? 'bg-accent text-accent-ink'
+                  : 'bg-surface text-ink-3 ring-1 ring-line hover:bg-surface-2'
               }`}
             >
               {option === 'simple' ? t('timer.modeSimple') : t('timer.modePomodoro')}
@@ -202,7 +202,7 @@ export function TimerCard() {
         </div>
       </div>
 
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-ink-4">
         {mode === 'pomodoro' ? t('timer.pomodoroHint') : t('timer.hint')}
       </p>
 
@@ -246,7 +246,7 @@ export function TimerCard() {
       </div>
 
       {errorKey && (
-        <p role="alert" className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
+        <p role="alert" className="mt-4 rounded-md bg-danger-soft p-3 text-sm text-danger">
           {t(errorKey)}
         </p>
       )}

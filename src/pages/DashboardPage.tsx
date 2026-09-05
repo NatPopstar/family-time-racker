@@ -10,6 +10,7 @@ import { TimerCard } from '@/features/activities/TimerCard'
 import { StatTile } from '@/features/dashboard/StatTile'
 import { CategoryDonut } from '@/features/dashboard/CategoryDonut'
 import { summarize, filterByRange, detectCurrencies } from '@/features/dashboard/stats'
+import { LeafRule } from '@/components/ornaments'
 
 /**
  * «Мой день» — личный кабинет.
@@ -57,7 +58,8 @@ export function DashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{t('page.dashboard.title')}</h1>
-        <p className="mt-1 text-sm text-slate-500">{t('page.dashboard.subtitle')}</p>
+        <p className="mt-1 text-sm text-ink-4">{t('page.dashboard.subtitle')}</p>
+        <LeafRule className="mt-3" />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -95,7 +97,7 @@ export function DashboardPage() {
       {/* Складывать фунты с евро бессмысленно — говорим об этом прямо,
           а не показываем сумму с одним значком. */}
       {isMixed && (
-        <p role="alert" className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
+        <p role="alert" className="rounded-md bg-warn-soft p-3 text-sm text-warn-deep">
           {t('money.mixedWarning')}
         </p>
       )}
@@ -111,7 +113,7 @@ export function DashboardPage() {
       <ActivityForm />
 
       <section>
-        <h2 className="text-base font-semibold text-slate-900">{t('activity.todayTitle')}</h2>
+        <h2 className="text-base font-semibold text-ink">{t('activity.todayTitle')}</h2>
         <div className="mt-3">
           <ActivityList from={today} to={today} />
         </div>

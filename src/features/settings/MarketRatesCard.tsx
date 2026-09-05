@@ -67,16 +67,16 @@ export function MarketRatesCard() {
   }
 
   return (
-    <section className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-      <h2 className="text-base font-semibold text-slate-900">{t('settings.ratesTitle')}</h2>
-      <p className="mt-1 text-sm text-slate-500">{t('settings.ratesHint')}</p>
+    <section className="rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
+      <h2 className="text-base font-semibold text-ink">{t('settings.ratesTitle')}</h2>
+      <p className="mt-1 text-sm text-ink-4">{t('settings.ratesHint')}</p>
 
-      {isPending && <p className="mt-4 text-slate-400">{t('common.loading')}</p>}
+      {isPending && <p className="mt-4 text-ink-5">{t('common.loading')}</p>}
 
       {rates && (
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-200 text-left text-slate-500">
+            <thead className="border-b border-line text-left text-ink-4">
               <tr>
                 <th scope="col" className="py-2 pr-4 font-medium">{t('settings.rateName')}</th>
                 <th scope="col" className="py-2 pr-4 font-medium">{t('settings.rateValue')}</th>
@@ -86,7 +86,7 @@ export function MarketRatesCard() {
             <tbody className="divide-y divide-slate-100">
               {rates.map((rate) => (
                 <tr key={rate.id}>
-                  <td className="py-2 pr-4 font-medium text-slate-900">{rate.name}</td>
+                  <td className="py-2 pr-4 font-medium text-ink">{rate.name}</td>
                   <td className="py-2 pr-4">
                     <div className="flex items-center gap-2">
                       <input
@@ -103,9 +103,9 @@ export function MarketRatesCard() {
                             update.mutate({ id: rate.id, hourlyRate: value })
                           }
                         }}
-                        className="w-24 rounded-md border-0 px-2 py-1 text-slate-900 ring-1 ring-slate-300 focus:ring-2 focus:ring-indigo-600 focus:outline-none"
+                        className="w-24 rounded-md border-0 px-2 py-1 text-ink ring-1 ring-line-strong focus:ring-2 focus:ring-accent focus:outline-none"
                       />
-                      <span className="text-slate-400">{rate.currency}</span>
+                      <span className="text-ink-5">{rate.currency}</span>
                     </div>
                   </td>
                   <td className="py-2">
@@ -125,7 +125,7 @@ export function MarketRatesCard() {
       )}
 
       {/* Смена валюты */}
-      <div className="mt-6 border-t border-slate-100 pt-4">
+      <div className="mt-6 border-t border-line-soft pt-4">
         <Select
           label={t('settings.currency')}
           value={currentCurrency}
@@ -140,12 +140,12 @@ export function MarketRatesCard() {
         </Select>
         {/* Честное предупреждение: тихий пересчёт по выдуманному курсу
             был бы хуже, чем прямое «мы просто меняем значок». */}
-        <p className="mt-2 text-xs text-amber-700">{t('settings.currencyWarning')}</p>
+        <p className="mt-2 text-xs text-warn">{t('settings.currencyWarning')}</p>
       </div>
 
       {/* Добавление новой профессии */}
-      <form onSubmit={handleAdd} className="mt-6 border-t border-slate-100 pt-4">
-        <h3 className="text-sm font-semibold text-slate-900">{t('settings.addRate')}</h3>
+      <form onSubmit={handleAdd} className="mt-6 border-t border-line-soft pt-4">
+        <h3 className="text-sm font-semibold text-ink">{t('settings.addRate')}</h3>
 
         <div className="mt-3 flex flex-wrap items-end gap-3">
           <Input
@@ -170,7 +170,7 @@ export function MarketRatesCard() {
         </div>
 
         {errorKey && (
-          <p role="alert" className="mt-3 rounded-md bg-red-50 p-3 text-sm text-red-700">
+          <p role="alert" className="mt-3 rounded-md bg-danger-soft p-3 text-sm text-danger">
             {t(errorKey)}
           </p>
         )}

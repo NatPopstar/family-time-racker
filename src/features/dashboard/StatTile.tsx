@@ -37,28 +37,28 @@ export function StatTile({
   const { t, locale } = useI18n()
 
   return (
-    <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-      <p className="text-sm font-medium text-slate-500">{label}</p>
+    <div className="rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
+      <p className="text-sm font-medium text-ink-4">{label}</p>
 
       {isLoading ? (
-        <p className="mt-2 text-2xl font-bold text-slate-300">{t('common.loading')}</p>
+        <p className="mt-2 text-2xl font-bold text-ink-6">{t('common.loading')}</p>
       ) : (
         <>
           {/* Крупное число — обычные пропорциональные цифры.
               Табличные (tabular-nums) нужны там, где числа выстроены
               в столбец и должны совпадать по ширине; здесь это не так. */}
-          <p className="mt-2 text-3xl font-bold text-slate-900">
+          <p className="mt-2 text-3xl font-bold text-ink">
             {formatHours(minutes, locale)}
           </p>
 
           {earnings > 0 && (
-            <p className="mt-1 text-sm font-medium text-emerald-700">
+            <p className="mt-1 text-sm font-medium text-positive">
               {t('report.earned')}: {formatMoney(earnings, earningsCurrency, locale)}
             </p>
           )}
 
           {estimated > 0 && (
-            <p className="mt-0.5 text-sm font-medium text-indigo-700">
+            <p className="mt-0.5 text-sm font-medium text-accent-deep">
               {t('family.marketValue')}: {formatMoney(estimated, estimatedCurrency, locale)}
             </p>
           )}
