@@ -1,5 +1,10 @@
 import { useI18n, type TranslationKey } from '@/lib/i18n'
-import { getPeriodRange, type PeriodId, type DateRange } from '@/lib/periods'
+import {
+  getPeriodRange,
+  BEGINNING_OF_TIME,
+  type PeriodId,
+  type DateRange,
+} from '@/lib/periods'
 import { Select } from '@/components/ui/Select'
 import { Input } from '@/components/ui/Input'
 
@@ -17,6 +22,8 @@ const presets: { id: Exclude<PeriodId, 'custom'>; labelKey: TranslationKey }[] =
   { id: 'lastWeek', labelKey: 'period.lastWeek' },
   { id: 'thisMonth', labelKey: 'period.thisMonth' },
   { id: 'lastMonth', labelKey: 'period.lastMonth' },
+  { id: 'lastYear', labelKey: 'period.lastYear' },
+  { id: 'allTime', labelKey: 'period.allTime' },
 ]
 
 export function PeriodFilter({
@@ -34,7 +41,15 @@ export function PeriodFilter({
     if (nextPeriod === 'custom') {
       // Переходя на свой период, оставляем текущие даты как отправную точку —
       // так человеку обычно нужно поправить только одну из них.
-      onChange('custom', range)
+      //
+      // Исключение — переход со «Всего времени». Его нижняя граница
+      // техническая: она нужна запросу к базе, но в поле «С» выглядит
+      // как взявшийся ниоткуда 2000 год. Подставляем начало текущего
+      // месяца — понятную точку, от которой удобно двигаться.
+      const from =
+        range.from === BEGINNING_OF_TIME ? getPeriodRange('thisMonth').from : range.from
+
+      onChange('custom', { from, to: range.to })
       return
     }
     onChange(nextPeriod, getPeriodRange(nextPeriod))

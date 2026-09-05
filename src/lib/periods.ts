@@ -5,6 +5,7 @@ import {
   endOfMonth,
   subWeeks,
   subMonths,
+  subYears,
   addWeeks,
   addDays,
 } from 'date-fns'
@@ -25,6 +26,8 @@ export type PeriodId =
   | 'lastWeek'
   | 'thisMonth'
   | 'lastMonth'
+  | 'lastYear'
+  | 'allTime'
   | 'custom'
 
 export type DateRange = {
@@ -35,6 +38,19 @@ export type DateRange = {
 }
 
 const WEEK_OPTIONS = { weekStartsOn: 1 } as const
+
+/**
+ * С какой даты начинается «всё время».
+ *
+ * Запрос к базе требует обе границы, поэтому нижнюю приходится чем-то
+ * заполнить. Взята заведомо ранняя дата: раньше неё записей быть
+ * не может, а значит период честно накрывает всё, что есть и что
+ * появится задним числом.
+ *
+ * Человек этой даты не видит: поля «С» и «По» показываются только
+ * для своего периода.
+ */
+export const BEGINNING_OF_TIME = '2000-01-01'
 
 /**
  * Границы периода по его названию.
@@ -66,6 +82,15 @@ export function getPeriodRange(period: Exclude<PeriodId, 'custom'>, now: Date = 
       const monthAgo = subMonths(now, 1)
       return { from: todayISO(startOfMonth(monthAgo)), to: todayISO(endOfMonth(monthAgo)) }
     }
+
+    // Скользящий год, а не календарный: «последний год» — это
+    // двенадцать месяцев назад от сегодня. Календарный 2025-й,
+    // если он понадобится, задаётся своим периодом.
+    case 'lastYear':
+      return { from: todayISO(subYears(now, 1)), to: todayISO(now) }
+
+    case 'allTime':
+      return { from: BEGINNING_OF_TIME, to: todayISO(now) }
   }
 }
 
