@@ -91,6 +91,30 @@ describe('ActivityList: дорога — это тоже потраченное 
     expect(await screen.findByText('1.5 ч')).toBeInTheDocument()
   })
 
+  it('выходной с ребёнком объясняет, почему нет денег', async () => {
+    // Прочерк или общее «без денежной оценки» здесь врут: ставка есть,
+    // просто по правилу семьи суббота и воскресенье с ребёнком —
+    // это семейное время, а не работа, которую нанимают.
+    vi.mocked(fetchActivities).mockResolvedValue([
+      activity({ date: '2026-09-05', value: 0, is_unpaid_weekend: true }),
+    ])
+
+    renderWithProviders(<ActivityList from="2026-09-05" to="2026-09-05" />)
+
+    expect(await screen.findByText(/выходной с ребёнком/)).toBeInTheDocument()
+    expect(screen.queryByText('без денежной оценки')).not.toBeInTheDocument()
+  })
+
+  it('работа без ставки говорит другое — там ставки нет вовсе', async () => {
+    vi.mocked(fetchActivities).mockResolvedValue([
+      activity({ value: 0, is_unpaid_weekend: false, rate_snapshot: null }),
+    ])
+
+    renderWithProviders(<ActivityList from="2026-09-01" to="2026-09-01" />)
+
+    expect(await screen.findByText('без денежной оценки')).toBeInTheDocument()
+  })
+
   it('без дороги значок машины не появляется', async () => {
     vi.mocked(fetchActivities).mockResolvedValue([
       activity({ actual_minutes: 120, travel_minutes: 0 }),

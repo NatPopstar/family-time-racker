@@ -357,6 +357,9 @@ export type Database = {
           date: string | null
           id: string | null
           is_earnings_snapshot: boolean | null
+          // Заботу о ребёнке в выходные не оцениваем в деньгах —
+          // этот признак объясняет, почему у записи нет стоимости.
+          is_unpaid_weekend: boolean | null
           planned_minutes: number | null
           pomodoros_done: number | null
           rate_snapshot: number | null

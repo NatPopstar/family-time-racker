@@ -184,6 +184,12 @@ export function HistoryPage() {
                           <span className="text-positive">
                             {formatMoney(activity.value, activity.currency_snapshot ?? 'GBP', locale)}
                           </span>
+                        ) : activity.is_unpaid_weekend ? (
+                          // Прочерк тут ввёл бы в заблуждение: ставка есть,
+                          // просто выходной с ребёнком не оценивается.
+                          <span className="text-xs text-ink-5">
+                            {t('activity.weekendNotPriced')}
+                          </span>
                         ) : (
                           <span className="text-ink-6">—</span>
                         )}

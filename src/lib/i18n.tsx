@@ -103,6 +103,10 @@ export const ru = {
   'activity.empty': 'За сегодня записей пока нет. Первую можно добавить формой выше.',
   'activity.loadFailed': 'Не удалось загрузить записи:',
   'activity.notPriced': 'без денежной оценки',
+  // Отдельная формулировка, а не общая «без оценки»: у работы и учёбы
+  // ставки нет вовсе, а здесь она есть — просто в выходной не считается.
+  // Без объяснения это выглядит как поломка.
+  'activity.weekendNotPriced': 'выходной с ребёнком — не оценивается',
 
   'period.today': 'Сегодня',
   'period.thisWeek': 'Эта неделя',
@@ -429,6 +433,7 @@ export const en: Record<keyof typeof ru, string> = {
   'activity.empty': 'Nothing logged today yet. Add your first entry with the form above.',
   'activity.loadFailed': 'Could not load the entries:',
   'activity.notPriced': 'no market value',
+  'activity.weekendNotPriced': 'weekend with the child — not priced',
 
   'period.today': 'Today',
   'period.thisWeek': 'This week',

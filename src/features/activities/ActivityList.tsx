@@ -99,9 +99,17 @@ export function ActivityList({ from, to }: { from: string; to: string }) {
               <p className="mt-0.5 text-sm tabular-nums text-positive">
                 {activity.value && activity.value > 0
                   ? formatMoney(activity.value, activity.currency_snapshot ?? 'GBP', locale)
-                  : // Работа и учёба деньгами не оцениваются — говорим об этом прямо,
-                    // иначе пустое место выглядит как потерянные данные.
-                    <span className="text-ink-5">{t('activity.notPriced')}</span>}
+                  : // Денег нет по двум разным причинам, и их надо различать:
+                    // у работы и учёбы ставки нет вовсе, а у выходного
+                    // с ребёнком она есть, просто не считается по правилу.
+                    // Одна общая надпись выглядела бы как потерянные данные.
+                    <span className="text-ink-5">
+                      {t(
+                        activity.is_unpaid_weekend
+                          ? 'activity.weekendNotPriced'
+                          : 'activity.notPriced',
+                      )}
+                    </span>}
               </p>
               {activity.user_id === user?.id && (
                 <button
