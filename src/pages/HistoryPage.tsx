@@ -5,7 +5,7 @@ import { useAuth } from '@/features/auth/AuthProvider'
 import { getPeriodRange, type PeriodId } from '@/lib/periods'
 import { formatMinutes, formatHours } from '@/lib/time'
 import { formatMoney } from '@/lib/money'
-import { formatDateShort } from '@/lib/dates'
+import { formatDateNumeric } from '@/lib/dates'
 import { fetchActivities, deleteActivity } from '@/features/activities/api'
 import { fetchCategories } from '@/features/categories/api'
 import { fetchAllProfiles } from '@/features/profile/api'
@@ -146,12 +146,12 @@ export function HistoryPage() {
             <table className="w-full min-w-[52rem] table-fixed text-sm">
               <thead className="border-b border-line text-left text-ink-4">
                 <tr>
-                  <th scope="col" className="w-[6.5rem] px-4 py-3 font-medium">{t('history.date')}</th>
+                  <th scope="col" className="w-[5rem] px-4 py-3 font-medium">{t('history.date')}</th>
                   <th scope="col" className="w-[7rem] px-4 py-3 font-medium">{t('history.person')}</th>
                   {/* Ширину задаём на заголовке столбца: max-width на ячейке
                       таблицы браузер не соблюдает, а width — соблюдает. */}
-                  <th scope="col" className="w-[22rem] px-4 py-3 font-medium">{t('history.task')}</th>
-                  <th scope="col" className="w-[13rem] px-4 py-3 font-medium">{t('history.category')}</th>
+                  <th scope="col" className="w-[17rem] px-4 py-3 font-medium">{t('history.task')}</th>
+                  <th scope="col" className="w-[10rem] px-4 py-3 font-medium">{t('history.category')}</th>
                   <th scope="col" className="w-[7rem] px-4 py-3 text-right font-medium">{t('history.time')}</th>
                   <th scope="col" className="w-[9rem] px-4 py-3 text-right font-medium">{t('history.value')}</th>
                   <th scope="col" className="w-[6.5rem] px-4 py-3 font-medium">{t('history.actions')}</th>
@@ -162,8 +162,10 @@ export function HistoryPage() {
                   const isMine = activity.user_id === user?.id
                   return (
                     <tr key={activity.id}>
-                      <td className="px-4 py-3 whitespace-nowrap text-ink-3">
-                        {formatDateShort(activity.date!, locale)}
+                      {/* Числами, а не «6 сентября»: в столбце дат разной
+                          длины колонка прыгает, и глаз спотыкается. */}
+                      <td className="px-4 py-3 whitespace-nowrap tabular-nums text-ink-3">
+                        {formatDateNumeric(activity.date!)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">{nameOf(activity.user_id)}</td>
                       {/* Длинные названия вроде «помыла полы, пропылесосила,
@@ -196,10 +198,16 @@ export function HistoryPage() {
                             {formatMoney(activity.value, activity.currency_snapshot ?? 'GBP', locale)}
                           </span>
                         ) : activity.is_unpaid_weekend ? (
-                          // Прочерк тут ввёл бы в заблуждение: ставка есть,
-                          // просто выходной с ребёнком не оценивается.
-                          <span className="text-xs text-ink-5">
-                            {t('activity.weekendNotPriced')}
+                          // Прочерк, а не текст: длинная надпись раздувала
+                          // столбец ради редкого случая. Объяснение никуда
+                          // не делось — оно всплывает при наведении, а
+                          // aria-label читает его вслух незрячим.
+                          <span
+                            title={t('activity.weekendNotPriced')}
+                            aria-label={t('activity.weekendNotPriced')}
+                            className="cursor-help text-ink-5 underline decoration-dotted underline-offset-4"
+                          >
+                            —
                           </span>
                         ) : (
                           <span className="text-ink-6">—</span>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { todayISO, formatDateShort, isoWeekday } from './dates'
+import { todayISO, formatDateShort, isoWeekday, formatDateNumeric } from './dates'
 
 describe('todayISO', () => {
   it('собирает дату в формате YYYY-MM-DD', () => {
@@ -63,5 +63,29 @@ describe('isoWeekday', () => {
       '2026-09-06',
     ]
     expect(week.map(isoWeekday)).toEqual([1, 2, 3, 4, 5, 6, 7])
+  })
+})
+
+describe('formatDateNumeric', () => {
+  it('пишет дату числами день/месяц/год', () => {
+    expect(formatDateNumeric('2026-09-06')).toBe('06/09/26')
+  })
+
+  it('однозначные числа дополняет нулём — столбец не прыгает', () => {
+    // Ради этого всё и затевалось: в таблице даты должны быть
+    // одной ширины, иначе глаз спотыкается на каждой строке.
+    expect(formatDateNumeric('2026-01-01')).toBe('01/01/26')
+    expect(formatDateNumeric('2025-08-31')).toBe('31/08/25')
+  })
+
+  it('день идёт перед месяцем, а не наоборот', () => {
+    // 06/09 — это шестое сентября, а не девятое июня.
+    expect(formatDateNumeric('2026-09-06')).not.toBe('09/06/26')
+  })
+
+  it('выглядит одинаково независимо от языка', () => {
+    // Intl показал бы русскому «06.09.26», а англичанину «06/09/26».
+    // Таблицу читают оба, и столбец должен быть один и тот же.
+    expect(formatDateNumeric('2026-09-06')).toBe('06/09/26')
   })
 })
