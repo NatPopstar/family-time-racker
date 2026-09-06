@@ -26,6 +26,11 @@ export function RecurringRulesCard() {
   const queryClient = useQueryClient()
 
   const [isOpen, setIsOpen] = useState(false)
+  // Список свёрнут по умолчанию. Когда правил на всю неделю, он
+  // занимает целый экран и отодвигает сам Планер — ради которого
+  // на страницу и заходят. Настройка, которую меняют раз в месяц,
+  // не должна заслонять то, что смотрят каждый день.
+  const [isListOpen, setIsListOpen] = useState(false)
   const [categoryId, setCategoryId] = useState('')
   const [subcategoryId, setSubcategoryId] = useState('')
   const [title, setTitle] = useState('')
@@ -117,6 +122,27 @@ export function RecurringRulesCard() {
       )}
 
       {rules && rules.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setIsListOpen((open) => !open)}
+          // aria-expanded сообщает программам чтения с экрана,
+          // раскрыт список или свёрнут: по стрелке это видно только глазами.
+          aria-expanded={isListOpen}
+          className="mt-3 flex w-full items-center gap-2 rounded-lg bg-surface-2 px-3 py-2 text-left text-sm text-ink-3 transition hover:bg-surface-3"
+        >
+          <span aria-hidden="true" className="text-xs">
+            {isListOpen ? '▾' : '▸'}
+          </span>
+          <span className="font-medium text-ink-2">
+            {t('recurring.count')}: {rules.length}
+          </span>
+          <span className="ml-auto text-ink-4">
+            {isListOpen ? t('recurring.hide') : t('recurring.show')}
+          </span>
+        </button>
+      )}
+
+      {rules && rules.length > 0 && isListOpen && (
         <ul className="mt-3 space-y-2">
           {rules.map((rule) => {
             const owner = profiles?.find((p) => p.id === rule.default_user_id)
