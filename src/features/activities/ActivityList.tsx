@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useI18n } from '@/lib/i18n'
 import { useAuth } from '@/features/auth/AuthProvider'
 import { formatMinutes, formatHours } from '@/lib/time'
+import { activityMinutes } from '@/features/dashboard/stats'
 import { formatMoney } from '@/lib/money'
 import { fetchActivities, deleteActivity } from './api'
 
@@ -56,7 +57,10 @@ export function ActivityList({ from, to }: { from: string; to: string }) {
 
   // Итоги считаем здесь, а не запросом в базу: записей за день десятки,
   // складывать их в браузере быстрее, чем идти за суммой на сервер.
-  const totalMinutes = activities.reduce((sum, a) => sum + (a.actual_minutes ?? 0), 0)
+  // Через activityMinutes, а не сложением actual_minutes: дорога — тоже
+  // потраченное время, и карточки «Сегодня» на дашборде считают именно так.
+  // Пока здесь было своё сложение, итог списка расходился с итогом сверху.
+  const totalMinutes = activities.reduce((sum, a) => sum + activityMinutes(a), 0)
   const totalValue = activities.reduce((sum, a) => sum + (a.value ?? 0), 0)
   const currency = activities.find((a) => a.currency_snapshot)?.currency_snapshot ?? 'GBP'
 
@@ -79,9 +83,19 @@ export function ActivityList({ from, to }: { from: string; to: string }) {
             </div>
 
             <div className="shrink-0 text-right">
+              {/* Время СО ВРЕМЕНЕМ В ДОРОГЕ: именно столько занял день.
+                  Раньше здесь стояло только actual_minutes, и запись
+                  «отвела в школу» — которая целиком состоит из дороги —
+                  показывалась как «0 мин», хотя в итоге строкой ниже
+                  честно считалось полтора часа. Строка спорила с итогом. */}
               <p className="font-semibold tabular-nums text-ink">
-                {formatMinutes(activity.actual_minutes ?? 0, locale)}
+                {formatMinutes(activityMinutes(activity), locale)}
               </p>
+              {(activity.travel_minutes ?? 0) > 0 && (
+                <p className="text-xs tabular-nums text-ink-5">
+                  🚗 {formatMinutes(activity.travel_minutes ?? 0, locale)}
+                </p>
+              )}
               <p className="mt-0.5 text-sm tabular-nums text-positive">
                 {activity.value && activity.value > 0
                   ? formatMoney(activity.value, activity.currency_snapshot ?? 'GBP', locale)
