@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { TravelInput, type TravelLegs } from './TravelInput'
+import { plannedTimeHintKey } from './plannedTimeHint'
 
 const MAX_MINUTES = 24 * 60
 
@@ -61,6 +62,10 @@ export function AddPlannedTaskDialog({
     queryKey: ['subcategories-with-rates'],
     queryFn: fetchSubcategoriesWithRates,
   })
+
+  // Подсказка под полем времени зависит от категории: правило одно,
+  // но объяснять его нужно на примере того, что человек записывает.
+  const categorySlug = categories?.find((c) => c.id === categoryId)?.slug
 
   const visibleSubcategories = (subcategories ?? []).filter((s) => s.category_id === categoryId)
   const plannedMinutes = hoursAndMinutesToMinutes(Number(hours) || 0, Number(minutes) || 0)
@@ -220,7 +225,7 @@ export function AddPlannedTaskDialog({
             {/* Без этой строки поле читается как «сколько ребёнок пробудет
                 на занятии». Это самое частое непонимание: приложение
                 считает труд ВЗРОСЛОГО, а не занятость ребёнка. */}
-            <p className="mt-0.5 text-xs text-ink-5">{t('planner.plannedTimeHint')}</p>
+            <p className="mt-0.5 text-xs text-ink-5">{t(plannedTimeHintKey(categorySlug))}</p>
             <div className="mt-1 flex gap-2">
               <Input
                 label={t('activity.hours')}

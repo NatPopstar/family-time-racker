@@ -11,7 +11,7 @@ import type { Locale } from './time'
  *
  * Ключи именуем через точку по смыслу: 'auth.email', 'nav.dashboard'.
  */
-const ru = {
+export const ru = {
   'app.title': 'Семейный учёт времени',
 
   'auth.signIn': 'Вход',
@@ -167,8 +167,21 @@ const ru = {
   'planner.thisWeek': 'Текущая неделя',
   'planner.addTask': 'Добавить задачу',
   'planner.plannedTime': 'Ваше время на задачу',
-  'planner.plannedTimeHint':
+  // Правило одно: считается время ВЗРОСЛОГО, а не длительность события.
+  // Но понимается оно только на своём примере, поэтому фраза у каждой
+  // категории своя.
+  'planner.plannedTimeHint.default':
+    'Сколько времени задача займёт у вас. Если только отвезти и уехать — оставьте пусто, посчитается одна дорога.',
+  'planner.plannedTimeHint.work':
+    'Сколько времени вы будете работать. Дорогу до места укажите отдельно, в поле ниже.',
+  'planner.plannedTimeHint.study':
+    'Сколько времени вы просидите за учёбой. Занятие с преподавателем считайте по своему присутствию, а не по расписанию.',
+  'planner.plannedTimeHint.household':
+    'Сколько времени займёт само дело. Дорогу до магазина или мастерской укажите отдельно, в поле ниже.',
+  'planner.plannedTimeHint.childcare':
     'Сколько времени задача займёт У ВАС, а не сколько ребёнок пробудет на занятии. Отвезли и уехали домой — оставьте пусто, посчитается одна дорога.',
+  'planner.plannedTimeHint.admin':
+    'Сколько времени займут звонки, формы и переписка. Ожидание в очереди тоже считается: вы в это время заняты.',
   'planner.noTasks': 'Задач нет',
   'planner.done': 'Выполнено',
   'planner.markDone': 'Отметить выполненной',
@@ -324,7 +337,7 @@ const ru = {
  * Английский словарь. Тип Record<...> заставляет TypeScript проверить,
  * что здесь есть КАЖДЫЙ ключ из русского словаря — забыть перевод нельзя.
  */
-const en: Record<keyof typeof ru, string> = {
+export const en: Record<keyof typeof ru, string> = {
   'app.title': 'Family Time Tracker',
 
   'auth.signIn': 'Sign in',
@@ -480,8 +493,18 @@ const en: Record<keyof typeof ru, string> = {
   'planner.thisWeek': 'This week',
   'planner.addTask': 'Add task',
   'planner.plannedTime': 'Your time on the task',
-  'planner.plannedTimeHint':
+  'planner.plannedTimeHint.default':
+    'How long the task takes you. Just dropping off and leaving — leave it empty and only travel counts.',
+  'planner.plannedTimeHint.work':
+    'How long you will be working. Put the journey there in the field below.',
+  'planner.plannedTimeHint.study':
+    'How long you will actually be studying. For a class with a tutor, count your own attendance, not the timetable.',
+  'planner.plannedTimeHint.household':
+    'How long the task itself takes. Put the journey to the shop or workshop in the field below.',
+  'planner.plannedTimeHint.childcare':
     'How long the task takes YOU, not how long the child stays at the class. Dropped off and went home — leave it empty and only travel counts.',
+  'planner.plannedTimeHint.admin':
+    'How long the calls, forms and correspondence take. Waiting in a queue counts too: your time is taken either way.',
   'planner.noTasks': 'No tasks',
   'planner.done': 'Done',
   'planner.markDone': 'Mark as done',
