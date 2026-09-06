@@ -76,7 +76,9 @@ export function HistoryPage() {
   }
 
   return (
-    <div className="space-y-6">
+    // bleed-wide на всю страницу, а не на одну таблицу: иначе блоки
+    // разъезжаются по ширине и таблица выглядит выпавшей из страницы.
+    <div className="bleed-wide space-y-6">
       <PageHeader title={t('page.history.title')} subtitle={t('page.history.subtitle')} />
 
       <div className="space-y-3 rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
@@ -134,19 +136,25 @@ export function HistoryPage() {
 
       {visible.length > 0 && (
         <>
-          {/* overflow-x-auto: на телефоне таблица прокручивается вбок,
-              а не растягивает страницу. */}
+          {/* bleed-wide — таблица шире колонки: семи столбцам в ней тесно.
+              overflow-x-auto — если и этого мало, прокручивается ВНУТРИ
+              себя, а не растягивает страницу вбок.
+              min-w — граница, ниже которой столбцы не сжимаются: без неё
+              вместо прокрутки текст ломался на три строки и читать
+              таблицу становилось тяжело. */}
           <div className="overflow-x-auto rounded-xl bg-surface shadow-sm ring-1 ring-line">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[52rem] table-fixed text-sm">
               <thead className="border-b border-line text-left text-ink-4">
                 <tr>
-                  <th scope="col" className="px-4 py-3 font-medium">{t('history.date')}</th>
-                  <th scope="col" className="px-4 py-3 font-medium">{t('history.person')}</th>
-                  <th scope="col" className="px-4 py-3 font-medium">{t('history.task')}</th>
-                  <th scope="col" className="px-4 py-3 font-medium">{t('history.category')}</th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">{t('history.time')}</th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">{t('history.value')}</th>
-                  <th scope="col" className="px-4 py-3 font-medium">{t('history.actions')}</th>
+                  <th scope="col" className="w-[6.5rem] px-4 py-3 font-medium">{t('history.date')}</th>
+                  <th scope="col" className="w-[7rem] px-4 py-3 font-medium">{t('history.person')}</th>
+                  {/* Ширину задаём на заголовке столбца: max-width на ячейке
+                      таблицы браузер не соблюдает, а width — соблюдает. */}
+                  <th scope="col" className="w-[22rem] px-4 py-3 font-medium">{t('history.task')}</th>
+                  <th scope="col" className="w-[13rem] px-4 py-3 font-medium">{t('history.category')}</th>
+                  <th scope="col" className="w-[7rem] px-4 py-3 text-right font-medium">{t('history.time')}</th>
+                  <th scope="col" className="w-[9rem] px-4 py-3 text-right font-medium">{t('history.value')}</th>
+                  <th scope="col" className="w-[6.5rem] px-4 py-3 font-medium">{t('history.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -158,6 +166,9 @@ export function HistoryPage() {
                         {formatDateShort(activity.date!, locale)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">{nameOf(activity.user_id)}</td>
+                      {/* Длинные названия вроде «помыла полы, пропылесосила,
+                          убрала в зале…» иначе растянули бы столбец на всю
+                          таблицу и вытеснили остальные. */}
                       <td className="px-4 py-3">
                         <span className="font-medium text-ink">{activity.title}</span>
                         {activity.comment && (
