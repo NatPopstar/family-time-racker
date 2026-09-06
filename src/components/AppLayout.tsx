@@ -6,6 +6,7 @@ import { signOut } from '@/features/auth/api'
 import { Button } from '@/components/ui/Button'
 import { LocaleSwitcher } from '@/components/LocaleSwitcher'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
+import { useWorkdayFill } from '@/features/earnings/useWorkdayFill'
 import { FernSprig } from '@/components/ornaments'
 
 /**
@@ -38,6 +39,11 @@ export function AppLayout() {
   const { t } = useI18n()
   const displayName = useDisplayName()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  // Досоздаёт пропущенные будние рабочие дни. Здесь, а не на странице:
+  // рамка рисуется один раз на всё приложение, значит и заполнение
+  // случится один раз, на какую бы страницу человек ни зашёл.
+  useWorkdayFill()
 
   return (
     <div className="min-h-screen text-ink">

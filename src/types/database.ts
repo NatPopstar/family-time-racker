@@ -393,6 +393,8 @@ export type Database = {
     }
     Functions: {
       is_adult: { Args: never; Returns: boolean }
+      // Досоздаёт пропущенные будние рабочие дни, возвращает их число.
+      fill_workdays: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never
