@@ -137,6 +137,10 @@ export const ru = {
   'history.editTitle': 'Изменить запись',
   'history.deleteConfirm': 'Удалить эту запись? Отменить будет нельзя.',
   'history.foreignHint': 'Чужие записи видны, но менять их нельзя.',
+  'history.byPerson': 'Итоги за период',
+  'history.showList': 'Показать список дел',
+  'history.hideList': 'Свернуть список дел',
+  'history.recordCount': 'Записей',
 
   'timer.title': 'Таймер',
   'timer.start': '▶ Запустить',
@@ -467,6 +471,10 @@ export const en: Record<keyof typeof ru, string> = {
   'history.editTitle': 'Edit entry',
   'history.deleteConfirm': 'Delete this entry? This cannot be undone.',
   'history.foreignHint': "Other people's entries are visible but not editable.",
+  'history.byPerson': 'Totals for the period',
+  'history.showList': 'Show the list',
+  'history.hideList': 'Collapse the list',
+  'history.recordCount': 'Entries',
 
   'timer.title': 'Timer',
   'timer.start': '▶ Start',

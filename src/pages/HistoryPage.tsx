@@ -9,7 +9,7 @@ import { formatDateNumeric } from '@/lib/dates'
 import { fetchActivities, deleteActivity } from '@/features/activities/api'
 import { fetchCategories } from '@/features/categories/api'
 import { fetchAllProfiles } from '@/features/profile/api'
-import { activityMinutes, detectCurrencies } from '@/features/dashboard/stats'
+import { activityMinutes, detectCurrencies, summarizeByPerson } from '@/features/dashboard/stats'
 import { PeriodFilter } from '@/features/activities/PeriodFilter'
 import { EditActivityDialog } from '@/features/activities/EditActivityDialog'
 import { Select } from '@/components/ui/Select'
@@ -34,6 +34,8 @@ export function HistoryPage() {
   const [range, setRange] = useState(() => getPeriodRange('thisWeek'))
   const [personId, setPersonId] = useState('')
   const [categoryId, setCategoryId] = useState('')
+  // Список свёрнут: сверху нужны итоги, а не сто строк дел.
+  const [isListOpen, setIsListOpen] = useState(false)
   const [editing, setEditing] = useState<ActivityWithValue | null>(null)
 
   const { data: profiles } = useQuery({ queryKey: ['profiles'], queryFn: fetchAllProfiles })
@@ -69,6 +71,15 @@ export function HistoryPage() {
   // с ними ровно на записи с дорогой.
   const totalMinutes = visible.reduce((sum, a) => sum + activityMinutes(a), 0)
   const totalValue = visible.reduce((sum, a) => sum + (a.value ?? 0), 0)
+
+  // Итоги по людям — через ту же функцию, что и семейный дашборд.
+  // Своё сложение здесь однажды разошлось бы с ним, и понять, какое
+  // из двух чисел настоящее, стало бы нельзя.
+  // Людей без записей в периоде не показываем: строка с нулями
+  // ничего не сообщает, а место занимает.
+  const byPerson = summarizeByPerson(visible, profiles ?? []).filter(
+    (row) => row.totalMinutes > 0,
+  )
 
   /** Имя автора записи. Профили загружены отдельно, сопоставляем по id. */
   function nameOf(userId: string | null) {
@@ -134,7 +145,61 @@ export function HistoryPage() {
         </p>
       )}
 
+      {/* СНАЧАЛА ИТОГИ, ПОТОМ ДЕЛА.
+          В историю заходят с вопросом «сколько вышло за период»,
+          а не «покажи мне сто строк». Список нужен, когда что-то
+          не сходится, — поэтому он свёрнут, но под рукой. */}
+      {visible.length > 0 && byPerson.length > 0 && (
+        <div className="rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
+          <h2 className="text-base font-semibold text-ink">{t('history.byPerson')}</h2>
+          <ul className="mt-3 space-y-2">
+            {byPerson.map((row) => (
+              <li
+                key={row.userId}
+                className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 rounded-lg bg-surface-2 px-4 py-3"
+              >
+                <span className="font-medium text-ink">{row.name}</span>
+                <span className="flex items-baseline gap-5 tabular-nums">
+                  <span className="text-sm text-ink-3">
+                    {formatHours(row.totalMinutes, locale)}
+                  </span>
+                  {row.totalEarnings > 0 && (
+                    <span className="font-semibold text-positive">
+                      {t('report.earned')}: {formatMoney(row.totalEarnings, currency, locale)}
+                    </span>
+                  )}
+                  <span className="text-lg font-bold text-estimate">
+                    {formatMoney(row.totalEstimated, currency, locale)}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {visible.length > 0 && (
+        <>
+          <button
+            type="button"
+            onClick={() => setIsListOpen((open) => !open)}
+            aria-expanded={isListOpen}
+            className="flex w-full items-center gap-2 rounded-xl bg-surface px-5 py-3 text-left text-sm shadow-sm ring-1 ring-line transition hover:bg-surface-2"
+          >
+            <span aria-hidden="true" className="text-xs text-ink-4">
+              {isListOpen ? '▾' : '▸'}
+            </span>
+            <span className="font-medium text-ink-2">
+              {t('history.recordCount')}: {visible.length}
+            </span>
+            <span className="ml-auto text-ink-4">
+              {isListOpen ? t('history.hideList') : t('history.showList')}
+            </span>
+          </button>
+        </>
+      )}
+
+      {visible.length > 0 && isListOpen && (
         <>
           {/* bleed-wide — таблица шире колонки: семи столбцам в ней тесно.
               overflow-x-auto — если и этого мало, прокручивается ВНУТРИ

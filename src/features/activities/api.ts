@@ -63,6 +63,10 @@ export function buildActivityInsert(input: NewActivityInput): ActivityInsert {
     travel_legs: input.travelLegs ?? 2,
     rate_snapshot: rate ? rate.hourly_rate : null,
     currency_snapshot: rate ? rate.currency : null,
+    // Признак едет вместе со ставкой: без него зарплата попадала
+    // в оценку неоплачиваемого труда, и два разных смысла —
+    // «заработано» и «столько стоило бы нанять» — складывались в одну сумму.
+    is_earnings_snapshot: rate ? rate.is_earnings : false,
   }
 }
 
@@ -178,6 +182,10 @@ export function buildActivityUpdate(input: EditActivityInput): ActivityUpdate {
     ...base,
     rate_snapshot: rate ? rate.hourly_rate : null,
     currency_snapshot: rate ? rate.currency : null,
+    // Признак едет вместе со ставкой: без него зарплата попадала
+    // в оценку неоплачиваемого труда, и два разных смысла —
+    // «заработано» и «столько стоило бы нанять» — складывались в одну сумму.
+    is_earnings_snapshot: rate ? rate.is_earnings : false,
   }
 }
 
@@ -266,6 +274,10 @@ export async function completePlannedActivity(params: {
     subcategory_id: params.subcategory.id,
     rate_snapshot: rate ? rate.hourly_rate : null,
     currency_snapshot: rate ? rate.currency : null,
+    // Признак едет вместе со ставкой: без него зарплата попадала
+    // в оценку неоплачиваемого труда, и два разных смысла —
+    // «заработано» и «столько стоило бы нанять» — складывались в одну сумму.
+    is_earnings_snapshot: rate ? rate.is_earnings : false,
   }
 
   if (params.comment?.trim()) {
@@ -408,6 +420,10 @@ export async function stopPomodoro(params: {
       timer_phase: null,
       rate_snapshot: rate ? rate.hourly_rate : null,
       currency_snapshot: rate ? rate.currency : null,
+      // Признак едет вместе со ставкой: без него зарплата попадала
+      // в оценку неоплачиваемого труда, и два разных смысла —
+      // «заработано» и «столько стоило бы нанять» — складывались в одну сумму.
+      is_earnings_snapshot: rate ? rate.is_earnings : false,
     })
     .eq('id', params.activityId)
 
@@ -454,6 +470,10 @@ export async function stopTimer(params: {
       timer_started_at: null,
       rate_snapshot: rate ? rate.hourly_rate : null,
       currency_snapshot: rate ? rate.currency : null,
+      // Признак едет вместе со ставкой: без него зарплата попадала
+      // в оценку неоплачиваемого труда, и два разных смысла —
+      // «заработано» и «столько стоило бы нанять» — складывались в одну сумму.
+      is_earnings_snapshot: rate ? rate.is_earnings : false,
     })
     .eq('id', params.activityId)
 

@@ -45,7 +45,7 @@ const subcategories = [
     name: 'Логистика (отвезти/забрать)',
     sort_order: 2,
     is_active: true,
-    market_rates: { name: 'Babysitter / Nanny', hourly_rate: 18.56, currency: 'EUR' },
+    market_rates: { name: 'Babysitter / Nanny', hourly_rate: 18.56, currency: 'EUR', is_earnings: false },
   },
 ]
 

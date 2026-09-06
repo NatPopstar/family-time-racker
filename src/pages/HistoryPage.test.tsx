@@ -105,6 +105,18 @@ const activities = [
   },
 ]
 
+/**
+ * Раскрывает список дел.
+ *
+ * Список свёрнут по умолчанию: в Историю заходят за итогами, а не за
+ * сотней строк. Тестам, которые проверяют сами строки, его надо открыть.
+ */
+async function openList() {
+  const user = userEvent.setup()
+  const toggle = await screen.findByRole('button', { name: /Записей:/ })
+  await user.click(toggle)
+}
+
 describe('HistoryPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -118,8 +130,37 @@ describe('HistoryPage', () => {
     vi.mocked(deleteActivity).mockResolvedValue(undefined)
   })
 
+  it('сначала показывает итоги по людям, а список дел прячет', async () => {
+    // В Историю заходят с вопросом «сколько вышло за период»,
+    // а не «покажи мне сто строк».
+    renderWithProviders(<HistoryPage />)
+
+    expect(await screen.findByText('Итоги за период')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Записей:/ })).toBeInTheDocument()
+    // Таблицы ещё нет.
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  })
+
+  it('в итогах показывает ОЦЕНКУ ТРУДА, а не зарплату', async () => {
+    // Смысл всего приложения — не смешивать реальные деньги
+    // с оценкой неоплачиваемого труда. Зарплата в эту сумму
+    // попадать не должна: её видно отдельной строкой.
+    // Две записи одного человека: 100 евро оценки труда и 900 зарплаты.
+    vi.mocked(fetchActivities).mockResolvedValue([
+      { ...activities[0], id: 'a', value: 100, is_earnings_snapshot: false },
+      { ...activities[0], id: 'b', value: 900, is_earnings_snapshot: true },
+    ] as never)
+
+    renderWithProviders(<HistoryPage />)
+
+    const totals = (await screen.findByText('Итоги за период')).closest('div')!
+    expect(within(totals).getByText(/100/)).toBeInTheDocument()
+    expect(within(totals).queryByText(/1 000/)).not.toBeInTheDocument()
+  })
+
   it('показывает записи всей семьи', async () => {
     renderWithProviders(<HistoryPage />)
+    await openList()
 
     expect(await screen.findByText('Уборка кухни')).toBeInTheDocument()
 
@@ -136,6 +177,7 @@ describe('HistoryPage', () => {
   it('фильтрует по человеку', async () => {
     const user = userEvent.setup()
     renderWithProviders(<HistoryPage />)
+    await openList()
 
     await screen.findByText('Уборка кухни')
     await user.selectOptions(screen.getByLabelText('Кто'), 'user-papa')
@@ -147,6 +189,7 @@ describe('HistoryPage', () => {
   it('фильтрует по категории', async () => {
     const user = userEvent.setup()
     renderWithProviders(<HistoryPage />)
+    await openList()
 
     await screen.findByText('Уборка кухни')
     await user.selectOptions(screen.getByLabelText('Категория'), 'cat-work')
@@ -158,6 +201,7 @@ describe('HistoryPage', () => {
   it('складывает два фильтра сразу', async () => {
     const user = userEvent.setup()
     renderWithProviders(<HistoryPage />)
+    await openList()
 
     await screen.findByText('Уборка кухни')
     await user.selectOptions(screen.getByLabelText('Кто'), 'user-mama')
@@ -171,6 +215,7 @@ describe('HistoryPage', () => {
   it('пересчитывает итоги после фильтрации', async () => {
     const user = userEvent.setup()
     renderWithProviders(<HistoryPage />)
+    await openList()
 
     await screen.findByText('Уборка кухни')
 
@@ -189,6 +234,7 @@ describe('HistoryPage', () => {
   it('показывает прочерк вместо стоимости у работы без ставки', async () => {
     const user = userEvent.setup()
     renderWithProviders(<HistoryPage />)
+    await openList()
 
     await screen.findByText('Уборка кухни')
     await user.selectOptions(screen.getByLabelText('Категория'), 'cat-work')
@@ -199,6 +245,7 @@ describe('HistoryPage', () => {
 
   it('даёт кнопки правки только для своих записей', async () => {
     renderWithProviders(<HistoryPage />)
+    await openList()
 
     await screen.findByText('Уборка кухни')
 
@@ -216,6 +263,7 @@ describe('HistoryPage', () => {
     // Отвечаем «нет» — запись должна остаться.
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
     renderWithProviders(<HistoryPage />)
+    await openList()
 
     await screen.findByText('Уборка кухни')
     const myRow = screen.getByText('Уборка кухни').closest('tr')!
@@ -231,6 +279,7 @@ describe('HistoryPage', () => {
     const user = userEvent.setup()
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
     renderWithProviders(<HistoryPage />)
+    await openList()
 
     await screen.findByText('Уборка кухни')
     const myRow = screen.getByText('Уборка кухни').closest('tr')!
@@ -249,6 +298,7 @@ describe('HistoryPage', () => {
   it('поля своего периода появляются только при его выборе', async () => {
     const user = userEvent.setup()
     renderWithProviders(<HistoryPage />)
+    await openList()
 
     await screen.findByText('Уборка кухни')
     expect(screen.queryByLabelText('С')).not.toBeInTheDocument()
@@ -262,6 +312,7 @@ describe('HistoryPage', () => {
   it('открывает окно правки своей записи', async () => {
     const user = userEvent.setup()
     renderWithProviders(<HistoryPage />)
+    await openList()
 
     await screen.findByText('Уборка кухни')
     const myRow = screen.getByText('Уборка кухни').closest('tr')!

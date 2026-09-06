@@ -11,7 +11,17 @@ import type { Category, Subcategory } from '@/types/models'
 
 /** Подкатегория вместе со своей ставкой (или без неё — тогда market_rates = null). */
 export type SubcategoryWithRate = Subcategory & {
-  market_rates: { name: string; hourly_rate: number; currency: string } | null
+  market_rates: {
+    name: string
+    hourly_rate: number
+    currency: string
+    /**
+     * Настоящие деньги (зарплата) или рыночная оценка неоплачиваемого труда.
+     * Различие — смысл всего приложения, поэтому признак копируется
+     * в каждую запись вместе со ставкой.
+     */
+    is_earnings: boolean
+  } | null
 }
 
 /** Четыре главные категории, по порядку сортировки. */
@@ -53,7 +63,7 @@ export async function fetchSubcategories(): Promise<Subcategory[]> {
 export async function fetchSubcategoriesWithRates(): Promise<SubcategoryWithRate[]> {
   const { data, error } = await supabase
     .from('subcategories')
-    .select('*, market_rates ( name, hourly_rate, currency )')
+    .select('*, market_rates ( name, hourly_rate, currency, is_earnings )')
     .eq('is_active', true)
     .order('sort_order', { ascending: true })
 

@@ -77,7 +77,7 @@ const cleaning: SubcategoryWithRate = {
   name: 'Уборка',
   sort_order: 1,
   is_active: true,
-  market_rates: { name: 'Cleaning', hourly_rate: 20, currency: 'GBP' },
+  market_rates: { name: 'Cleaning', hourly_rate: 20, currency: 'GBP', is_earnings: false },
 }
 
 /** Подкатегория без ставки — оплачиваемая работа. */
@@ -89,6 +89,22 @@ const paidWork: SubcategoryWithRate = {
   sort_order: 1,
   is_active: true,
   market_rates: null,
+}
+
+/** Подкатегория со ставкой-ЗАРПЛАТОЙ — настоящие деньги, а не оценка. */
+const salary: SubcategoryWithRate = {
+  id: 'sub-work1',
+  category_id: 'cat-work',
+  rate_id: 'rate-work1',
+  name: 'Работа Andrei (инвест)',
+  sort_order: 1,
+  is_active: true,
+  market_rates: {
+    name: 'Работа Andrei (инвест)',
+    hourly_rate: 47.45,
+    currency: 'EUR',
+    is_earnings: true,
+  },
 }
 
 const baseInput = {
@@ -172,6 +188,40 @@ describe('buildActivityInsert: «заморозка» ставки', () => {
   })
 })
 
+describe('признак заработка едет вместе со ставкой', () => {
+  /**
+   * Зарплата и оценка неоплачиваемого труда — два разных смысла,
+   * и приложение существует ради того, чтобы их не путать.
+   * Пока признак не копировался, зарплата мужа попадала в «оценку
+   * стоимости труда»: 2359 евро реальных денег складывались с тем,
+   * во сколько обошлось бы нанять человека вместо жены.
+   */
+  it('зарплата помечается заработком', () => {
+    const row = buildActivityInsert({ ...baseInput, subcategory: salary })
+    expect(row.is_earnings_snapshot).toBe(true)
+  })
+
+  it('домашний труд заработком НЕ помечается', () => {
+    const row = buildActivityInsert({ ...baseInput, subcategory: cleaning })
+    expect(row.is_earnings_snapshot).toBe(false)
+  })
+
+  it('без ставки заработком тоже не помечается', () => {
+    const row = buildActivityInsert({ ...baseInput, subcategory: paidWork })
+    expect(row.is_earnings_snapshot).toBe(false)
+  })
+
+  it('при смене вида работы признак берётся у нового', () => {
+    // Записали как уборку, оказалось — рабочие часы.
+    const row = buildActivityUpdate({
+      ...baseInput,
+      previousSubcategoryId: 'sub-cleaning',
+      subcategory: salary,
+    })
+    expect(row.is_earnings_snapshot).toBe(true)
+  })
+})
+
 describe('buildActivityUpdate: правка записи', () => {
   const editBase = {
     title: 'Уборка кухни',
@@ -197,7 +247,7 @@ describe('buildActivityUpdate: правка записи', () => {
       ...cleaning,
       id: 'sub-cooking',
       name: 'Приготовление еды',
-      market_rates: { name: 'Private Chef', hourly_rate: 35, currency: 'GBP' },
+      market_rates: { name: 'Private Chef', hourly_rate: 35, currency: 'GBP', is_earnings: false },
     }
 
     const row = buildActivityUpdate({ ...editBase, subcategory: cooking })

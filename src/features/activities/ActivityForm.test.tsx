@@ -47,7 +47,7 @@ const subcategories = [
     name: 'Уборка',
     sort_order: 1,
     is_active: true,
-    market_rates: { name: 'Cleaning', hourly_rate: 20, currency: 'GBP' },
+    market_rates: { name: 'Cleaning', hourly_rate: 20, currency: 'GBP', is_earnings: false },
   },
   {
     id: 'sub-cooking',
@@ -56,7 +56,7 @@ const subcategories = [
     name: 'Приготовление еды',
     sort_order: 2,
     is_active: true,
-    market_rates: { name: 'Private Chef', hourly_rate: 35, currency: 'GBP' },
+    market_rates: { name: 'Private Chef', hourly_rate: 35, currency: 'GBP', is_earnings: false },
   },
   {
     id: 'sub-work',
