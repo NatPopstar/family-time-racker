@@ -18,11 +18,14 @@ export function PersonReport({
   categories,
   earningsCurrency,
   estimatedCurrency,
+  periodTitle,
 }: {
   person: PersonRow
   categories: CategorySummary[]
   /** У двух сумм валюта может отличаться, поэтому их две. */
   earningsCurrency: string
+  /** За какие числа посчитано. Подписывается прямо на карточке. */
+  periodTitle?: string
   estimatedCurrency: string
 }) {
   const { t, locale } = useI18n()
@@ -82,7 +85,17 @@ export function PersonReport({
           </div>
         )}
         <div className="flex items-baseline justify-between">
-          <span className="text-sm font-medium text-ink-3">{t('report.estimatedValue')}</span>
+          <span className="text-sm font-medium text-ink-3">
+            {t('report.estimatedValue')}
+            {/* Период прямо под суммой. Заголовок страницы его называет,
+                но карточку часто смотрят вырезанной — на снимке экрана,
+                в пересылке — и тогда число остаётся без периода.
+                Две карточки за разные недели выглядят как пропажа денег,
+                хотя оба числа верные. */}
+            {periodTitle && (
+              <span className="block text-xs font-normal text-ink-5">{periodTitle}</span>
+            )}
+          </span>
           <span className="text-xl font-bold text-estimate">
             {formatMoney(person.totalEstimated, estimatedCurrency, locale)}
           </span>

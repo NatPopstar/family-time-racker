@@ -115,7 +115,7 @@ describe('ReportsPage', () => {
     expect(within(mamaCard).queryByText('Работа')).not.toBeInTheDocument()
   })
 
-  it('показывает Estimated Market Value у каждого', async () => {
+  it('показывает оценку стоимости труда у каждого', async () => {
     vi.mocked(fetchActivities).mockResolvedValue([
       entry({ user_id: 'mama', actual_minutes: 300, value: 100 }),
     ] as never)
@@ -123,7 +123,24 @@ describe('ReportsPage', () => {
     renderWithProviders(<ReportsPage />)
 
     const mamaCard = (await screen.findByRole('heading', { name: 'Мама' })).closest('section')!
-    expect(within(mamaCard).getByText('Estimated Market Value')).toBeInTheDocument()
+    // Раньше здесь стояло английское «Estimated Market Value»: фразу
+    // забыли перевести, и она светилась посреди русского экрана.
+    expect(within(mamaCard).getByText(/Оценка стоимости труда/)).toBeInTheDocument()
+  })
+
+  it('подписывает период прямо на карточке', async () => {
+    // Заголовок страницы период называет, но карточку часто смотрят
+    // вырезанной — на снимке экрана. Тогда число остаётся без периода,
+    // и две карточки за разные недели выглядят как пропажа денег.
+    vi.mocked(fetchActivities).mockResolvedValue([
+      entry({ user_id: 'mama', actual_minutes: 300, value: 100 }),
+    ] as never)
+
+    renderWithProviders(<ReportsPage />)
+
+    const mamaCard = (await screen.findByRole('heading', { name: 'Мама' })).closest('section')!
+    const pageTitle = screen.getAllByRole('heading', { level: 2 })[0].textContent!
+    expect(within(mamaCard).getByText(pageTitle)).toBeInTheDocument()
   })
 
   it('подводит итог по семье', async () => {

@@ -113,6 +113,7 @@ export function ReportsPage() {
                 // этого человека, а не делим общую.
                 earningsCurrency={earningsCurrency}
                 estimatedCurrency={estimatedCurrency}
+                periodTitle={title}
                 categories={
                   summarize(all.filter((a) => a.user_id === row.userId)).byCategory
                 }

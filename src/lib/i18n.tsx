@@ -330,7 +330,7 @@ export const ru = {
   'report.next': 'Позже →',
   'report.current': 'Текущий период',
   'report.totalTime': 'Всего времени',
-  'report.estimatedValue': 'Estimated Market Value',
+  'report.estimatedValue': 'Оценка стоимости труда',
   'report.earned': 'Заработано (зарплата)',
   'money.bothHint':
     'Заработок и оценка неоплачиваемого труда показаны отдельно. Складывать их нельзя: первое — реальные деньги, второе — сколько стоило бы купить эту работу.',
