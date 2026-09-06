@@ -129,6 +129,43 @@ describe('AddPlannedTaskDialog: повтор каждую неделю', () => {
     expect(createPlannedActivity).not.toHaveBeenCalled()
   })
 
+  it('задачу можно записать ОДНОЙ ДОРОГОЙ, без своего времени', async () => {
+    // Отвёз и уехал домой: своего времени ноль, труд весь в пути.
+    // Раньше форма требовала время больше нуля, и такую задачу
+    // приходилось выдумывать.
+    const user = userEvent.setup()
+    renderWithProviders(<AddPlannedTaskDialog date={MONDAY} onClose={() => {}} />)
+
+    await screen.findByRole('option', { name: /Ребёнок/ })
+    await user.selectOptions(screen.getByLabelText('Категория'), 'cat-child')
+    await user.selectOptions(screen.getByLabelText('Вид работы'), 'sub-logistics')
+    await user.type(screen.getByLabelText('Что делали'), 'Отвёз Сашу на занятие')
+    // Своё время не заполняем вовсе — только дорогу.
+    await user.type(screen.getByLabelText(/Дорога в одну сторону/), '15')
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }))
+
+    await waitFor(() => expect(createPlannedActivity).toHaveBeenCalledTimes(1))
+    const task = vi.mocked(createPlannedActivity).mock.calls[0][0]
+    expect(task.plannedMinutes).toBe(0)
+    expect(task.travelOneWayMinutes).toBe(15)
+  })
+
+  it('совсем пустую задачу — ни времени, ни дороги — не сохраняет', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<AddPlannedTaskDialog date={MONDAY} onClose={() => {}} />)
+
+    await screen.findByRole('option', { name: /Ребёнок/ })
+    await user.selectOptions(screen.getByLabelText('Категория'), 'cat-child')
+    await user.selectOptions(screen.getByLabelText('Вид работы'), 'sub-logistics')
+    await user.type(screen.getByLabelText('Что делали'), 'Непонятно что')
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'либо своё время на задачу, либо время в дороге',
+    )
+    expect(createPlannedActivity).not.toHaveBeenCalled()
+  })
+
   it('пустое название не сохраняет даже с галочкой', async () => {
     const user = userEvent.setup()
     renderWithProviders(<AddPlannedTaskDialog date={MONDAY} onClose={() => {}} />)

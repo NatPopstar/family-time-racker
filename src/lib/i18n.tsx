@@ -94,6 +94,8 @@ const ru = {
   'activity.error.titleRequired': 'Напишите, что вы делали.',
   'activity.error.subcategoryRequired': 'Выберите вид работы.',
   'activity.error.timeRequired': 'Укажите потраченное время — хотя бы одну минуту.',
+  'activity.error.timeOrTravelRequired':
+    'Укажите либо своё время на задачу, либо время в дороге — хотя бы одно из двух.',
   'activity.error.timeTooLong': 'В сутках 24 часа. Проверьте введённое время.',
   'activity.error.saveFailed': 'Не удалось сохранить запись:',
 
@@ -164,7 +166,9 @@ const ru = {
   'planner.nextWeek': 'Следующая неделя →',
   'planner.thisWeek': 'Текущая неделя',
   'planner.addTask': 'Добавить задачу',
-  'planner.plannedTime': 'Планируемое время',
+  'planner.plannedTime': 'Ваше время на задачу',
+  'planner.plannedTimeHint':
+    'Сколько времени задача займёт У ВАС, а не сколько ребёнок пробудет на занятии. Отвезли и уехали домой — оставьте пусто, посчитается одна дорога.',
   'planner.noTasks': 'Задач нет',
   'planner.done': 'Выполнено',
   'planner.markDone': 'Отметить выполненной',
@@ -403,6 +407,8 @@ const en: Record<keyof typeof ru, string> = {
   'activity.error.titleRequired': 'Write down what you did.',
   'activity.error.subcategoryRequired': 'Choose a type of work.',
   'activity.error.timeRequired': 'Enter the time spent — at least one minute.',
+  'activity.error.timeOrTravelRequired':
+    'Enter either your time on the task or the travel time — at least one of the two.',
   'activity.error.timeTooLong': 'A day has 24 hours. Please check the time you entered.',
   'activity.error.saveFailed': 'Could not save the entry:',
 
@@ -473,7 +479,9 @@ const en: Record<keyof typeof ru, string> = {
   'planner.nextWeek': 'Next week →',
   'planner.thisWeek': 'This week',
   'planner.addTask': 'Add task',
-  'planner.plannedTime': 'Planned time',
+  'planner.plannedTime': 'Your time on the task',
+  'planner.plannedTimeHint':
+    'How long the task takes YOU, not how long the child stays at the class. Dropped off and went home — leave it empty and only travel counts.',
   'planner.noTasks': 'No tasks',
   'planner.done': 'Done',
   'planner.markDone': 'Mark as done',

@@ -89,7 +89,13 @@ export function EditPlannedTaskDialog({
 
     if (title.trim() === '') return setErrorKey('activity.error.titleRequired')
     if (!subcategoryId) return setErrorKey('activity.error.subcategoryRequired')
-    if (plannedMinutes <= 0) return setErrorKey('activity.error.timeRequired')
+    // Задача может состоять ИЗ ОДНОЙ ДОРОГИ: отвёз и уехал домой —
+    // своего времени ноль, труд весь в пути. Раньше здесь стояло
+    // «время больше нуля», и такую задачу нельзя было записать честно:
+    // приходилось выдумывать минуты.
+    if (plannedMinutes <= 0 && travelMinutes <= 0) {
+      return setErrorKey('activity.error.timeOrTravelRequired')
+    }
     if (plannedMinutes + travelMinutes > MAX_MINUTES) {
       return setErrorKey('activity.error.timeTooLong')
     }
@@ -175,6 +181,10 @@ export function EditPlannedTaskDialog({
             <span className="block text-sm font-medium text-ink-2">
               {t('planner.plannedTime')}
             </span>
+            {/* Без этой строки поле читается как «сколько ребёнок пробудет
+                на занятии». Это самое частое непонимание: приложение
+                считает труд ВЗРОСЛОГО, а не занятость ребёнка. */}
+            <p className="mt-0.5 text-xs text-ink-5">{t('planner.plannedTimeHint')}</p>
             <div className="mt-1 flex gap-2">
               <Input
                 label={t('activity.hours')}

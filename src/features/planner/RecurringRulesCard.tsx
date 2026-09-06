@@ -68,6 +68,7 @@ export function RecurringRulesCard() {
 
   const visibleSubcategories = (subcategories ?? []).filter((s) => s.category_id === categoryId)
   const plannedMinutes = hoursAndMinutesToMinutes(Number(hours) || 0, Number(minutes) || 0)
+  const travelMinutes = (Number(travel) || 0) * travelLegs
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -75,7 +76,13 @@ export function RecurringRulesCard() {
 
     if (title.trim() === '') return setErrorKey('activity.error.titleRequired')
     if (!subcategoryId) return setErrorKey('activity.error.subcategoryRequired')
-    if (plannedMinutes <= 0) return setErrorKey('activity.error.timeRequired')
+    // Задача может состоять ИЗ ОДНОЙ ДОРОГИ: отвёз и уехал домой —
+    // своего времени ноль, труд весь в пути. Раньше здесь стояло
+    // «время больше нуля», и такую задачу нельзя было записать честно:
+    // приходилось выдумывать минуты.
+    if (plannedMinutes <= 0 && travelMinutes <= 0) {
+      return setErrorKey('activity.error.timeOrTravelRequired')
+    }
     if (!user) return
 
     create.mutate({
