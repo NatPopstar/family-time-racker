@@ -9,7 +9,7 @@ import { formatDateShort } from '@/lib/dates'
 import { fetchActivities, deleteActivity } from '@/features/activities/api'
 import { fetchCategories } from '@/features/categories/api'
 import { fetchAllProfiles } from '@/features/profile/api'
-import { detectCurrencies } from '@/features/dashboard/stats'
+import { activityMinutes, detectCurrencies } from '@/features/dashboard/stats'
 import { PeriodFilter } from '@/features/activities/PeriodFilter'
 import { EditActivityDialog } from '@/features/activities/EditActivityDialog'
 import { Select } from '@/components/ui/Select'
@@ -64,7 +64,10 @@ export function HistoryPage() {
   // Валюта итога берётся из самих записей, а не зашита в код.
   // В истории у каждой записи своя валюта; для ИТОГА берём валюту оценки.
   const { estimated: currency } = detectCurrencies(visible)
-  const totalMinutes = visible.reduce((sum, a) => sum + (a.actual_minutes ?? 0), 0)
+  // Через activityMinutes: дорога — тоже потраченное время, и карточки
+  // на дашборде считают именно так. Своё сложение здесь расходилось бы
+  // с ними ровно на записи с дорогой.
+  const totalMinutes = visible.reduce((sum, a) => sum + activityMinutes(a), 0)
   const totalValue = visible.reduce((sum, a) => sum + (a.value ?? 0), 0)
 
   /** Имя автора записи. Профили загружены отдельно, сопоставляем по id. */
@@ -164,8 +167,17 @@ export function HistoryPage() {
                       <td className="px-4 py-3 text-ink-3">
                         {activity.category_name} · {activity.subcategory_name}
                       </td>
+                      {/* Время СО ВРЕМЕНЕМ В ДОРОГЕ. Раньше здесь стояло
+                          одно actual_minutes, и запись «отвёл в школу»,
+                          состоящая целиком из дороги, показывалась
+                          как «0 мин» рядом со стоимостью в 16 евро. */}
                       <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">
-                        {formatMinutes(activity.actual_minutes ?? 0, locale)}
+                        {formatMinutes(activityMinutes(activity), locale)}
+                        {(activity.travel_minutes ?? 0) > 0 && (
+                          <span className="block text-xs text-ink-5">
+                            🚗 {formatMinutes(activity.travel_minutes ?? 0, locale)}
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">
                         {activity.value && activity.value > 0 ? (
@@ -181,7 +193,9 @@ export function HistoryPage() {
                             ещё и в базе, но показывать заведомо нерабочие
                             кнопки — плохо. */}
                         {isMine ? (
-                          <span className="flex gap-3">
+                          /* Столбиком, а не в строку: «Изменить» и «Удалить»
+                             рядом не помещаются и уезжают за край таблицы. */
+                          <span className="flex flex-col items-start gap-1">
                             <button
                               type="button"
                               onClick={() => setEditing(activity)}
