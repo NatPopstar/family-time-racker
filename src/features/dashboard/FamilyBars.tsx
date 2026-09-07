@@ -37,6 +37,7 @@ export function FamilyBars({ rows }: { rows: PersonRow[] }) {
     { key: 'household' as const, slug: 'household', label: t('family.household') },
     { key: 'childcare' as const, slug: 'childcare', label: t('family.childcare') },
     { key: 'admin' as const, slug: 'admin', label: t('family.admin') },
+    { key: 'selfcare' as const, slug: 'selfcare', label: t('family.selfcare') },
   ]
 
   // Recharts работает с часами удобнее, чем с минутами: ось получается
@@ -48,6 +49,7 @@ export function FamilyBars({ rows }: { rows: PersonRow[] }) {
     household: row.household / 60,
     childcare: row.childcare / 60,
     admin: row.admin / 60,
+    selfcare: row.selfcare / 60,
   }))
 
   return (

@@ -157,16 +157,30 @@ describe('summarizeByPerson', () => {
         entry({ user_id: 'mama', category_slug: 'household', actual_minutes: 50 }),
         entry({ user_id: 'mama', category_slug: 'childcare', actual_minutes: 60 }),
         entry({ user_id: 'mama', category_slug: 'admin', actual_minutes: 70 }),
+        entry({ user_id: 'mama', category_slug: 'selfcare', actual_minutes: 80 }),
       ],
       people,
     )
 
     const mama = rows.find((r) => r.userId === 'mama')!
     const byCategory =
-      mama.work + mama.study + mama.household + mama.childcare + mama.admin
+      mama.work + mama.study + mama.household + mama.childcare + mama.admin + mama.selfcare
 
     expect(byCategory).toBe(mama.totalMinutes)
-    expect(mama.totalMinutes).toBe(250)
+    expect(mama.totalMinutes).toBe(330)
+  })
+
+  it('считает время на себя отдельной категорией', () => {
+    const rows = summarizeByPerson(
+      [entry({ user_id: 'mama', category_slug: 'selfcare', actual_minutes: 45, value: 0 })],
+      people,
+    )
+
+    const mama = rows.find((r) => r.userId === 'mama')!
+    expect(mama.selfcare).toBe(45)
+    // Ставки у категории нет: полежать в ванне вместо тебя нельзя,
+    // и вопрос «сколько стоило бы нанять» смысла не имеет.
+    expect(mama.totalEstimated).toBe(0)
   })
 
   it('считает время администрирования отдельной категорией', () => {

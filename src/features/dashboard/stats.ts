@@ -176,6 +176,7 @@ export type PersonRow = {
   household: number
   childcare: number
   admin: number
+  selfcare: number
   totalMinutes: number
   totalValue: number
   /** Реально заработано. */
@@ -207,6 +208,7 @@ export function summarizeByPerson(
         household: 0,
         childcare: 0,
         admin: 0,
+        selfcare: 0,
         totalMinutes: 0,
         totalValue: 0,
         totalEarnings: 0,
@@ -243,6 +245,9 @@ export function summarizeByPerson(
         break
       case 'admin':
         row.admin += minutes
+        break
+      case 'selfcare':
+        row.selfcare += minutes
         break
     }
   }
