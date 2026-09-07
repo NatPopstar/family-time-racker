@@ -100,7 +100,18 @@ function PlannerTask({
 
   const subcategory = subcategories.find((s) => s.id === task.subcategory_id)
   const isDone = task.status === 'done'
-  const comparison = comparePlanToFact(task.planned_minutes, task.actual_minutes)
+  // Дорога входит И в план, И в факт: она часть задачи, а не довесок
+  // к одному из двух. Раньше она стояла между ними и не считалась нигде.
+  const travel = task.travel_minutes ?? 0
+  const plannedTotal = (task.planned_minutes ?? 0) + travel
+  const totalMinutes = (task.actual_minutes ?? 0) + travel
+
+  // Сравнивать с планом есть смысл только там, где план был:
+  // у задачи из одной дороги плана нет, и «быстрее плана на 0» — шум.
+  const comparison =
+    (task.planned_minutes ?? 0) > 0
+      ? comparePlanToFact(task.planned_minutes, task.actual_minutes)
+      : null
 
   // Ничья задача: договорённости не было, отметит тот, кто сделает.
   const isUnassigned = task.user_id === null
@@ -160,18 +171,23 @@ function PlannerTask({
         )}
       </p>
 
+      {/* ВРЕМЯ ЗАДАЧИ — ОДНИМ ЧИСЛОМ, а не «план + дорога · факт».
+          Прежняя запись была нечитаемой: дорога стояла посередине
+          и не принадлежала ни плану, ни факту, а «факт» показывал время
+          СВЕРХ дороги. Для ходки, которая целиком из дороги, выходило
+          «план: 0 мин + 🚗 54 мин · факт: 0 мин» — будто ничего не сделано.
+
+          Теперь как везде в приложении: общее время, а под ним дорога
+          отдельной строкой. Сравнение с планом показываем только там,
+          где план вообще был. */}
       <p className="mt-1 text-xs text-ink-4 tabular-nums">
-        {t('planner.plan')}: {formatMinutes(task.planned_minutes ?? 0, locale)}
-        {/* Дорогу показываем отдельным слагаемым: так видно,
-            из чего складывается время. */}
+        {isDone
+          ? `${t('planner.spent')}: ${formatMinutes(totalMinutes, locale)}`
+          : `${t('planner.plan')}: ${formatMinutes(plannedTotal, locale)}`}
         {(task.travel_minutes ?? 0) > 0 && (
-          <> {' + '}🚗 {formatMinutes(task.travel_minutes ?? 0, locale)}</>
-        )}
-        {isDone && (
-          <>
-            {' · '}
-            {t('planner.fact')}: {formatMinutes(task.actual_minutes ?? 0, locale)}
-          </>
+          <span className="block text-ink-5">
+            🚗 {formatMinutes(task.travel_minutes ?? 0, locale)}
+          </span>
         )}
       </p>
 
