@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { renderWithProviders } from '@/test/renderWithProviders'
 import type { ActivityWithValue } from '@/types/models'
 
@@ -51,6 +52,46 @@ function activity(over: Partial<ActivityWithValue> = {}): ActivityWithValue {
  * что карточка «Сегодня» на том же экране честно считала полтора часа.
  * Одна строка спорила с другой, и понять, какая права, было нельзя.
  */
+/** Раскрывает свёрнутый список записей. */
+async function openList() {
+  const user = userEvent.setup()
+  await user.click(await screen.findByRole('button', { name: /Записей:/ }))
+}
+
+describe('ActivityList: список свёрнут, итог на виду', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('по умолчанию показывает счётчик и итог, но не сами записи', async () => {
+    // За день записей набирается много, и они отодвигают всё остальное.
+    // Заходят чаще с вопросом «сколько вышло», чем «покажи каждую строку».
+    vi.mocked(fetchActivities).mockResolvedValue([
+      activity({ id: 'a', actual_minutes: 60, travel_minutes: 0, title: 'Уборка кухни' }),
+      activity({ id: 'b', actual_minutes: 30, travel_minutes: 0, title: 'Готовка' }),
+    ])
+
+    renderWithProviders(<ActivityList from="2026-09-01" to="2026-09-01" />)
+
+    expect(await screen.findByText(/Записей: 2/)).toBeInTheDocument()
+    // Итог виден сразу.
+    expect(screen.getByText('1.5 ч')).toBeInTheDocument()
+    // А строки — нет.
+    expect(screen.queryByText('Уборка кухни')).not.toBeInTheDocument()
+  })
+
+  it('раскрывается и сворачивается обратно', async () => {
+    vi.mocked(fetchActivities).mockResolvedValue([
+      activity({ id: 'a', title: 'Уборка кухни' }),
+    ])
+
+    renderWithProviders(<ActivityList from="2026-09-01" to="2026-09-01" />)
+    await openList()
+    expect(screen.getByText('Уборка кухни')).toBeInTheDocument()
+
+    await openList()
+    expect(screen.queryByText('Уборка кухни')).not.toBeInTheDocument()
+  })
+})
+
 describe('ActivityList: дорога — это тоже потраченное время', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -60,6 +101,7 @@ describe('ActivityList: дорога — это тоже потраченное 
     vi.mocked(fetchActivities).mockResolvedValue([activity()])
 
     renderWithProviders(<ActivityList from="2026-09-01" to="2026-09-01" />)
+    await openList()
 
     // 0 минут дела + 40 минут дороги = 40 минут.
     expect(await screen.findByText('40 мин')).toBeInTheDocument()
@@ -72,6 +114,7 @@ describe('ActivityList: дорога — это тоже потраченное 
     ])
 
     renderWithProviders(<ActivityList from="2026-09-01" to="2026-09-01" />)
+    await openList()
 
     expect(await screen.findByText('1 ч 30 мин')).toBeInTheDocument()
     expect(screen.getByText(/🚗/)).toBeInTheDocument()
@@ -86,6 +129,7 @@ describe('ActivityList: дорога — это тоже потраченное 
     ])
 
     renderWithProviders(<ActivityList from="2026-09-01" to="2026-09-01" />)
+    await openList()
 
     // 40 + 50 = 90 минут = 1.5 часа.
     expect(await screen.findByText('1.5 ч')).toBeInTheDocument()
@@ -100,6 +144,7 @@ describe('ActivityList: дорога — это тоже потраченное 
     ])
 
     renderWithProviders(<ActivityList from="2026-09-05" to="2026-09-05" />)
+    await openList()
 
     expect(await screen.findByText(/выходной с ребёнком/)).toBeInTheDocument()
     expect(screen.queryByText('без денежной оценки')).not.toBeInTheDocument()
@@ -111,6 +156,7 @@ describe('ActivityList: дорога — это тоже потраченное 
     ])
 
     renderWithProviders(<ActivityList from="2026-09-01" to="2026-09-01" />)
+    await openList()
 
     expect(await screen.findByText('без денежной оценки')).toBeInTheDocument()
   })
@@ -121,6 +167,7 @@ describe('ActivityList: дорога — это тоже потраченное 
     ])
 
     renderWithProviders(<ActivityList from="2026-09-01" to="2026-09-01" />)
+    await openList()
 
     // «2 ч» встречается дважды — в строке и в итоге, поэтому findAll.
     expect(await screen.findAllByText('2 ч')).toHaveLength(2)

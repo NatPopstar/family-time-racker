@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useI18n } from '@/lib/i18n'
 import { useAuth } from '@/features/auth/AuthProvider'
@@ -17,6 +18,9 @@ export function ActivityList({ from, to }: { from: string; to: string }) {
   const { t, locale } = useI18n()
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  // Список свёрнут: за день записей набирается много, и они отодвигают
+  // всё остальное. Итог при этом остаётся на виду — за ним и заходят.
+  const [isOpen, setIsOpen] = useState(false)
 
   const {
     data: activities,
@@ -66,6 +70,26 @@ export function ActivityList({ from, to }: { from: string; to: string }) {
 
   return (
     <div className="space-y-2">
+      <button
+        type="button"
+        onClick={() => setIsOpen((open) => !open)}
+        aria-expanded={isOpen}
+        className="flex w-full items-center gap-2 rounded-lg bg-surface px-4 py-2.5 text-left text-sm shadow-sm ring-1 ring-line transition hover:bg-surface-2"
+      >
+        <span aria-hidden="true" className="text-xs text-ink-4">
+          {isOpen ? '▾' : '▸'}
+        </span>
+        <span className="font-medium text-ink-2">
+          {t('history.recordCount')}: {activities.length}
+        </span>
+        <span className="ml-auto text-ink-4">
+          {isOpen ? t('history.hideList') : t('history.showList')}
+        </span>
+      </button>
+
+      {/* Сами записи прячутся, ИТОГ остаётся ниже: с вопросом «сколько
+          вышло за день» заходят чаще, чем с «покажи каждую строку». */}
+      {isOpen && (
       <ul className="space-y-2">
         {activities.map((activity) => (
           <li
@@ -125,6 +149,7 @@ export function ActivityList({ from, to }: { from: string; to: string }) {
           </li>
         ))}
       </ul>
+      )}
 
       <div className="flex items-center justify-between rounded-lg bg-surface-3 px-4 py-3">
         <span className="text-sm font-medium text-ink-3">{t('common.total')}</span>
