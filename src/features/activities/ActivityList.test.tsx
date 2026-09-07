@@ -72,9 +72,9 @@ describe('ActivityList: список свёрнут, итог на виду', ()
     renderWithProviders(<ActivityList from="2026-09-01" to="2026-09-01" />)
 
     expect(await screen.findByText(/Записей: 2/)).toBeInTheDocument()
-    // Итог виден сразу.
-    expect(screen.getByText('1.5 ч')).toBeInTheDocument()
-    // А строки — нет.
+    // Заголовок блока — внутри самой карточки.
+    expect(screen.getByText('Записи за сегодня')).toBeInTheDocument()
+    // А строки спрятаны.
     expect(screen.queryByText('Уборка кухни')).not.toBeInTheDocument()
   })
 
@@ -120,9 +120,9 @@ describe('ActivityList: дорога — это тоже потраченное 
     expect(screen.getByText(/🚗/)).toBeInTheDocument()
   })
 
-  it('итог списка тоже считает дорогу', async () => {
-    // Иначе итог списка расходился бы с итогом на дашборде,
-    // который считает через ту же функцию activityMinutes.
+  it('каждая строка считает дорогу отдельно', async () => {
+    // Итог переехал в карточку диаграммы: там он стоит рядом с кругом,
+    // который показывает те же данные. Список отвечает за строки.
     vi.mocked(fetchActivities).mockResolvedValue([
       activity({ id: 'a', actual_minutes: 0, travel_minutes: 40 }),
       activity({ id: 'b', actual_minutes: 0, travel_minutes: 50 }),
@@ -131,8 +131,8 @@ describe('ActivityList: дорога — это тоже потраченное 
     renderWithProviders(<ActivityList from="2026-09-01" to="2026-09-01" />)
     await openList()
 
-    // 40 + 50 = 90 минут = 1.5 часа.
-    expect(await screen.findByText('1.5 ч')).toBeInTheDocument()
+    expect(await screen.findByText('40 мин')).toBeInTheDocument()
+    expect(screen.getByText('50 мин')).toBeInTheDocument()
   })
 
   it('выходной с ребёнком объясняет, почему нет денег', async () => {
@@ -169,8 +169,8 @@ describe('ActivityList: дорога — это тоже потраченное 
     renderWithProviders(<ActivityList from="2026-09-01" to="2026-09-01" />)
     await openList()
 
-    // «2 ч» встречается дважды — в строке и в итоге, поэтому findAll.
-    expect(await screen.findAllByText('2 ч')).toHaveLength(2)
+    // Итога в списке больше нет — «2 ч» встречается один раз, в строке.
+    expect(await screen.findByText('2 ч')).toBeInTheDocument()
     expect(screen.queryByText(/🚗/)).not.toBeInTheDocument()
   })
 })

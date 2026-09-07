@@ -235,6 +235,21 @@ function PlannerTask({
           <span className="block text-xs font-medium text-ink-3">
             {t('planner.actualTime')}
           </span>
+
+          {/* САМОЕ ВАЖНОЕ МЕСТО ЭТОЙ ФОРМЫ.
+              У задачи из правила дорога уже задана и уже считается.
+              Пока это не было написано, человек вписывал сюда ВСЁ время
+              ходки — и оно складывалось с дорогой: «отвёл за 30 минут»
+              превращалось в 70. */}
+          {(task.travel_minutes ?? 0) > 0 && (
+            <p className="rounded-md bg-surface-3 px-2.5 py-2 text-xs text-ink-3">
+              🚗 {t('planner.travelAlreadyCounted')}:{' '}
+              <span className="font-medium tabular-nums text-ink-2">
+                {formatMinutes(task.travel_minutes ?? 0, locale)}
+              </span>
+              <span className="block text-ink-4">{t('planner.travelOnlyHint')}</span>
+            </p>
+          )}
           <div className="flex gap-2">
             <Input
               label={t('activity.hours')}

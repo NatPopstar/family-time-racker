@@ -10,7 +10,7 @@ import { TimerCard } from '@/features/activities/TimerCard'
 import { StatTile } from '@/features/dashboard/StatTile'
 import { CategoryDonut } from '@/features/dashboard/CategoryDonut'
 import { summarize, filterByRange, detectCurrencies } from '@/features/dashboard/stats'
-import { PageHeader } from '@/components/PageHeader'
+import { LeafRule } from '@/components/ornaments'
 
 /**
  * «Мой день» — личный кабинет.
@@ -55,41 +55,48 @@ export function DashboardPage() {
     detectCurrencies(all)
 
   return (
-    <div className="space-y-8">
-      <PageHeader title={t('page.dashboard.title')} subtitle={t('page.dashboard.subtitle')} />
+    <div className="space-y-6">
+      {/* Заголовок и три плитки — ОДИН блок: это один ответ на один
+          вопрос «сколько у меня вышло». Разделённые, они читались как
+          подпись отдельно и цифры отдельно. */}
+      <section className="rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
+        <h1 className="text-2xl font-bold tracking-tight text-ink">
+          {t('page.dashboard.title')}
+        </h1>
+        <p className="mt-1 text-sm text-ink-4">{t('page.dashboard.subtitle')}</p>
+        <LeafRule className="mt-3" />
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatTile
-          label={t('dashboard.today')}
-          minutes={todayStats.totalMinutes}
-          earnings={todayStats.totalEarnings}
-          estimated={todayStats.totalEstimated}
-          earningsCurrency={earningsCurrency}
-          estimatedCurrency={estimatedCurrency}
-          isLoading={isPending}
-        />
-        <StatTile
-          label={t('dashboard.week')}
-          minutes={weekStats.totalMinutes}
-          earnings={weekStats.totalEarnings}
-          estimated={weekStats.totalEstimated}
-          earningsCurrency={earningsCurrency}
-          estimatedCurrency={estimatedCurrency}
-          isLoading={isPending}
-        />
-        <StatTile
-          label={t('dashboard.month')}
-          minutes={monthStats.totalMinutes}
-          earnings={monthStats.totalEarnings}
-          estimated={monthStats.totalEstimated}
-          earningsCurrency={earningsCurrency}
-          estimatedCurrency={estimatedCurrency}
-          isLoading={isPending}
-        />
-      </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <StatTile
+            label={t('dashboard.today')}
+            minutes={todayStats.totalMinutes}
+            earnings={todayStats.totalEarnings}
+            estimated={todayStats.totalEstimated}
+            earningsCurrency={earningsCurrency}
+            estimatedCurrency={estimatedCurrency}
+            isLoading={isPending}
+          />
+          <StatTile
+            label={t('dashboard.week')}
+            minutes={weekStats.totalMinutes}
+            earnings={weekStats.totalEarnings}
+            estimated={weekStats.totalEstimated}
+            earningsCurrency={earningsCurrency}
+            estimatedCurrency={estimatedCurrency}
+            isLoading={isPending}
+          />
+          <StatTile
+            label={t('dashboard.month')}
+            minutes={monthStats.totalMinutes}
+            earnings={monthStats.totalEarnings}
+            estimated={monthStats.totalEstimated}
+            earningsCurrency={earningsCurrency}
+            estimatedCurrency={estimatedCurrency}
+            isLoading={isPending}
+          />
+        </div>
+      </section>
 
-      {/* Распределение показываем за НЕДЕЛЮ: за день данных обычно
-          слишком мало, за месяц картина слишком усреднена. */}
       {/* Складывать фунты с евро бессмысленно — говорим об этом прямо,
           а не показываем сумму с одним значком. */}
       {isMixed && (
@@ -98,22 +105,25 @@ export function DashboardPage() {
         </p>
       )}
 
-      <CategoryDonut
-        data={weekStats.byCategory}
-        totalMinutes={weekStats.totalMinutes}
-        currency={estimatedCurrency}
-      />
-
+      {/* Порядок: сначала то, чем ПОЛЬЗУЮТСЯ (таймер, форма записи),
+          потом то, на что СМОТРЯТ (диаграмма, записи за день).
+          Раньше диаграмма стояла выше формы и каждый раз отодвигала
+          её вниз — а заходят на страницу обычно записать дело. */}
       <TimerCard />
 
       <ActivityForm />
 
-      <section>
-        <h2 className="text-base font-semibold text-ink">{t('activity.todayTitle')}</h2>
-        <div className="mt-3">
-          <ActivityList from={today} to={today} />
-        </div>
-      </section>
+      {/* Диаграмма и итог — за СЕГОДНЯ, как и вся страница.
+          Раньше круг показывал неделю, а итог под ним — день; два числа
+          за разные периоды в одной карточке читались бы как ошибка. */}
+      <CategoryDonut
+        data={todayStats.byCategory}
+        totalMinutes={todayStats.totalMinutes}
+        totalValue={todayStats.totalEstimated}
+        currency={estimatedCurrency}
+      />
+
+      <ActivityList from={today} to={today} />
     </div>
   )
 }

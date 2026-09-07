@@ -1,6 +1,6 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { useI18n } from '@/lib/i18n'
-import { formatMinutes } from '@/lib/time'
+import { formatHours, formatMinutes } from '@/lib/time'
 import { formatMoney } from '@/lib/money'
 import { useChartPalette } from '@/lib/chartColors'
 import type { CategorySummary } from './stats'
@@ -21,9 +21,13 @@ export function CategoryDonut({
   data,
   totalMinutes,
   currency,
+  totalValue,
 }: {
   data: CategorySummary[]
   totalMinutes: number
+  /** Итог периода. Стоит в той же карточке, что и круг: одна картина,
+   *  одни числа — не надо сверять две карточки глазами. */
+  totalValue?: number
   /** Валюта берётся из самих записей, а не зашита в код. */
   currency: string
 }) {
@@ -115,6 +119,20 @@ export function CategoryDonut({
             </li>
           ))}
         </ul>
+
+      {/* Итог той же картины, что и круг. Раньше он жил в списке записей
+          внизу страницы, и приходилось сверять два блока глазами. */}
+      {totalValue !== undefined && (
+        <div className="mt-4 flex items-center justify-between border-t border-line-soft pt-3">
+          <span className="text-sm font-medium text-ink-3">{t('common.total')}</span>
+          <span className="flex gap-4 font-semibold tabular-nums">
+            <span className="text-ink">{formatHours(totalMinutes, locale)}</span>
+            {totalValue > 0 && (
+              <span className="text-estimate">{formatMoney(totalValue, currency, locale)}</span>
+            )}
+          </span>
+        </div>
+      )}
       </div>
     </div>
   )

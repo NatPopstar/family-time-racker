@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useI18n } from '@/lib/i18n'
 import { useAuth } from '@/features/auth/AuthProvider'
-import { formatMinutes, formatHours } from '@/lib/time'
+import { formatMinutes } from '@/lib/time'
 import { activityMinutes } from '@/features/dashboard/stats'
 import { formatMoney } from '@/lib/money'
 import { fetchActivities, deleteActivity } from './api'
@@ -40,7 +40,12 @@ export function ActivityList({ from, to }: { from: string; to: string }) {
   })
 
   if (isPending) {
-    return <p className="text-ink-5">{t('common.loading')}</p>
+    return (
+      <section className="rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
+        <h2 className="text-base font-semibold text-ink">{t('activity.todayTitle')}</h2>
+        <p className="mt-3 text-ink-5">{t('common.loading')}</p>
+      </section>
+    )
   }
 
   if (error) {
@@ -53,9 +58,12 @@ export function ActivityList({ from, to }: { from: string; to: string }) {
 
   if (activities.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-line-strong bg-surface p-6 text-center text-sm text-ink-4">
-        {t('activity.empty')}
-      </p>
+      <section className="rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
+        <h2 className="text-base font-semibold text-ink">{t('activity.todayTitle')}</h2>
+        <p className="mt-3 rounded-lg border border-dashed border-line-strong p-6 text-center text-sm text-ink-4">
+          {t('activity.empty')}
+        </p>
+      </section>
     )
   }
 
@@ -64,12 +72,14 @@ export function ActivityList({ from, to }: { from: string; to: string }) {
   // Через activityMinutes, а не сложением actual_minutes: дорога — тоже
   // потраченное время, и карточки «Сегодня» на дашборде считают именно так.
   // Пока здесь было своё сложение, итог списка расходился с итогом сверху.
-  const totalMinutes = activities.reduce((sum, a) => sum + activityMinutes(a), 0)
-  const totalValue = activities.reduce((sum, a) => sum + (a.value ?? 0), 0)
-  const currency = activities.find((a) => a.currency_snapshot)?.currency_snapshot ?? 'GBP'
 
   return (
-    <div className="space-y-2">
+    // Заголовок внутри карточки, а не над ней: блок «записи за сегодня»
+    // должен читаться как одно целое, а не как подпись и отдельная плашка.
+    <section className="rounded-xl bg-surface p-5 shadow-sm ring-1 ring-line">
+      <h2 className="text-base font-semibold text-ink">{t('activity.todayTitle')}</h2>
+
+      <div className="mt-3 space-y-2">
       <button
         type="button"
         onClick={() => setIsOpen((open) => !open)}
@@ -150,16 +160,7 @@ export function ActivityList({ from, to }: { from: string; to: string }) {
         ))}
       </ul>
       )}
-
-      <div className="flex items-center justify-between rounded-lg bg-surface-3 px-4 py-3">
-        <span className="text-sm font-medium text-ink-3">{t('common.total')}</span>
-        <span className="flex gap-4 font-semibold tabular-nums">
-          <span>{formatHours(totalMinutes, locale)}</span>
-          {totalValue > 0 && (
-            <span className="text-positive">{formatMoney(totalValue, currency, locale)}</span>
-          )}
-        </span>
       </div>
-    </div>
+    </section>
   )
 }
