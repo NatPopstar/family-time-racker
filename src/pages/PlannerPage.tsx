@@ -81,7 +81,11 @@ export function PlannerPage() {
 
   // Задачи Планера — только те, у которых есть план. Записи, сделанные
   // сразу «по факту» через форму или таймер, планом не являются.
-  const plannedTasks = (tasks ?? []).filter((task) => task.planned_minutes !== null)
+  // Пропущенные повторы не показываем: их убрали, но строка нужна,
+  // чтобы правило не создало задачу заново.
+  const plannedTasks = (tasks ?? []).filter(
+    (task) => task.planned_minutes !== null && task.status !== 'skipped',
+  )
 
   const plannedTotal = plannedTasks.reduce((sum, t) => sum + (t.planned_minutes ?? 0), 0)
   const actualTotal = plannedTasks.reduce((sum, t) => sum + (t.actual_minutes ?? 0), 0)

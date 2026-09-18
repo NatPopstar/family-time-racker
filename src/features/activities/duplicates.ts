@@ -134,6 +134,8 @@ export function findDuplicates(params: {
   for (const activity of params.existing) {
     if (activity.date !== params.date) continue
     if (activity.id === params.excludeId) continue
+    // Пропущенный повтор — это «дела не было», дублем он быть не может.
+    if (activity.status === 'skipped') continue
 
     const isMine = activity.user_id === params.userId || activity.user_id === null
     if (!isMine) continue

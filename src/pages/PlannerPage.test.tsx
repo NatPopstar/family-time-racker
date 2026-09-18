@@ -18,7 +18,7 @@ vi.mock('@/features/activities/api', () => ({
   fetchActivities: vi.fn(),
   createPlannedActivity: vi.fn(),
   completePlannedActivity: vi.fn(),
-  deleteActivity: vi.fn(),
+  removePlannedTask: vi.fn(),
 }))
 
 vi.mock('@/features/profile/api', () => ({
@@ -41,7 +41,7 @@ vi.mock('@/features/categories/api', () => ({
   fetchSubcategoriesWithRates: vi.fn(),
 }))
 
-import { fetchActivities, completePlannedActivity, deleteActivity } from '@/features/activities/api'
+import { fetchActivities, completePlannedActivity, removePlannedTask } from '@/features/activities/api'
 import { fetchCategories, fetchSubcategoriesWithRates } from '@/features/categories/api'
 import { fetchAllProfiles } from '@/features/profile/api'
 import { fetchRecurringRules, materialiseRules } from '@/features/planner/rulesApi'
@@ -102,7 +102,7 @@ describe('PlannerPage', () => {
     vi.mocked(fetchSubcategoriesWithRates).mockResolvedValue(subcategories)
     vi.mocked(fetchCategories).mockResolvedValue(categories)
     vi.mocked(completePlannedActivity).mockResolvedValue(undefined)
-    vi.mocked(deleteActivity).mockResolvedValue(undefined)
+    vi.mocked(removePlannedTask).mockResolvedValue(undefined)
     vi.mocked(fetchAllProfiles).mockResolvedValue(people as never)
     vi.mocked(fetchRecurringRules).mockResolvedValue([])
     vi.mocked(materialiseRules).mockResolvedValue(undefined)
@@ -258,8 +258,8 @@ describe('PlannerPage', () => {
 
     await user.click(await screen.findByRole('button', { name: /Удалить: Уборка ванной/ }))
 
-    await waitFor(() => expect(deleteActivity).toHaveBeenCalledTimes(1))
-    expect(vi.mocked(deleteActivity).mock.calls[0][0]).toBe('task-1')
+    await waitFor(() => expect(removePlannedTask).toHaveBeenCalledTimes(1))
+    expect(vi.mocked(removePlannedTask).mock.calls[0][0]).toMatchObject({ id: 'task-1' })
   })
 })
 
@@ -271,7 +271,7 @@ describe('PlannerPage: задачи общие для родителей', () =>
     vi.mocked(fetchSubcategoriesWithRates).mockResolvedValue(subcategories)
     vi.mocked(fetchCategories).mockResolvedValue(categories)
     vi.mocked(completePlannedActivity).mockResolvedValue(undefined)
-    vi.mocked(deleteActivity).mockResolvedValue(undefined)
+    vi.mocked(removePlannedTask).mockResolvedValue(undefined)
     vi.mocked(fetchAllProfiles).mockResolvedValue(people as never)
     vi.mocked(fetchRecurringRules).mockResolvedValue([])
     vi.mocked(materialiseRules).mockResolvedValue(undefined)

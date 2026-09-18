@@ -124,6 +124,26 @@ describe('findDuplicates: незакрытые задачи', () => {
     expect(found[0].activity.id).toBe('planned-1')
   })
 
+  it('пропущенный повтор дублем не считает', () => {
+    const skipped = activity({
+      id: 'skipped-1',
+      status: 'skipped',
+      title: 'Отвести/Привести из школы',
+      planned_minutes: 60,
+      actual_minutes: null,
+    } as never)
+
+    const found = findDuplicates({
+      title: 'Забрала ребенка из школы',
+      date: '2026-09-04',
+      subcategoryId: LOGISTICS,
+      userId: ME,
+      existing: [skipped],
+    })
+
+    expect(found).toHaveLength(0)
+  })
+
   it('находит запланированную задачу по словам, даже если вид работы другой', () => {
     const planned = activity({
       id: 'planned-2',

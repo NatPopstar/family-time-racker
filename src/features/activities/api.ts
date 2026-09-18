@@ -481,6 +481,27 @@ export async function stopTimer(params: {
 }
 
 /** Удаляет запись. База сама не даст удалить чужую — этим занимается RLS. */
+/**
+ * Убирает задачу из Планера.
+ *
+ * Задачу из правила повтора удалять нельзя: Планер при следующем
+ * открытии недели увидел бы пустой день и создал бы её заново.
+ * Поэтому она помечается пропущенной — строка остаётся и занимает
+ * место, а правило продолжает работать на других неделях.
+ * Разовую задачу удаляем по-настоящему.
+ */
+export async function removePlannedTask(task: {
+  id: string
+  recurring_rule_id: string | null
+}): Promise<void> {
+  const query = task.recurring_rule_id
+    ? supabase.from('activities').update({ status: 'skipped' }).eq('id', task.id)
+    : supabase.from('activities').delete().eq('id', task.id)
+
+  const { error } = await query
+  if (error) throw new Error(error.message)
+}
+
 export async function deleteActivity(id: string): Promise<void> {
   const { error } = await supabase.from('activities').delete().eq('id', id)
 

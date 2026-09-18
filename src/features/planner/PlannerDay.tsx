@@ -5,7 +5,7 @@ import { formatMinutes, comparePlanToFact, hoursAndMinutesToMinutes } from '@/li
 import { formatDateShort } from '@/lib/dates'
 import type { ActivityWithValue, Profile } from '@/types/models'
 import type { SubcategoryWithRate } from '@/features/categories/api'
-import { completePlannedActivity, deleteActivity } from '@/features/activities/api'
+import { completePlannedActivity, removePlannedTask } from '@/features/activities/api'
 import { claimActivity } from './rulesApi'
 import { EditPlannedTaskDialog } from './EditPlannedTaskDialog'
 import { Button } from '@/components/ui/Button'
@@ -136,7 +136,8 @@ function PlannerTask({
   })
 
   const claim = useMutation({ mutationFn: claimActivity, onSuccess: refresh })
-  const remove = useMutation({ mutationFn: deleteActivity, onSuccess: refresh })
+  // Задача из правила не удаляется, а пропускается — иначе вернётся.
+  const remove = useMutation({ mutationFn: removePlannedTask, onSuccess: refresh })
 
   return (
     <li className={`rounded-lg p-3 ${isUnassigned && !isDone ? 'bg-warn-soft' : 'bg-surface-2'}`}>
@@ -150,7 +151,9 @@ function PlannerTask({
         </div>
         <button
           type="button"
-          onClick={() => remove.mutate(task.id!)}
+          onClick={() =>
+            remove.mutate({ id: task.id!, recurring_rule_id: task.recurring_rule_id ?? null })
+          }
           className="shrink-0 text-xs text-ink-6 hover:text-danger-hover"
           aria-label={`${t('common.delete')}: ${task.title}`}
         >

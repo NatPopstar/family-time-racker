@@ -61,6 +61,7 @@ import {
   updateActivity,
   fetchActivities,
   deleteActivity,
+  removePlannedTask,
   elapsedMinutes,
   startTimer,
   stopTimer,
@@ -604,5 +605,35 @@ describe('deleteActivity', () => {
     queryResult = { data: null, error: { message: 'запись не найдена' } }
 
     await expect(deleteActivity('activity-1')).rejects.toThrow('запись не найдена')
+  })
+})
+
+describe('removePlannedTask', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryResult = { data: null, error: null }
+  })
+
+  it('задачу из правила не удаляет, а помечает пропущенной — иначе правило создаст её снова', async () => {
+    await removePlannedTask({ id: 'a-1', recurring_rule_id: 'rule-1' })
+
+    expect(mockUpdate).toHaveBeenCalledWith({ status: 'skipped' })
+    expect(mockDelete).not.toHaveBeenCalled()
+    expect(mockEq).toHaveBeenCalledWith('id', 'a-1')
+  })
+
+  it('разовую задачу удаляет по-настоящему', async () => {
+    await removePlannedTask({ id: 'a-2', recurring_rule_id: null })
+
+    expect(mockDelete).toHaveBeenCalled()
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+
+  it('сообщает об ошибке', async () => {
+    queryResult = { data: null, error: { message: 'нет доступа' } }
+
+    await expect(
+      removePlannedTask({ id: 'a-1', recurring_rule_id: 'rule-1' }),
+    ).rejects.toThrow('нет доступа')
   })
 })
